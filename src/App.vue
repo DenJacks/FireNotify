@@ -132,3 +132,36 @@ const handleRegisterUser = (newUser) => {
 
 loadRegisteredUsers()
 </script>
+
+<style scoped>
+@keyframes sidebarItemEnter {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-sidebar-item {
+  animation: sidebarItemEnter 0.45s ease-out both;
+}
+
+@keyframes logoFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+.sidebar-logo {
+  animation: logoFloat 3s ease-in-out infinite;
+}
+</style>
