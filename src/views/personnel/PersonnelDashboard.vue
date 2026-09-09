@@ -1,381 +1,1400 @@
 <template>
-  <div class="relative flex h-screen w-full bg-[#15120F] text-[#D8CFC3] font-body overflow-hidden select-none bg-[radial-gradient(#3A3530_1px,transparent_1px)] [background-size:24px_24px]">
+  <div class="flex h-screen w-full bg-slate-100 text-slate-800 font-sans overflow-hidden">
 
-    <!-- Ambient Glow FX -->
-    <div class="pointer-events-none absolute top-0 left-1/4 h-96 w-96 -translate-y-1/2 rounded-full bg-[#C1272D]/[0.08] blur-[140px]"></div>
-    <div class="pointer-events-none absolute top-1/3 right-10 h-96 w-96 rounded-full bg-[#E8A33D]/[0.06] blur-[150px]"></div>
+    <!-- ========================================================= -->
+    <!-- SIDEBAR -->
+    <!-- ========================================================= -->
+    <aside
+      class="w-72 flex-shrink-0 bg-white border-r border-slate-200 flex flex-col justify-between shadow-sm z-20"
+    >
 
-    <!-- Sidebar -->
-    <aside class="w-64 flex-shrink-0 border-r border-[#3A3530] bg-[#181410] flex flex-col justify-between z-20 shadow-2xl">
-      <div class="overflow-y-auto custom-scrollbar">
+      <!-- TOP SIDEBAR -->
+      <div class="overflow-y-auto">
 
-        <!-- Hazard Stripe Top Accent -->
-        <div class="h-[5px] w-full" style="background-image: repeating-linear-gradient(135deg, #E8A33D 0 12px, #15120F 12px 24px);"></div>
+        <!-- BFP COLOR ACCENT -->
+        <div class="h-2 bg-[#8B1E23]"></div>
 
-        <!-- Logo Header -->
-        <div class="flex items-center gap-3 px-6 py-5 border-b border-[#3A3530]/70 bg-[#141110]">
-          <div class="relative flex items-center justify-center h-10 w-10 bg-[#100D0B] border border-[#C9A227]/40 rounded-sm">
-            <svg viewBox="0 0 64 64" class="h-7 w-7 shrink-0" fill="none">
-              <path d="M32 4 L58 13 V29 C58 45 47 55 32 60 C17 55 6 45 6 29 V13 Z" stroke="#C9A227" stroke-width="2.5" fill="#100D0B"/>
-              <path d="M32 20c-4.5 4.5-7 8.2-7 12.2 0 4.4 3.3 7.8 7.4 7.8 4.5 0 7.9-3.2 7.9-7.5 0-2.2-.9-3.9-2.3-5.6.1 1.7-.5 2.9-1.6 3.7.3-2.9-.7-6.4-4.4-10.6Z" fill="#C9A227"/>
+        <!-- LOGO -->
+        <div class="flex items-center gap-4 px-6 py-6 border-b border-slate-200">
+
+          <div
+            class="h-14 w-14 rounded-xl bg-[#8B1E23] flex items-center justify-center shadow-sm"
+          >
+            <svg
+              viewBox="0 0 64 64"
+              class="h-9 w-9"
+              fill="none"
+            >
+              <path
+                d="M32 4 L58 13 V29 C58 45 47 55 32 60 C17 55 6 45 6 29 V13 Z"
+                stroke="#F4C542"
+                stroke-width="3"
+                fill="#8B1E23"
+              />
+
+              <path
+                d="M32 20c-4.5 4.5-7 8.2-7 12.2 0 4.4 3.3 7.8 7.4 7.8 4.5 0 7.9-3.2 7.9-7.5 0-2.2-.9-3.9-2.3-5.6.1 1.7-.5 2.9-1.6 3.7.3-2.9-.7-6.4-4.4-10.6Z"
+                fill="#F4C542"
+              />
             </svg>
           </div>
+
           <div>
-            <span class="block -mb-1 font-mono text-[9px] font-bold uppercase tracking-[0.25em] text-[#E8A33D]">Personnel Portal</span>
-            <span class="font-display text-lg font-bold tracking-[0.08em] text-[#EDE6D6]">FIRE<span class="text-[#C1272D]">NOTIFY</span></span>
+            <p class="text-sm font-semibold text-slate-500">
+              Personnel Portal
+            </p>
+
+            <h1 class="text-xl font-extrabold tracking-wide text-slate-900">
+              FIRE<span class="text-[#8B1E23]">NOTIFY</span>
+            </h1>
           </div>
+
         </div>
 
-        <!-- Navigation Sections -->
-        <div class="px-3 py-4 space-y-6">
 
-          <!-- Section 1 -->
+        <!-- ===================================================== -->
+        <!-- NAVIGATION -->
+        <!-- ===================================================== -->
+        <div class="px-4 py-6 space-y-7">
+
+          <!-- FIELD DUTY -->
           <div>
-            <p class="px-3 mb-2 font-mono text-[9px] font-bold uppercase tracking-[0.28em] text-[#6E645A]">Field Duty</p>
-            <nav class="space-y-1">
+            <p
+              class="px-3 mb-3 text-xs font-bold uppercase tracking-wider text-slate-400"
+            >
+              Field Duty
+            </p>
+
+            <nav class="space-y-2">
+
               <button
                 v-for="item in fieldItems"
                 :key="item.name"
                 @click="activeTab = item.name"
                 :title="item.context"
                 :class="[
-                  'group relative w-full flex items-center justify-between rounded-sm pl-3 pr-3 py-2.5 text-xs font-medium transition-all duration-150 border-l-2',
+                  'w-full flex items-center gap-4 px-4 py-3.5 rounded-xl text-left transition-all duration-150',
                   activeTab === item.name
-                    ? 'bg-[#211B16] text-[#EDE6D6] border-[#C1272D] shadow-inner'
-                    : 'text-[#9A9086] border-transparent hover:bg-[#1D1814] hover:text-[#D8CFC3]'
+                    ? 'bg-[#8B1E23] text-white shadow-md'
+                    : 'text-slate-700 hover:bg-slate-100'
                 ]"
               >
-                <div class="flex items-center gap-3 min-w-0">
+
+                <span
+                  v-html="ICONS[item.icon]"
+                  :class="[
+                    'h-6 w-6 shrink-0',
+                    activeTab === item.name
+                      ? 'text-[#F4C542]'
+                      : 'text-slate-500'
+                  ]"
+                ></span>
+
+                <div class="min-w-0 flex-1">
+
+                  <span class="block text-base font-semibold truncate">
+                    {{ item.name }}
+                  </span>
+
                   <span
-                    v-html="ICONS[item.icon]"
-                    :class="['h-4 w-4 shrink-0 transition-colors', activeTab === item.name ? 'text-[#E8A33D]' : 'text-[#7A6F63] group-hover:text-[#9A9086]']"
-                  ></span>
-                  <div class="text-left min-w-0">
-                    <span class="block truncate font-semibold">{{ item.name }}</span>
-                    <span class="block truncate font-mono text-[9px] text-[#5A5148]">{{ item.context }}</span>
-                  </div>
+                    :class="[
+                      'block text-xs mt-0.5 truncate',
+                      activeTab === item.name
+                        ? 'text-white/75'
+                        : 'text-slate-400'
+                    ]"
+                  >
+                    {{ item.context }}
+                  </span>
+
                 </div>
+
                 <span
                   v-if="item.badge"
-                  class="ml-2 shrink-0 rounded-xs border border-[#C1272D]/40 bg-[#C1272D]/10 px-1.5 py-0.5 font-mono text-[9px] font-bold text-[#E4595E]"
-                >{{ item.badge }}</span>
+                  class="rounded-full bg-red-100 text-red-700 px-2.5 py-1 text-xs font-bold"
+                >
+                  {{ item.badge }}
+                </span>
+
               </button>
+
             </nav>
           </div>
 
-          <!-- Section 2 -->
+
+          <!-- MANAGEMENT -->
           <div>
-            <p class="px-3 mb-2 font-mono text-[9px] font-bold uppercase tracking-[0.28em] text-[#6E645A]">Management & Records</p>
-            <nav class="space-y-1">
+            <p
+              class="px-3 mb-3 text-xs font-bold uppercase tracking-wider text-slate-400"
+            >
+              Management & Records
+            </p>
+
+            <nav class="space-y-2">
+
               <button
                 v-for="item in managementItems"
                 :key="item.name"
                 @click="activeTab = item.name"
                 :title="item.context"
                 :class="[
-                  'group relative w-full flex items-center gap-3 rounded-sm pl-3 pr-3 py-2.5 text-xs font-medium transition-all duration-150 border-l-2',
+                  'w-full flex items-center gap-4 px-4 py-3.5 rounded-xl text-left transition-all duration-150',
                   activeTab === item.name
-                    ? 'bg-[#211B16] text-[#EDE6D6] border-[#C1272D] shadow-inner'
-                    : 'text-[#9A9086] border-transparent hover:bg-[#1D1814] hover:text-[#D8CFC3]'
+                    ? 'bg-[#8B1E23] text-white shadow-md'
+                    : 'text-slate-700 hover:bg-slate-100'
                 ]"
               >
+
                 <span
                   v-html="ICONS[item.icon]"
-                  :class="['h-4 w-4 shrink-0 transition-colors', activeTab === item.name ? 'text-[#E8A33D]' : 'text-[#7A6F63] group-hover:text-[#9A9086]']"
+                  :class="[
+                    'h-6 w-6 shrink-0',
+                    activeTab === item.name
+                      ? 'text-[#F4C542]'
+                      : 'text-slate-500'
+                  ]"
                 ></span>
-                <div class="text-left min-w-0">
-                  <span class="block truncate font-semibold">{{ item.name }}</span>
-                  <span class="block truncate font-mono text-[9px] text-[#5A5148]">{{ item.context }}</span>
+
+                <div class="min-w-0">
+
+                  <span class="block text-base font-semibold truncate">
+                    {{ item.name }}
+                  </span>
+
+                  <span
+                    :class="[
+                      'block text-xs mt-0.5 truncate',
+                      activeTab === item.name
+                        ? 'text-white/75'
+                        : 'text-slate-400'
+                    ]"
+                  >
+                    {{ item.context }}
+                  </span>
+
                 </div>
+
               </button>
+
             </nav>
           </div>
 
-          <!-- Section 3 -->
+
+          <!-- PERSONNEL TOOLS -->
           <div>
-            <p class="px-3 mb-2 font-mono text-[9px] font-bold uppercase tracking-[0.28em] text-[#6E645A]">Personnel Tools</p>
-            <nav class="space-y-1">
+            <p
+              class="px-3 mb-3 text-xs font-bold uppercase tracking-wider text-slate-400"
+            >
+              Personnel Tools
+            </p>
+
+            <nav class="space-y-2">
+
               <button
                 v-for="item in toolItems"
                 :key="item.name"
                 @click="activeTab = item.name"
                 :title="item.context"
                 :class="[
-                  'group relative w-full flex items-center gap-3 rounded-sm pl-3 pr-3 py-2.5 text-xs font-medium transition-all duration-150 border-l-2',
+                  'w-full flex items-center gap-4 px-4 py-3.5 rounded-xl text-left transition-all duration-150',
                   activeTab === item.name
-                    ? 'bg-[#211B16] text-[#EDE6D6] border-[#C1272D] shadow-inner'
-                    : 'text-[#9A9086] border-transparent hover:bg-[#1D1814] hover:text-[#D8CFC3]'
+                    ? 'bg-[#8B1E23] text-white shadow-md'
+                    : 'text-slate-700 hover:bg-slate-100'
                 ]"
               >
+
                 <span
                   v-html="ICONS[item.icon]"
-                  :class="['h-4 w-4 shrink-0 transition-colors', activeTab === item.name ? 'text-[#E8A33D]' : 'text-[#7A6F63] group-hover:text-[#9A9086]']"
+                  :class="[
+                    'h-6 w-6 shrink-0',
+                    activeTab === item.name
+                      ? 'text-[#F4C542]'
+                      : 'text-slate-500'
+                  ]"
                 ></span>
-                <div class="text-left min-w-0">
-                  <span class="block truncate font-semibold">{{ item.name }}</span>
-                  <span class="block truncate font-mono text-[9px] text-[#5A5148]">{{ item.context }}</span>
+
+                <div class="min-w-0">
+
+                  <span class="block text-base font-semibold truncate">
+                    {{ item.name }}
+                  </span>
+
+                  <span
+                    :class="[
+                      'block text-xs mt-0.5 truncate',
+                      activeTab === item.name
+                        ? 'text-white/75'
+                        : 'text-slate-400'
+                    ]"
+                  >
+                    {{ item.context }}
+                  </span>
+
                 </div>
+
               </button>
+
             </nav>
           </div>
 
         </div>
       </div>
 
-      <!-- Profile & Sign Out Footer -->
-      <div class="p-3 border-t border-[#3A3530] bg-[#141110] space-y-2">
-        <div class="flex items-center gap-3 p-2 rounded-sm bg-[#1D1814] border border-[#3A3530]">
-          <div class="h-8 w-8 rounded-xs bg-[#C1272D] flex items-center justify-center font-mono font-bold text-[#EDE6D6] text-[10px] shrink-0 border border-[#E4595E]/30">
+
+      <!-- ===================================================== -->
+      <!-- USER PROFILE -->
+      <!-- ===================================================== -->
+      <div class="p-4 border-t border-slate-200 bg-slate-50">
+
+        <div
+          class="flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl"
+        >
+
+          <div
+            class="h-12 w-12 rounded-full bg-[#8B1E23] flex items-center justify-center text-white font-bold text-sm"
+          >
             {{ currentUser?.rank || 'FO3' }}
           </div>
+
           <div class="overflow-hidden">
-            <p class="text-xs font-semibold text-[#EDE6D6] truncate">{{ currentUser?.firstName || 'Juan' }} {{ currentUser?.lastName || 'Dela Cruz' }}</p>
-            <p class="font-mono text-[9px] uppercase tracking-wider text-[#6E645A] truncate">Station Inspector</p>
+
+            <p class="text-sm font-bold text-slate-900 truncate">
+              {{ currentUser?.firstName || 'Juan' }}
+              {{ currentUser?.lastName || 'Dela Cruz' }}
+            </p>
+
+            <p class="text-xs text-slate-500 truncate">
+              Station Inspector
+            </p>
+
           </div>
+
         </div>
 
+
+        <!-- SIGN OUT -->
         <button
           @click="showLogoutConfirm = true"
-          class="w-full flex items-center justify-between px-3 py-2 rounded-sm text-xs font-semibold text-[#9A9086] hover:text-[#E4595E] hover:bg-[#C1272D]/[0.12] border border-transparent hover:border-[#C1272D]/30 transition-all duration-150 group"
+          class="w-full mt-3 flex items-center gap-3 px-4 py-3 rounded-xl text-base font-semibold text-slate-600 hover:bg-red-50 hover:text-[#8B1E23] transition"
         >
-          <div class="flex items-center gap-2.5">
-            <span v-html="ICONS.logout" class="h-3.5 w-3.5 text-[#7A6F63] group-hover:text-[#E4595E]"></span>
-            <span>Sign Out</span>
-          </div>
-          <span class="font-mono text-[9px] uppercase tracking-widest text-[#5A5148] group-hover:text-[#E4595E]">Exit</span>
+
+          <span
+            v-html="ICONS.logout"
+            class="h-5 w-5"
+          ></span>
+
+          <span>Sign Out</span>
+
         </button>
+
       </div>
+
     </aside>
 
-    <!-- Main Workspace -->
-    <div class="flex-1 flex flex-col overflow-y-auto z-10 custom-scrollbar">
 
-      <!-- Top Header -->
-      <header class="h-16 border-b border-[#3A3530] bg-[#181410]/95 backdrop-blur-md px-8 flex items-center justify-between sticky top-0 z-30">
+    <!-- ========================================================= -->
+    <!-- MAIN CONTENT -->
+    <!-- ========================================================= -->
+    <div class="flex-1 flex flex-col overflow-y-auto">
+
+      <!-- ======================================================= -->
+      <!-- HEADER -->
+      <!-- ======================================================= -->
+      <header
+        class="bg-white border-b border-slate-200 px-8 py-5 flex items-center justify-between sticky top-0 z-30 shadow-sm"
+      >
+
         <div>
-          <p class="font-mono text-[9px] uppercase tracking-[0.25em] text-[#6E645A]">Operations Control</p>
-          <h1 class="font-display text-lg font-bold tracking-wide text-[#EDE6D6] uppercase">{{ activeTab }}</h1>
+
+          <p class="text-sm font-medium text-slate-500">
+            Personnel Portal
+          </p>
+
+          <h1 class="text-2xl font-bold text-slate-900">
+            {{ activeTab }}
+          </h1>
+
         </div>
+
 
         <div class="flex items-center gap-4">
-          <div class="flex items-center gap-2 rounded-xs border border-[#7BA88A]/30 bg-[#7BA88A]/[0.08] px-3 py-1.5">
-            <span class="relative flex h-2 w-2">
-              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#7BA88A]/60"></span>
-              <span class="relative inline-flex rounded-full h-2 w-2 bg-[#7BA88A]"></span>
+
+          <!-- DUTY STATUS -->
+          <div
+            class="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full bg-green-50 border border-green-200"
+          >
+
+            <span class="h-3 w-3 rounded-full bg-green-500"></span>
+
+            <span class="text-sm font-semibold text-green-700">
+              On Duty · Station 1
             </span>
-            <span class="font-mono text-[10px] font-semibold uppercase tracking-[0.15em] text-[#9BC1A6]">On Duty · Station 1</span>
+
           </div>
 
-          <button @click="activeTab = 'Notifications'" class="relative rounded-sm p-2 text-[#9A9086] hover:bg-[#211B16] hover:text-[#EDE6D6] border border-transparent hover:border-[#3A3530] transition-all">
-            <span v-html="ICONS.bell" class="block h-4 w-4"></span>
-            <span class="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-[#C1272D]"></span>
+
+          <!-- NOTIFICATIONS -->
+          <button
+            @click="activeTab = 'Notifications'"
+            class="relative h-12 w-12 flex items-center justify-center rounded-xl border border-slate-200 bg-white hover:bg-slate-100 transition"
+            title="Notifications"
+          >
+
+            <span
+              v-html="ICONS.bell"
+              class="h-6 w-6 text-slate-600"
+            ></span>
+
+            <span
+              class="absolute top-2 right-2 h-3 w-3 rounded-full bg-[#8B1E23] border-2 border-white"
+            ></span>
+
           </button>
+
         </div>
+
       </header>
 
-      <!-- Dashboard Viewport -->
-      <main class="p-8 space-y-6">
 
-        <!-- Tactical Metric Cards -->
-        <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div class="relative rounded-sm border border-[#3A3530] bg-[#181410] p-5 border-t-2 border-t-[#E8A33D] shadow-lg">
-            <div class="flex justify-between items-start">
-              <p class="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#7A6F63]">Assigned Tasks</p>
-              <span v-html="ICONS.tasks" class="h-4 w-4 text-[#7A6F63]"></span>
+      <!-- ======================================================= -->
+      <!-- PAGE -->
+      <!-- ======================================================= -->
+      <main class="p-6 lg:p-8 space-y-7">
+
+
+        <!-- ===================================================== -->
+        <!-- WELCOME -->
+        <!-- ===================================================== -->
+        <section
+          class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6"
+        >
+
+          <div
+            class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5"
+          >
+
+            <div>
+
+              <p class="text-sm font-medium text-[#8B1E23] mb-1">
+                FIRENOTIFY PERSONNEL PORTAL
+              </p>
+
+              <h2 class="text-2xl lg:text-3xl font-bold text-slate-900">
+                Welcome back,
+                {{ currentUser?.firstName || 'Juan' }}!
+              </h2>
+
+              <p class="mt-2 text-base text-slate-500">
+                Monitor your assigned tasks, reports, and station activities.
+              </p>
+
             </div>
-            <p class="mt-3 font-display text-4xl font-bold text-[#EDE6D6]">09</p>
-            <p class="mt-1 font-mono text-[10px] font-semibold text-[#7BA88A]">4 urgent pending</p>
+
+
+            <div
+              class="flex items-center gap-3 px-5 py-4 rounded-xl bg-[#8B1E23] text-white"
+            >
+
+              <div
+                class="h-11 w-11 rounded-full bg-white/10 flex items-center justify-center"
+              >
+                <span
+                  v-html="ICONS.siren"
+                  class="h-6 w-6 text-[#F4C542]"
+                ></span>
+              </div>
+
+              <div>
+
+                <p class="text-xs text-white/70">
+                  Current Status
+                </p>
+
+                <p class="text-base font-bold">
+                  On Duty
+                </p>
+
+              </div>
+
+            </div>
+
           </div>
 
-          <div class="relative rounded-sm border border-[#3A3530] bg-[#181410] p-5 border-t-2 border-t-[#E8A33D] shadow-lg">
-            <div class="flex justify-between items-start">
-              <p class="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#7A6F63]">Pending Reports</p>
-              <span v-html="ICONS.reports" class="h-4 w-4 text-[#7A6F63]"></span>
-            </div>
-            <p class="mt-3 font-display text-4xl font-bold text-[#E8A33D]">03</p>
-            <p class="mt-1 font-mono text-[10px] font-semibold text-[#E8A33D]/90">Submission needed</p>
-          </div>
-
-          <div class="relative rounded-sm border border-[#3A3530] bg-[#181410] p-5 border-t-2 border-t-[#C1272D] shadow-lg">
-            <div class="flex justify-between items-start">
-              <p class="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#7A6F63]">Station Alerts</p>
-              <span v-html="ICONS.siren" class="h-4 w-4 text-[#C1272D]"></span>
-            </div>
-            <p class="mt-3 font-display text-4xl font-bold text-[#E4595E]">02</p>
-            <p class="mt-1 font-mono text-[10px] font-semibold text-[#E4595E]/90">Requires immediate response</p>
-          </div>
         </section>
 
-        <!-- Dynamic Main Section -->
-        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-          <div class="lg:col-span-2 space-y-6">
+        <!-- ===================================================== -->
+        <!-- SUMMARY CARDS -->
+        <!-- ===================================================== -->
+        <section>
 
-            <!-- Tab: Dashboard -->
-            <div v-if="activeTab === 'Dashboard'" class="rounded-sm border border-[#3A3530] bg-[#181410] p-6 space-y-4 shadow-xl">
-              <div class="flex items-center justify-between border-b border-[#3A3530] pb-4">
-                <h2 class="font-display text-base font-bold text-[#EDE6D6] uppercase tracking-wide">Active Operational Workflows</h2>
-                <button @click="activeTab = 'Tasks'" class="font-mono text-[10px] uppercase tracking-wider font-bold text-[#E8A33D] hover:text-[#f0b45c] transition-colors">View All →</button>
+
+         
+
+
+    
+
+
+          
+        </section>
+
+
+        <!-- ===================================================== -->
+<!-- MAIN GRID -->
+<!-- ===================================================== -->
+<section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+  <!-- =================================================== -->
+  <!-- LEFT CONTENT -->
+  <!-- =================================================== -->
+  <div class="lg:col-span-2 space-y-6">
+
+    <!-- ================================================= -->
+    <!-- DASHBOARD -->
+    <!-- ================================================= -->
+    <div
+      v-if="activeTab === 'Dashboard'"
+      class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6"
+    >
+
+      <div class="border-b border-slate-200 pb-5">
+        <h2 class="text-xl font-bold text-slate-900">
+          Personnel Dashboard
+        </h2>
+
+        <p class="text-sm text-slate-500 mt-1">
+          Overview of your current duties, reports, and station activities
+        </p>
+      </div>
+
+      <div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <div class="p-5 rounded-xl bg-blue-50 border border-blue-100">
+          <p class="text-sm font-semibold text-blue-700">
+            Today's Assignment
+          </p>
+
+          <p class="mt-2 text-lg font-bold text-slate-900">
+            Fire Safety Inspection
+          </p>
+
+          <p class="text-sm text-slate-500 mt-1">
+            Public Market Complex · 09:00 AM
+          </p>
+        </div>
+
+        <div class="p-5 rounded-xl bg-green-50 border border-green-100">
+          <p class="text-sm font-semibold text-green-700">
+            Completed Tasks
+          </p>
+
+          <p class="mt-2 text-3xl font-bold text-slate-900">
+            06
+          </p>
+
+          <p class="text-sm text-slate-500 mt-1">
+            Tasks completed this week
+          </p>
+        </div>
+
+        <div class="p-5 rounded-xl bg-yellow-50 border border-yellow-100">
+          <p class="text-sm font-semibold text-yellow-700">
+            Reports To Submit
+          </p>
+
+          <p class="mt-2 text-3xl font-bold text-slate-900">
+            03
+          </p>
+
+          <p class="text-sm text-slate-500 mt-1">
+            Reports awaiting submission
+          </p>
+        </div>
+
+        <div class="p-5 rounded-xl bg-red-50 border border-red-100">
+          <p class="text-sm font-semibold text-[#8B1E23]">
+            Urgent Attention
+          </p>
+
+          <p class="mt-2 text-3xl font-bold text-slate-900">
+            02
+          </p>
+
+          <p class="text-sm text-slate-500 mt-1">
+            Tasks require immediate action
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- TASKS -->
+    <!-- ================================================= -->
+    <div
+      v-else-if="activeTab === 'Tasks'"
+      class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6"
+    >
+
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 pb-5">
+
+        <div>
+          <h2 class="text-xl font-bold text-slate-900">
+            Assigned Tasks
+          </h2>
+
+          <p class="text-sm text-slate-500 mt-1">
+            Activities and duties assigned to you
+          </p>
+        </div>
+
+        <span class="px-4 py-2 rounded-full bg-blue-50 text-blue-700 text-sm font-bold">
+          09 Total Tasks
+        </span>
+
+      </div>
+
+      <div class="mt-5 space-y-4">
+
+        <div
+          v-for="task in taskList"
+          :key="task.title"
+          class="p-5 rounded-xl border border-slate-200 bg-slate-50"
+        >
+
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+
+            <div class="flex items-start gap-4">
+
+              <div class="h-11 w-11 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+                <span
+                  v-html="ICONS.tasks"
+                  class="h-5 w-5 text-blue-600"
+                ></span>
               </div>
 
-              <div class="space-y-2.5">
-                <div class="flex items-center justify-between rounded-sm border border-[#3A3530] bg-[#100D0B] p-4 text-xs">
-                  <div class="flex items-center gap-3">
-                    <span v-html="ICONS.check" class="h-4 w-4 text-[#7BA88A] shrink-0"></span>
-                    <div>
-                      <p class="font-semibold text-[#D8CFC3]">Routine Safety Patrol</p>
-                      <p class="font-mono text-[9px] text-[#6E645A] mt-0.5">Zone 2 Commercial Area</p>
-                    </div>
-                  </div>
-                  <span class="px-2 py-1 rounded-xs font-mono text-[9px] font-bold uppercase tracking-wider bg-[#7BA88A]/10 text-[#7BA88A] border border-[#7BA88A]/30">Completed</span>
-                </div>
+              <div>
+                <p class="text-base font-bold text-slate-900">
+                  {{ task.title }}
+                </p>
 
-                <div class="flex items-center justify-between rounded-sm border border-[#3A3530] bg-[#100D0B] p-4 text-xs">
-                  <div class="flex items-center gap-3">
-                    <span v-html="ICONS.clock" class="h-4 w-4 text-[#E8A33D] shrink-0"></span>
-                    <div>
-                      <p class="font-semibold text-[#D8CFC3]">Fire Hazard Inspection</p>
-                      <p class="font-mono text-[9px] text-[#6E645A] mt-0.5">Public Market Complex</p>
-                    </div>
-                  </div>
-                  <span class="px-2 py-1 rounded-xs font-mono text-[9px] font-bold uppercase tracking-wider bg-[#E8A33D]/10 text-[#E8A33D] border border-[#E8A33D]/30">In Progress</span>
-                </div>
+                <p class="text-sm text-slate-500 mt-1">
+                  Due: {{ task.due }}
+                </p>
 
-                <div class="flex items-center justify-between rounded-sm border border-[#C1272D]/30 bg-[#100D0B] p-4 text-xs">
-                  <div class="flex items-center gap-3">
-                    <span v-html="ICONS.siren" class="h-4 w-4 text-[#E4595E] shrink-0"></span>
-                    <div>
-                      <p class="font-semibold text-[#D8CFC3]">Post-Operation Incident Assessment</p>
-                      <p class="font-mono text-[9px] text-[#6E645A] mt-0.5">Subdivision Sector 4</p>
-                    </div>
-                  </div>
-                  <span class="px-2 py-1 rounded-xs font-mono text-[9px] font-bold uppercase tracking-wider bg-[#C1272D]/10 text-[#E4595E] border border-[#C1272D]/30">Urgent</span>
-                </div>
+                <p class="text-sm text-slate-500 mt-1">
+                  Assigned to your station
+                </p>
               </div>
+
             </div>
 
-            <!-- Tab: Tasks -->
-            <div v-else-if="activeTab === 'Tasks'" class="rounded-sm border border-[#3A3530] bg-[#181410] p-6 space-y-4 shadow-xl">
-              <h2 class="font-display text-base font-bold text-[#EDE6D6] uppercase tracking-wide border-b border-[#3A3530] pb-4">Assigned Personnel Tasks</h2>
-              <div class="space-y-2.5">
-                <div v-for="task in taskList" :key="task.title" class="flex items-center justify-between rounded-sm border border-[#3A3530] bg-[#100D0B] p-4 text-xs">
-                  <div>
-                    <p class="font-semibold text-[#D8CFC3]">{{ task.title }}</p>
-                    <p class="font-mono text-[9px] text-[#6E645A] mt-0.5">Due: {{ task.due }}</p>
-                  </div>
-                  <button class="bg-[#211B16] hover:bg-[#2A231D] text-[#D8CFC3] font-mono text-[9px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-xs border border-[#3A3530] transition-colors">
-                    Update Status
-                  </button>
-                </div>
-              </div>
-            </div>
+            <button
+              class="px-5 py-3 rounded-xl bg-[#8B1E23] text-white text-sm font-bold hover:bg-[#72181D]"
+            >
+              Update Status
+            </button>
 
-            <!-- Tab: Reports -->
-            <div v-else-if="activeTab === 'Reports'" class="rounded-sm border border-[#3A3530] bg-[#181410] p-6 space-y-4 shadow-xl">
-              <h2 class="font-display text-base font-bold text-[#EDE6D6] uppercase tracking-wide border-b border-[#3A3530] pb-4">Incident & Operational Submissions</h2>
-              <div class="space-y-2.5">
-                <div class="flex items-center justify-between rounded-sm border border-[#C1272D]/30 bg-[#100D0B] p-4 text-xs">
-                  <div>
-                    <p class="font-semibold text-[#D8CFC3]">Incident Report #1047</p>
-                    <p class="font-mono text-[9px] text-[#6E645A] mt-0.5">Submitted by: FO3 J. Dela Cruz</p>
-                  </div>
-                  <span class="px-2 py-1 rounded-xs font-mono text-[9px] font-bold uppercase tracking-wider bg-[#C1272D]/10 text-[#E4595E] border border-[#C1272D]/30">Pending Review</span>
-                </div>
-              </div>
-            </div>
+          </div>
 
-            <!-- Tab: Personnel Roster -->
-            <div v-else-if="activeTab === 'Personnel Roster'" class="rounded-sm border border-[#3A3530] bg-[#181410] p-6 space-y-4 shadow-xl">
-              <h2 class="font-display text-base font-bold text-[#EDE6D6] uppercase tracking-wide border-b border-[#3A3530] pb-4">Active Station Roster</h2>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                <div v-for="person in roster" :key="person.name" class="p-3 bg-[#100D0B] border border-[#3A3530] rounded-sm flex items-center gap-3">
-                  <div class="h-9 w-9 rounded-xs bg-[#211B16] border border-[#3A3530] flex items-center justify-center font-mono font-bold text-[#E8A33D] text-[10px] shrink-0">
-                    {{ person.rank }}
-                  </div>
-                  <div>
-                    <p class="text-xs font-semibold text-[#EDE6D6]">{{ person.name }}</p>
-                    <p class="font-mono text-[9px] text-[#6E645A] mt-0.5">{{ person.role }} · {{ person.shift }}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+        </div>
 
-            <!-- Fallback Blank View -->
-            <div v-else class="rounded-sm border border-[#3A3530] bg-[#181410] p-12 text-center space-y-3 shadow-xl">
-              <span v-html="ICONS[getActiveIcon()]" class="mx-auto block h-10 w-10 text-[#7A6F63]"></span>
-              <h2 class="font-display text-xl font-bold text-[#EDE6D6] uppercase tracking-wider">{{ activeTab }}</h2>
-              <p class="text-xs text-[#9A9086] max-w-md mx-auto leading-relaxed">
-                Module active for station personnel. Real-time controls for <span class="text-[#E8A33D] font-mono">{{ activeTab }}</span> are currently synced with dispatch.
+      </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- REPORTS -->
+    <!-- ================================================= -->
+    <div
+      v-else-if="activeTab === 'Reports'"
+      class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6"
+    >
+
+      <div class="border-b border-slate-200 pb-5">
+
+        <h2 class="text-xl font-bold text-slate-900">
+          My Reports
+        </h2>
+
+        <p class="text-sm text-slate-500 mt-1">
+          Submit and monitor your operational reports
+        </p>
+
+      </div>
+
+      <!-- REPORT SUMMARY -->
+      <div class="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+        <div class="p-4 rounded-xl bg-yellow-50 border border-yellow-200">
+          <p class="text-sm font-semibold text-yellow-700">
+            Pending
+          </p>
+          <p class="text-2xl font-bold text-slate-900 mt-1">
+            03
+          </p>
+        </div>
+
+        <div class="p-4 rounded-xl bg-green-50 border border-green-200">
+          <p class="text-sm font-semibold text-green-700">
+            Submitted
+          </p>
+          <p class="text-2xl font-bold text-slate-900 mt-1">
+            12
+          </p>
+        </div>
+
+        <div class="p-4 rounded-xl bg-red-50 border border-red-200">
+          <p class="text-sm font-semibold text-[#8B1E23]">
+            Returned
+          </p>
+          <p class="text-2xl font-bold text-slate-900 mt-1">
+            01
+          </p>
+        </div>
+
+      </div>
+
+      <!-- REPORT LIST -->
+      <div class="mt-6 space-y-3">
+
+        <div class="p-5 rounded-xl border border-yellow-200 bg-yellow-50">
+
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+
+            <div>
+              <p class="text-base font-bold text-slate-900">
+                Fire Safety Inspection Report
+              </p>
+
+              <p class="text-sm text-slate-500 mt-1">
+                Due: September 12, 2026
               </p>
             </div>
 
+            <button
+              class="px-5 py-3 rounded-xl bg-[#8B1E23] text-white text-sm font-bold"
+            >
+              Submit Report
+            </button>
+
           </div>
 
-          <!-- Live Feeds Sidebar -->
-          <div class="rounded-sm border border-[#3A3530] bg-[#181410] p-6 space-y-4 shadow-xl">
-            <div class="flex items-center justify-between border-b border-[#3A3530] pb-3">
-              <h3 class="font-display text-sm font-bold text-[#EDE6D6] uppercase tracking-wide">Live Station Feeds</h3>
-              <span class="font-mono text-[9px] uppercase tracking-wider text-[#6E645A]">Real-time</span>
+        </div>
+
+        <div class="p-5 rounded-xl border border-green-200 bg-green-50">
+
+          <div class="flex items-center justify-between gap-4">
+
+            <div>
+              <p class="text-base font-bold text-slate-900">
+                Routine Safety Patrol Report
+              </p>
+
+              <p class="text-sm text-slate-500 mt-1">
+                Submitted September 7, 2026
+              </p>
             </div>
 
-            <div class="space-y-2.5 text-xs">
-              <div class="rounded-sm border border-[#3A3530] border-l-2 border-l-[#E8A33D] bg-[#100D0B] p-3.5">
-                <p class="font-semibold text-[11px] text-[#E8A33D]">Morning Briefing</p>
-                <p class="text-[10px] text-[#9A9086] mt-1 leading-relaxed">Station shift change and equipment check completed at 08:00 AM.</p>
-              </div>
+            <span class="px-4 py-2 rounded-full bg-green-100 text-green-700 text-sm font-bold">
+              Submitted
+            </span>
 
-              <div class="rounded-sm border border-[#3A3530] border-l-2 border-l-[#C1272D] bg-[#100D0B] p-3.5">
-                <p class="font-semibold text-[11px] text-[#E4595E]">Escalation Warning</p>
-                <p class="text-[10px] text-[#9A9086] mt-1 leading-relaxed">Maintenance request #202 waiting for inspector approval.</p>
-              </div>
-
-              <div class="rounded-sm border border-[#3A3530] border-l-2 border-l-[#7BA88A] bg-[#100D0B] p-3.5">
-                <p class="font-semibold text-[11px] text-[#7BA88A]">Safety Clearance</p>
-                <p class="text-[10px] text-[#9A9086] mt-1 leading-relaxed">Quarterly safety seminar training verified and logged in system.</p>
-              </div>
-            </div>
           </div>
 
-        </section>
+        </div>
 
-      </main>
+      </div>
+
     </div>
 
-    <!-- Sign Out Tactical Modal -->
-    <div v-if="showLogoutConfirm" class="fixed inset-0 z-50 flex items-center justify-center bg-[#0A0806]/85 backdrop-blur-md transition-opacity">
-      <div class="w-full max-w-md overflow-hidden rounded-sm border border-[#3A3530] bg-[#181410] shadow-2xl">
-        <div class="h-[5px] w-full" style="background-image: repeating-linear-gradient(135deg, #E8A33D 0 12px, #15120F 12px 24px);"></div>
-        <div class="p-6 space-y-4">
-          <div class="flex items-center gap-3">
-            <div class="flex h-10 w-10 items-center justify-center rounded-xs bg-[#C1272D]/10 border border-[#C1272D]/30 shrink-0">
-              <span v-html="ICONS.siren" class="h-5 w-5 text-[#E4595E]"></span>
+
+    <!-- ================================================= -->
+    <!-- PERSONNEL ROSTER -->
+    <!-- ================================================= -->
+    <div
+      v-else-if="activeTab === 'Personnel Roster'"
+      class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6"
+    >
+
+      <div class="border-b border-slate-200 pb-5">
+
+        <h2 class="text-xl font-bold text-slate-900">
+          Personnel Roster
+        </h2>
+
+        <p class="text-sm text-slate-500 mt-1">
+          View personnel currently assigned to your station
+        </p>
+
+      </div>
+
+      <div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <div
+          v-for="person in roster"
+          :key="person.name"
+          class="p-5 bg-slate-50 border border-slate-200 rounded-xl"
+        >
+
+          <div class="flex items-center gap-4">
+
+            <div
+              class="h-14 w-14 rounded-full bg-[#8B1E23] flex items-center justify-center text-white font-bold text-xs shrink-0"
+            >
+              {{ person.rank }}
             </div>
-            <div>
-              <h3 class="font-display text-lg font-bold text-[#EDE6D6] uppercase tracking-wide">Confirm Sign Out</h3>
-              <p class="text-xs text-[#9A9086] mt-0.5">Are you sure you want to exit the Personnel Portal?</p>
+
+            <div class="flex-1 min-w-0">
+
+              <p class="text-base font-bold text-slate-900 truncate">
+                {{ person.name }}
+              </p>
+
+              <p class="text-sm text-slate-600 mt-1">
+                {{ person.role }}
+              </p>
+
+              <p class="text-sm text-slate-400 mt-1">
+                {{ person.shift }}
+              </p>
+
             </div>
+
+            <span class="px-3 py-1.5 rounded-full bg-green-100 text-green-700 text-xs font-bold">
+              Active
+            </span>
+
           </div>
 
-          <p class="text-xs text-[#9A9086] leading-relaxed bg-[#100D0B] p-3 rounded-xs border border-[#3A3530]">
-            Unsaved changes in active forms or field logs may be lost upon signing out.
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- ACTIVITY MANAGEMENT -->
+    <!-- ================================================= -->
+    <div
+      v-else-if="activeTab === 'Activity Management'"
+      class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6"
+    >
+
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 pb-5">
+
+        <div>
+          <h2 class="text-xl font-bold text-slate-900">
+            Activity Management
+          </h2>
+
+          <p class="text-sm text-slate-500 mt-1">
+            View activities assigned to your station
+          </p>
+        </div>
+
+        <span class="px-4 py-2 rounded-full bg-blue-50 text-blue-700 text-sm font-bold">
+          Station Activities
+        </span>
+
+      </div>
+
+      <div class="mt-5 space-y-4">
+
+        <div class="p-5 rounded-xl border border-slate-200 bg-slate-50">
+
+          <div class="flex items-start gap-4">
+
+            <div class="h-12 w-12 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
+              <span
+                v-html="ICONS.tasks"
+                class="h-6 w-6 text-blue-600"
+              ></span>
+            </div>
+
+            <div class="flex-1">
+
+              <p class="text-base font-bold text-slate-900">
+                Fire Safety Inspection
+              </p>
+
+              <p class="text-sm text-slate-500 mt-1">
+                September 12, 2026 · 09:00 AM
+              </p>
+
+              <p class="text-sm text-slate-500 mt-1">
+                Public Market Complex
+              </p>
+
+            </div>
+
+            <span class="px-3 py-1.5 rounded-full bg-yellow-100 text-yellow-700 text-xs font-bold">
+              Scheduled
+            </span>
+
+          </div>
+
+        </div>
+
+        <div class="p-5 rounded-xl border border-green-200 bg-green-50">
+
+          <div class="flex items-start gap-4">
+
+            <div class="h-12 w-12 rounded-xl bg-green-100 flex items-center justify-center shrink-0">
+              <span
+                v-html="ICONS.check"
+                class="h-6 w-6 text-green-600"
+              ></span>
+            </div>
+
+            <div class="flex-1">
+
+              <p class="text-base font-bold text-slate-900">
+                Routine Safety Patrol
+              </p>
+
+              <p class="text-sm text-slate-500 mt-1">
+                Zone 2 Commercial Area
+              </p>
+
+            </div>
+
+            <span class="px-3 py-1.5 rounded-full bg-green-100 text-green-700 text-xs font-bold">
+              Completed
+            </span>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- DEADLINE MONITOR -->
+    <!-- ================================================= -->
+    <div
+      v-else-if="activeTab === 'Deadline Monitor'"
+      class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6"
+    >
+
+      <div class="border-b border-slate-200 pb-5">
+
+        <h2 class="text-xl font-bold text-slate-900">
+          Deadline Monitor
+        </h2>
+
+        <p class="text-sm text-slate-500 mt-1">
+          Monitor upcoming and overdue report deadlines
+        </p>
+
+      </div>
+
+      <!-- DEADLINE SUMMARY -->
+      <div class="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+        <div class="p-5 rounded-xl bg-red-50 border border-red-200">
+          <p class="text-sm font-semibold text-[#8B1E23]">
+            Overdue
           </p>
 
-          <div class="flex justify-end gap-3 pt-2">
+          <p class="text-3xl font-bold text-slate-900 mt-1">
+            02
+          </p>
+        </div>
+
+        <div class="p-5 rounded-xl bg-yellow-50 border border-yellow-200">
+          <p class="text-sm font-semibold text-yellow-700">
+            Due Today
+          </p>
+
+          <p class="text-3xl font-bold text-slate-900 mt-1">
+            03
+          </p>
+        </div>
+
+        <div class="p-5 rounded-xl bg-blue-50 border border-blue-200">
+          <p class="text-sm font-semibold text-blue-700">
+            This Week
+          </p>
+
+          <p class="text-3xl font-bold text-slate-900 mt-1">
+            06
+          </p>
+        </div>
+
+      </div>
+
+      <!-- DEADLINE LIST -->
+      <div class="mt-6 space-y-4">
+
+        <div class="p-5 rounded-xl border border-red-200 bg-red-50">
+
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+
+            <div>
+              <p class="text-base font-bold text-slate-900">
+                Incident Report
+              </p>
+
+              <p class="text-sm text-slate-500 mt-1">
+                Deadline: September 8, 2026
+              </p>
+            </div>
+
+            <span class="px-4 py-2 rounded-full bg-[#8B1E23] text-white text-sm font-bold">
+              OVERDUE
+            </span>
+
+          </div>
+
+        </div>
+
+        <div class="p-5 rounded-xl border border-yellow-200 bg-yellow-50">
+
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+
+            <div>
+              <p class="text-base font-bold text-slate-900">
+                Fire Safety Inspection Report
+              </p>
+
+              <p class="text-sm text-slate-500 mt-1">
+                Deadline: September 12, 2026
+              </p>
+            </div>
+
+            <span class="px-4 py-2 rounded-full bg-yellow-100 text-yellow-700 text-sm font-bold">
+              3 DAYS LEFT
+            </span>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- NOTIFICATIONS -->
+    <!-- ================================================= -->
+    <div
+      v-else-if="activeTab === 'Notifications'"
+      class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6"
+    >
+
+      <div class="border-b border-slate-200 pb-5">
+
+        <h2 class="text-xl font-bold text-slate-900">
+          Notifications
+        </h2>
+
+        <p class="text-sm text-slate-500 mt-1">
+          Important announcements, reminders, and system alerts
+        </p>
+
+      </div>
+
+      <div class="mt-5 space-y-4">
+
+        <!-- NOTIFICATION 1 -->
+        <div class="p-5 rounded-xl border border-red-200 bg-red-50">
+
+          <div class="flex items-start gap-4">
+
+            <div class="h-11 w-11 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+
+              <span
+                v-html="ICONS.siren"
+                class="h-5 w-5 text-[#8B1E23]"
+              ></span>
+
+            </div>
+
+            <div class="flex-1">
+
+              <p class="text-base font-bold text-slate-900">
+                Report Deadline Reminder
+              </p>
+
+              <p class="text-sm text-slate-600 mt-1">
+                Your Fire Safety Inspection Report is due on September 12, 2026.
+              </p>
+
+              <p class="text-xs text-slate-400 mt-2">
+                10 minutes ago
+              </p>
+
+            </div>
+
+            <span class="h-3 w-3 rounded-full bg-[#8B1E23] shrink-0"></span>
+
+          </div>
+
+        </div>
+
+
+        <!-- NOTIFICATION 2 -->
+        <div class="p-5 rounded-xl border border-blue-200 bg-blue-50">
+
+          <div class="flex items-start gap-4">
+
+            <div class="h-11 w-11 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+
+              <span
+                v-html="ICONS.tasks"
+                class="h-5 w-5 text-blue-600"
+              ></span>
+
+            </div>
+
+            <div class="flex-1">
+
+              <p class="text-base font-bold text-slate-900">
+                New Task Assigned
+              </p>
+
+              <p class="text-sm text-slate-600 mt-1">
+                You have been assigned to the Public Market Fire Safety Inspection.
+              </p>
+
+              <p class="text-xs text-slate-400 mt-2">
+                1 hour ago
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- NOTIFICATION 3 -->
+        <div class="p-5 rounded-xl border border-green-200 bg-green-50">
+
+          <div class="flex items-start gap-4">
+
+            <div class="h-11 w-11 rounded-full bg-green-100 flex items-center justify-center shrink-0">
+
+              <span
+                v-html="ICONS.check"
+                class="h-5 w-5 text-green-600"
+              ></span>
+
+            </div>
+
+            <div class="flex-1">
+
+              <p class="text-base font-bold text-slate-900">
+                Report Accepted
+              </p>
+
+              <p class="text-sm text-slate-600 mt-1">
+                Your Routine Safety Patrol Report has been successfully recorded.
+              </p>
+
+              <p class="text-xs text-slate-400 mt-2">
+                Yesterday
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- OTHER -->
+    <!-- ================================================= -->
+    <div
+      v-else
+      class="bg-white border border-slate-200 rounded-2xl shadow-sm p-10 text-center"
+    >
+
+      <div class="mx-auto h-16 w-16 rounded-full bg-red-50 flex items-center justify-center">
+
+        <span
+          v-html="ICONS[getActiveIcon()]"
+          class="h-8 w-8 text-[#8B1E23]"
+        ></span>
+
+      </div>
+
+      <h2 class="mt-5 text-2xl font-bold text-slate-900">
+        {{ activeTab }}
+      </h2>
+
+      <p class="mt-2 text-base text-slate-500 max-w-lg mx-auto">
+        This section contains personnel information and operational
+        controls related to {{ activeTab }}.
+      </p>
+
+    </div>
+
+  </div>
+
+
+  <!-- =================================================== -->
+  <!-- RIGHT SIDEBAR -->
+  <!-- =================================================== -->
+  <div class="space-y-6">
+
+    <!-- ================================================= -->
+    <!-- QUICK ACTIONS -->
+    <!-- ================================================= -->
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+      <h3 class="text-xl font-bold text-slate-900">
+        Quick Actions
+      </h3>
+
+      <p class="text-sm text-slate-500 mt-1">
+        Frequently used personnel actions
+      </p>
+
+      <div class="mt-5 space-y-3">
+
+        <button
+          @click="activeTab = 'Tasks'"
+          class="w-full flex items-center gap-3 p-4 rounded-xl bg-blue-50 hover:bg-blue-100 text-left transition"
+        >
+
+          <span
+            v-html="ICONS.tasks"
+            class="h-6 w-6 text-blue-600"
+          ></span>
+
+          <div>
+            <p class="text-sm font-bold text-slate-900">
+              View My Tasks
+            </p>
+
+            <p class="text-xs text-slate-500">
+              Check assigned duties
+            </p>
+          </div>
+
+        </button>
+
+
+        <button
+          @click="activeTab = 'Reports'"
+          class="w-full flex items-center gap-3 p-4 rounded-xl bg-yellow-50 hover:bg-yellow-100 text-left transition"
+        >
+
+          <span
+            v-html="ICONS.reports"
+            class="h-6 w-6 text-yellow-600"
+          ></span>
+
+          <div>
+            <p class="text-sm font-bold text-slate-900">
+              My Reports
+            </p>
+
+            <p class="text-xs text-slate-500">
+              Submit pending reports
+            </p>
+          </div>
+
+        </button>
+
+
+        <button
+          @click="activeTab = 'Deadline Monitor'"
+          class="w-full flex items-center gap-3 p-4 rounded-xl bg-red-50 hover:bg-red-100 text-left transition"
+        >
+
+          <span
+            v-html="ICONS.siren"
+            class="h-6 w-6 text-[#8B1E23]"
+          ></span>
+
+          <div>
+            <p class="text-sm font-bold text-slate-900">
+              Check Deadlines
+            </p>
+
+            <p class="text-xs text-slate-500">
+              View urgent deadlines
+            </p>
+          </div>
+
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- STATION UPDATES -->
+    <!-- ================================================= -->
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+      <div class="flex items-center justify-between border-b border-slate-200 pb-5">
+
+        <div>
+          <h3 class="text-xl font-bold text-slate-900">
+            Station Updates
+          </h3>
+
+          <p class="text-sm text-slate-500 mt-1">
+            Recent station information
+          </p>
+        </div>
+
+        <span class="h-3 w-3 rounded-full bg-green-500"></span>
+
+      </div>
+
+
+      <div class="mt-5 space-y-4">
+
+        <div class="p-4 rounded-xl border border-yellow-200 bg-yellow-50">
+
+          <p class="text-sm font-bold text-yellow-800">
+            Morning Briefing
+          </p>
+
+          <p class="text-sm text-slate-600 mt-1">
+            Station shift change and equipment check completed at 08:00 AM.
+          </p>
+
+        </div>
+
+
+        <div class="p-4 rounded-xl border border-red-200 bg-red-50">
+
+          <p class="text-sm font-bold text-[#8B1E23]">
+            Important Reminder
+          </p>
+
+          <p class="text-sm text-slate-600 mt-1">
+            Personnel are reminded to submit pending operational reports.
+          </p>
+
+        </div>
+
+
+        <div class="p-4 rounded-xl border border-green-200 bg-green-50">
+
+          <p class="text-sm font-bold text-green-700">
+            Safety Clearance
+          </p>
+
+          <p class="text-sm text-slate-600 mt-1">
+            Quarterly safety seminar training has been verified.
+          </p>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+      </main>
+
+    </div>
+
+
+    <!-- ========================================================= -->
+    <!-- SIGN OUT MODAL -->
+    <!-- ========================================================= -->
+    <div
+      v-if="showLogoutConfirm"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm px-4"
+    >
+
+      <div
+        class="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden"
+      >
+
+        <!-- TOP ACCENT -->
+        <div class="h-2 bg-[#8B1E23]"></div>
+
+
+        <div class="p-7">
+
+          <div class="flex items-start gap-4">
+
+            <div
+              class="h-14 w-14 rounded-full bg-red-50 flex items-center justify-center shrink-0"
+            >
+
+              <span
+                v-html="ICONS.siren"
+                class="h-7 w-7 text-[#8B1E23]"
+              ></span>
+
+            </div>
+
+            <div>
+
+              <h3 class="text-xl font-bold text-slate-900">
+                Confirm Sign Out
+              </h3>
+
+              <p class="text-base text-slate-500 mt-1">
+                Are you sure you want to exit the Personnel Portal?
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <div
+            class="mt-5 p-4 rounded-xl bg-yellow-50 border border-yellow-200"
+          >
+
+            <p class="text-sm text-slate-600 leading-relaxed">
+              Any unsaved changes in active forms or field logs may be lost
+              when you sign out.
+            </p>
+
+          </div>
+
+
+          <div class="flex flex-col-reverse sm:flex-row justify-end gap-3 mt-7">
+
             <button
               @click="showLogoutConfirm = false"
-              class="rounded-xs border border-[#3A3530] bg-[#211B16] px-4 py-2 text-xs font-bold uppercase tracking-wider text-[#D8CFC3] hover:bg-[#2A231D] transition-colors"
+              class="w-full sm:w-auto px-6 py-3 rounded-xl border border-slate-300 bg-white text-slate-700 text-base font-semibold hover:bg-slate-100 transition"
             >
               Cancel
             </button>
+
             <button
               @click="confirmLogout"
-              class="rounded-xs bg-[#C1272D] px-4 py-2 text-xs font-bold uppercase tracking-wider text-[#EDE6D6] hover:bg-[#A82126] transition-colors shadow-md"
+              class="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#8B1E23] text-white text-base font-semibold hover:bg-[#72181D] transition shadow-sm"
             >
               Sign Out
             </button>
+
           </div>
+
         </div>
+        
       </div>
+
     </div>
 
   </div>

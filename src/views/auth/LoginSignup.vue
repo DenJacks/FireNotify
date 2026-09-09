@@ -1,214 +1,752 @@
 <template>
-  <div class="min-h-screen w-full bg-[#15120F] flex items-center justify-center p-4 sm:p-6 lg:p-8 relative overflow-hidden font-body">
-    <!-- Ambient glow elements -->
-    <div class="absolute top-1/3 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[28rem] h-[28rem] bg-[#C1272D]/10 rounded-full blur-[100px] pointer-events-none"></div>
-    <div class="absolute bottom-0 right-0 w-96 h-96 bg-[#E8A33D]/[0.06] rounded-full blur-[100px] pointer-events-none"></div>
+  <div
+    class="min-h-screen w-full bg-slate-100 flex items-center justify-center p-4 sm:p-6 lg:p-10 font-sans"
+  >
 
-    <div class="relative z-10 w-full max-w-5xl overflow-hidden rounded-2xl border border-[#3A3530] bg-[#1B1815] shadow-[0_30px_90px_rgba(0,0,0,0.65)]">
+    <!-- MAIN CARD -->
+    <div
+      class="w-full max-w-6xl bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200"
+    >
 
-      <!-- Hazard-stripe header motif -->
-      <div class="h-[7px] w-full" style="background-image: repeating-linear-gradient(135deg, #E8A33D 0 14px, #15120F 14px 28px);"></div>
+      <!-- TOP HEADER -->
+      <div class="bg-[#8B1E23] text-white px-6 sm:px-8 py-5">
+        <div class="flex items-center gap-4">
 
-      <div class="grid lg:grid-cols-[1.05fr_0.95fr]">
+          <!-- FIRE ICON -->
+          <div
+            class="w-14 h-14 rounded-xl bg-white flex items-center justify-center shadow-md flex-shrink-0"
+          >
+            <svg
+              class="w-8 h-8 text-[#8B1E23]"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path
+                d="M13.5 2.5c.3 3.2-1.5 5.1-3.1 7-1.3 1.5-2.5 3-2.5 5.3
+                0 1.8.8 3.4 2.1 4.5-.1-.4-.2-.9-.2-1.4
+                0-1.7 1-3.1 2.5-4.2.7-.5 1.5-1.1 2.1-2
+                .5 1.1.8 2.2.8 3.4 0 1.7-.7 3.2-1.8 4.3
+                3.2-.9 5.6-3.8 5.6-7.3 0-4.3-3.2-7.5-5.5-9.6z"
+              />
+            </svg>
+          </div>
 
-        <!-- LEFT: Station Plaque / Readout -->
-        <div class="hidden lg:flex flex-col justify-between bg-[#181410] p-9 xl:p-11 border-r border-[#3A3530]/70 relative">
           <div>
-            <div class="inline-flex items-center gap-2.5 px-3 py-1.5 rounded-sm border border-[#E8A33D]/25 bg-[#E8A33D]/[0.06]">
-              <span class="relative flex h-1.5 w-1.5">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#E8A33D]/60"></span>
-                <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#E8A33D]"></span>
+            <h1 class="text-2xl sm:text-3xl font-bold tracking-wide">
+              FIRE<span class="text-[#F5C542]">NOTIFY</span>
+            </h1>
+
+            <p class="text-sm sm:text-base text-white/90 mt-1">
+              Bureau of Fire Protection
+            </p>
+          </div>
+
+        </div>
+      </div>
+
+
+      <!-- CONTENT -->
+      <div class="grid lg:grid-cols-[0.9fr_1.1fr]">
+
+        <!-- LEFT INFORMATION PANEL -->
+        <div
+          class="hidden lg:flex bg-slate-50 border-r border-slate-200 p-10 flex-col justify-between"
+        >
+
+          <div>
+
+            <div
+              class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-red-50 border border-red-200 text-[#8B1E23]"
+            >
+              <span
+                class="w-3 h-3 rounded-full bg-green-500"
+              ></span>
+
+              <span class="text-sm font-semibold">
+                Secure Personnel Portal
               </span>
-              <span class="font-mono text-[10px] font-medium uppercase tracking-[0.28em] text-[#E8A33D]/90">Secure Access Portal</span>
             </div>
 
-            <!-- Emblem + Branding -->
-            <div class="mt-9 flex items-center gap-4">
-              <svg viewBox="0 0 64 64" class="h-16 w-16 shrink-0" fill="none">
-                <path d="M32 4 L58 13 V29 C58 45 47 55 32 60 C17 55 6 45 6 29 V13 Z"
-                      stroke="#C9A227" stroke-width="1.6" fill="#15120F"/>
-                <path d="M32 4 L58 13 V29 C58 45 47 55 32 60 C17 55 6 45 6 29 V13 Z"
-                      stroke="#C9A227" stroke-width="1.6" fill="none" opacity="0.5" transform="scale(0.92) translate(2.8 2.8)"/>
-                <path d="M32 20c-4.5 4.5-7 8.2-7 12.2 0 4.4 3.3 7.8 7.4 7.8 4.5 0 7.9-3.2 7.9-7.5 0-2.2-.9-3.9-2.3-5.6.1 1.7-.5 2.9-1.6 3.7.3-2.9-.7-6.4-4.4-10.6Z"
-                      fill="#C9A227" opacity="0.9"/>
-              </svg>
-              <div>
-                <h1 class="font-display text-[28px] leading-none font-semibold tracking-[0.14em] text-[#EDE6D6]">FIRE<span class="text-[#C1272D]">NOTIFY</span></h1>
-                <p class="mt-2 font-mono text-[10px] uppercase tracking-[0.2em] text-[#9A9086]">Bureau of Fire Protection</p>
+
+            <h2
+              class="mt-8 text-3xl font-bold text-slate-800 leading-tight"
+            >
+              Operations Compliance
+              <br />
+              Monitoring System
+            </h2>
+
+
+            <p
+              class="mt-5 text-lg leading-8 text-slate-600"
+            >
+              FireNotify helps BFP personnel manage assigned
+              activities, reports, deadlines, and operational
+              compliance in one place.
+            </p>
+
+
+            <!-- FEATURES -->
+            <div class="mt-8 space-y-5">
+
+              <div class="flex items-start gap-4">
+
+                <div
+                  class="w-11 h-11 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0"
+                >
+                  <svg
+                    class="w-6 h-6 text-[#8B1E23]"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 12l2 2 4-4"
+                    />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 3l7 4v5c0 4.5-3 7.8-7 9-4-1.2-7-4.5-7-9V7l7-4z"
+                    />
+                  </svg>
+                </div>
+
+                <div>
+                  <h3 class="font-bold text-lg text-slate-800">
+                    Track Compliance
+                  </h3>
+
+                  <p class="text-base text-slate-600 mt-1">
+                    Monitor assigned activities and report submissions.
+                  </p>
+                </div>
+
               </div>
+
+
+              <div class="flex items-start gap-4">
+
+                <div
+                  class="w-11 h-11 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0"
+                >
+                  <svg
+                    class="w-6 h-6 text-amber-700"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M15 17h5l-1.5-1.5V11a6.5 6.5 0 00-13 0v4.5L4 17h5"
+                    />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M10 21h4"
+                    />
+                  </svg>
+                </div>
+
+                <div>
+                  <h3 class="font-bold text-lg text-slate-800">
+                    Receive Notifications
+                  </h3>
+
+                  <p class="text-base text-slate-600 mt-1">
+                    Stay informed about deadlines and assigned tasks.
+                  </p>
+                </div>
+
+              </div>
+
+
+              <div class="flex items-start gap-4">
+
+                <div
+                  class="w-11 h-11 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0"
+                >
+                  <svg
+                    class="w-6 h-6 text-green-700"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 17v-2a4 4 0 014-4h6"
+                    />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M15 7h6v6"
+                    />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M3 5h6v6"
+                    />
+                  </svg>
+                </div>
+
+                <div>
+                  <h3 class="font-bold text-lg text-slate-800">
+                    View Reports
+                  </h3>
+
+                  <p class="text-base text-slate-600 mt-1">
+                    Access accomplishment and compliance reports.
+                  </p>
+                </div>
+
+              </div>
+
             </div>
 
-            <p class="mt-5 max-w-sm text-sm leading-6 text-[#B5ACA1]">Compliance monitoring, incident reporting, and field operations — built for BFP personnel.</p>
           </div>
 
-          <!-- Dispatch-board readout -->
-          <div class="rounded-lg border border-[#3A3530] bg-[#100D0B] px-5 py-4">
+
+          <!-- STATUS -->
+          <div
+            class="mt-10 bg-white rounded-xl border border-slate-200 p-5"
+          >
+
             <div class="flex items-center justify-between">
-              <p class="font-mono text-[9px] uppercase tracking-[0.3em] text-[#6E645A]">Station Readout</p>
-              <span class="font-mono text-[9px] uppercase tracking-[0.25em] text-[#7BA88A]">● Online</span>
+
+              <span class="text-base font-semibold text-slate-700">
+                System Status
+              </span>
+
+              <span
+                class="flex items-center gap-2 text-green-700 font-semibold"
+              >
+                <span class="w-3 h-3 rounded-full bg-green-500"></span>
+                Online
+              </span>
+
             </div>
-            <div class="mt-3.5 grid grid-cols-3 divide-x divide-[#3A3530]">
-              <div class="px-1 text-center first:pl-0">
-                <div class="font-mono text-2xl font-medium text-[#E8A33D] [text-shadow:0_0_12px_rgba(232,163,61,0.35)]">48</div>
-                <div class="mt-1 font-mono text-[8px] uppercase tracking-[0.2em] text-[#7A6F63]">On Duty</div>
+
+            <div
+              class="grid grid-cols-3 mt-5 divide-x divide-slate-200"
+            >
+
+              <div class="text-center px-2">
+                <p class="text-2xl font-bold text-[#8B1E23]">
+                  48
+                </p>
+
+                <p class="text-sm text-slate-500 mt-1">
+                  On Duty
+                </p>
               </div>
-              <div class="px-1 text-center">
-                <div class="font-mono text-2xl font-medium text-[#E8A33D] [text-shadow:0_0_12px_rgba(232,163,61,0.35)]">12</div>
-                <div class="mt-1 font-mono text-[8px] uppercase tracking-[0.2em] text-[#7A6F63]">Reports</div>
+
+              <div class="text-center px-2">
+                <p class="text-2xl font-bold text-[#8B1E23]">
+                  12
+                </p>
+
+                <p class="text-sm text-slate-500 mt-1">
+                  Reports
+                </p>
               </div>
-              <div class="px-1 text-center last:pr-0">
-                <div class="font-mono text-2xl font-medium text-[#E8A33D] [text-shadow:0_0_12px_rgba(232,163,61,0.35)]">94.5%</div>
-                <div class="mt-1 font-mono text-[8px] uppercase tracking-[0.2em] text-[#7A6F63]">Readiness</div>
+
+              <div class="text-center px-2">
+                <p class="text-2xl font-bold text-[#8B1E23]">
+                  94.5%
+                </p>
+
+                <p class="text-sm text-slate-500 mt-1">
+                  Readiness
+                </p>
               </div>
+
             </div>
+
           </div>
+
         </div>
 
-        <!-- RIGHT: Form panel -->
-        <div class="bg-[#1B1815] p-6 sm:p-8 lg:p-10">
-          <div class="mb-7">
-            <p class="font-mono text-[10px] uppercase tracking-[0.3em] text-[#7A6F63]">Personnel Access</p>
-            <h2 class="mt-2 font-display text-2xl font-semibold tracking-wide text-[#EDE6D6]">{{ isLogin ? 'Welcome back' : 'Create account' }}</h2>
+
+        <!-- RIGHT FORM PANEL -->
+        <div class="p-6 sm:p-8 lg:p-12">
+
+          <!-- TITLE -->
+          <div class="mb-8">
+
+            <p
+              class="text-sm font-semibold text-[#8B1E23] uppercase tracking-wide"
+            >
+              Personnel Access
+            </p>
+
+            <h2
+              class="mt-2 text-3xl font-bold text-slate-800"
+            >
+              {{ isLogin ? 'Welcome Back' : 'Create Your Account' }}
+            </h2>
+
+            <p class="mt-2 text-base text-slate-600">
+              {{
+                isLogin
+                  ? 'Sign in to access your FireNotify account.'
+                  : 'Register your BFP personnel account.'
+              }}
+            </p>
+
           </div>
 
-          <!-- Sliding tab buttons -->
-          <div class="mb-7 flex gap-6 border-b border-[#3A3530]">
+
+          <!-- TABS -->
+          <div
+            class="grid grid-cols-2 border-b-2 border-slate-200 mb-8"
+          >
+
             <button
               @click="switchToLogin"
               type="button"
-              class="relative pb-3 font-mono text-xs font-medium uppercase tracking-[0.2em] transition-colors duration-200"
-              :class="isLogin ? 'text-[#EDE6D6]' : 'text-[#6E645A] hover:text-[#9A9086]'"
+              class="py-4 text-base sm:text-lg font-bold transition-colors"
+              :class="
+                isLogin
+                  ? 'text-[#8B1E23] border-b-4 border-[#8B1E23] -mb-[2px]'
+                  : 'text-slate-500 hover:text-slate-700'
+              "
             >
               Sign In
-              <span class="absolute -bottom-px left-0 h-[2px] bg-[#C1272D] transition-all duration-300" :class="isLogin ? 'w-full' : 'w-0'"></span>
             </button>
+
+
             <button
               @click="switchToRegister"
               type="button"
-              class="relative pb-3 font-mono text-xs font-medium uppercase tracking-[0.2em] transition-colors duration-200"
-              :class="!isLogin ? 'text-[#EDE6D6]' : 'text-[#6E645A] hover:text-[#9A9086]'"
+              class="py-4 text-base sm:text-lg font-bold transition-colors"
+              :class="
+                !isLogin
+                  ? 'text-[#8B1E23] border-b-4 border-[#8B1E23] -mb-[2px]'
+                  : 'text-slate-500 hover:text-slate-700'
+              "
             >
               Register
-              <span class="absolute -bottom-px left-0 h-[2px] bg-[#C1272D] transition-all duration-300" :class="!isLogin ? 'w-full' : 'w-0'"></span>
             </button>
+
           </div>
 
-          <!-- Status Banners -->
-          <div v-if="errorMessage" class="mb-5 flex items-center gap-2.5 rounded-md border border-[#C1272D]/30 bg-[#C1272D]/[0.08] px-3.5 py-2.5">
-            <svg class="h-3.5 w-3.5 shrink-0 text-[#E4595E]" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-11a.75.75 0 00-1.5 0v4a.75.75 0 001.5 0V7zm-.75 6.25a.875.875 0 100 1.75.875.875 0 000-1.75z" clip-rule="evenodd"/></svg>
-            <span class="text-xs text-[#E4959A]">{{ errorMessage }}</span>
+
+          <!-- ERROR MESSAGE -->
+          <div
+            v-if="errorMessage"
+            class="mb-6 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-4"
+          >
+
+            <svg
+              class="w-6 h-6 text-red-600 flex-shrink-0"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 14a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z"
+                clip-rule="evenodd"
+              />
+            </svg>
+
+            <span class="text-base font-medium text-red-700">
+              {{ errorMessage }}
+            </span>
+
           </div>
 
-          <div v-else-if="successMessage" class="mb-5 flex items-center gap-2.5 rounded-md border border-[#7BA88A]/30 bg-[#7BA88A]/[0.08] px-3.5 py-2.5">
-            <svg class="h-3.5 w-3.5 shrink-0 text-[#7BA88A]" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.7 5.3a1 1 0 010 1.4l-7.5 7.5a1 1 0 01-1.4 0l-3.5-3.5a1 1 0 111.4-1.4l2.8 2.8 6.8-6.8a1 1 0 011.4 0z" clip-rule="evenodd"/></svg>
-            <span class="text-xs text-[#A9CBB4]">{{ successMessage }}</span>
+
+          <!-- SUCCESS MESSAGE -->
+          <div
+            v-else-if="successMessage"
+            class="mb-6 flex items-start gap-3 rounded-lg border border-green-200 bg-green-50 px-4 py-4"
+          >
+
+            <svg
+              class="w-6 h-6 text-green-600 flex-shrink-0"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M12 2a10 10 0 100 20 10 10 0 000-20zm5 7l-6 6-3-3 1.4-1.4L11 12.2l4.6-4.6L17 9z"
+                clip-rule="evenodd"
+              />
+            </svg>
+
+            <span class="text-base font-medium text-green-700">
+              {{ successMessage }}
+            </span>
+
           </div>
 
+
+          <!-- ========================= -->
           <!-- LOGIN FORM -->
-          <form v-if="isLogin" @submit.prevent="handleLogin" class="space-y-5">
+          <!-- ========================= -->
+
+          <form
+            v-if="isLogin"
+            @submit.prevent="handleLogin"
+            class="space-y-6"
+          >
+
+            <!-- EMAIL -->
             <div>
-              <label class="mb-2 block font-mono text-[10px] font-medium uppercase tracking-[0.22em] text-[#9A9086]">BFP Email Address</label>
+
+              <label
+                class="mb-2 block text-base font-semibold text-slate-700"
+              >
+                BFP Email Address
+              </label>
+
               <input
                 v-model="loginForm.identifier"
                 type="email"
                 required
-                placeholder="bfp.officer@bfp.gov.ph"
-                class="w-full rounded-md border border-[#3A3530] bg-[#100D0B] px-4 py-3 text-sm text-[#EDE6D6] placeholder:text-[#5A5148] focus:border-[#E8A33D]/60 focus:outline-none focus:ring-1 focus:ring-[#E8A33D]/30 transition-all"
+                placeholder="Enter your BFP email"
+                class="w-full h-14 rounded-lg border-2 border-slate-300 bg-white px-4 text-base text-slate-800 placeholder:text-slate-400 focus:border-[#8B1E23] focus:outline-none focus:ring-4 focus:ring-red-100 transition"
               />
+
             </div>
 
+
+            <!-- PASSWORD -->
             <div>
+
               <div class="mb-2 flex items-center justify-between">
-                <label class="font-mono text-[10px] font-medium uppercase tracking-[0.22em] text-[#9A9086]">Password</label>
-                <button type="button" class="text-[11px] text-[#7A6F63] transition-colors hover:text-[#E8A33D]">Forgot?</button>
+
+                <label
+                  class="text-base font-semibold text-slate-700"
+                >
+                  Password
+                </label>
+
+                <button
+                  type="button"
+                  class="text-base font-semibold text-[#8B1E23] hover:underline"
+                >
+                  Forgot Password?
+                </button>
+
               </div>
+
+
               <div class="relative">
+
                 <input
                   v-model="loginForm.password"
                   :type="showLoginPassword ? 'text' : 'password'"
                   required
-                  placeholder="••••••••"
-                  class="w-full rounded-md border border-[#3A3530] bg-[#100D0B] px-4 py-3 pr-12 text-sm text-[#EDE6D6] placeholder:text-[#5A5148] focus:border-[#E8A33D]/60 focus:outline-none focus:ring-1 focus:ring-[#E8A33D]/30 transition-all"
+                  placeholder="Enter your password"
+                  class="w-full h-14 rounded-lg border-2 border-slate-300 bg-white px-4 pr-20 text-base text-slate-800 placeholder:text-slate-400 focus:border-[#8B1E23] focus:outline-none focus:ring-4 focus:ring-red-100 transition"
                 />
-                <button type="button" @click="showLoginPassword = !showLoginPassword" class="absolute right-3.5 top-1/2 -translate-y-1/2 font-mono text-[10px] uppercase tracking-wide text-[#7A6F63] hover:text-[#B5ACA1]">
+
+                <button
+                  type="button"
+                  @click="showLoginPassword = !showLoginPassword"
+                  class="absolute right-4 top-1/2 -translate-y-1/2 text-base font-semibold text-[#8B1E23] hover:underline"
+                >
                   {{ showLoginPassword ? 'Hide' : 'Show' }}
                 </button>
+
               </div>
+
             </div>
 
-            <label class="flex items-center gap-2.5 text-sm text-[#B5ACA1] cursor-pointer">
-              <input id="remember-me" v-model="loginForm.remember" type="checkbox" class="h-3.5 w-3.5 rounded-sm border-[#3A3530] bg-[#100D0B] text-[#C1272D] focus:ring-[#E8A33D]/40 focus:ring-offset-0" />
-              Keep me logged in
+
+            <!-- REMEMBER -->
+            <label
+              class="flex items-center gap-3 cursor-pointer text-base text-slate-700"
+            >
+
+              <input
+                id="remember-me"
+                v-model="loginForm.remember"
+                type="checkbox"
+                class="w-5 h-5 rounded border-slate-300 text-[#8B1E23] focus:ring-[#8B1E23]"
+              />
+
+              <span>
+                Keep me logged in
+              </span>
+
             </label>
 
-            <button type="submit" class="flex w-full items-center justify-center gap-2.5 rounded-md bg-[#C1272D] px-4 py-3 text-sm font-semibold tracking-wide text-[#EDE6D6] shadow-[0_10px_30px_rgba(193,39,45,0.25)] transition-colors duration-200 hover:bg-[#A82126] focus:outline-none focus:ring-1 focus:ring-[#E8A33D]/50">
-              <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4.5" y="9" width="11" height="8" rx="1.2"/><path d="M7 9V6.5a3 3 0 016 0V9"/></svg>
+
+            <!-- LOGIN BUTTON -->
+            <button
+              type="submit"
+              class="w-full h-14 rounded-lg bg-[#8B1E23] text-white text-lg font-bold flex items-center justify-center gap-3 hover:bg-[#71181D] focus:outline-none focus:ring-4 focus:ring-red-200 transition shadow-md"
+            >
+
+              <svg
+                class="w-6 h-6"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <rect
+                  x="4"
+                  y="10"
+                  width="16"
+                  height="11"
+                  rx="2"
+                />
+
+                <path
+                  d="M8 10V7a4 4 0 018 0v3"
+                />
+              </svg>
+
               Sign In
+
             </button>
+
           </form>
 
-          <!-- SIGNUP FORM -->
-          <form v-else @submit.prevent="handleSignup" class="space-y-3.5">
-            <div class="grid grid-cols-2 gap-3">
+
+          <!-- ========================= -->
+          <!-- REGISTER FORM -->
+          <!-- ========================= -->
+
+          <form
+            v-else
+            @submit.prevent="handleSignup"
+            class="space-y-5"
+          >
+
+            <!-- FIRST / LAST NAME -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+
               <div>
-                <label class="mb-1.5 block font-mono text-[10px] font-medium uppercase tracking-[0.22em] text-[#9A9086]">First Name</label>
-                <input v-model="signupForm.firstName" type="text" placeholder="Juan" class="w-full rounded-md border border-[#3A3530] bg-[#100D0B] px-3.5 py-2 text-sm text-[#EDE6D6] placeholder:text-[#5A5148] focus:border-[#E8A33D]/60 focus:outline-none focus:ring-1 focus:ring-[#E8A33D]/30 transition-all" />
+
+                <label
+                  class="mb-2 block text-base font-semibold text-slate-700"
+                >
+                  First Name
+                </label>
+
+                <input
+                  v-model="signupForm.firstName"
+                  type="text"
+                  placeholder="Enter first name"
+                  class="w-full h-14 rounded-lg border-2 border-slate-300 px-4 text-base text-slate-800 placeholder:text-slate-400 focus:border-[#8B1E23] focus:outline-none focus:ring-4 focus:ring-red-100 transition"
+                />
+
               </div>
+
+
               <div>
-                <label class="mb-1.5 block font-mono text-[10px] font-medium uppercase tracking-[0.22em] text-[#9A9086]">Last Name</label>
-                <input v-model="signupForm.lastName" type="text" placeholder="Dela Cruz" class="w-full rounded-md border border-[#3A3530] bg-[#100D0B] px-3.5 py-2 text-sm text-[#EDE6D6] placeholder:text-[#5A5148] focus:border-[#E8A33D]/60 focus:outline-none focus:ring-1 focus:ring-[#E8A33D]/30 transition-all" />
+
+                <label
+                  class="mb-2 block text-base font-semibold text-slate-700"
+                >
+                  Last Name
+                </label>
+
+                <input
+                  v-model="signupForm.lastName"
+                  type="text"
+                  placeholder="Enter last name"
+                  class="w-full h-14 rounded-lg border-2 border-slate-300 px-4 text-base text-slate-800 placeholder:text-slate-400 focus:border-[#8B1E23] focus:outline-none focus:ring-4 focus:ring-red-100 transition"
+                />
+
               </div>
+
             </div>
 
+
+            <!-- EMAIL -->
             <div>
-              <label class="mb-1.5 block font-mono text-[10px] font-medium uppercase tracking-[0.22em] text-[#9A9086]">BFP Email Address</label>
-              <input v-model="signupForm.email" type="email" placeholder="officer@bfp.gov.ph" class="w-full rounded-md border border-[#3A3530] bg-[#100D0B] px-3.5 py-2 text-sm text-[#EDE6D6] placeholder:text-[#5A5148] focus:border-[#E8A33D]/60 focus:outline-none focus:ring-1 focus:ring-[#E8A33D]/30 transition-all" />
+
+              <label
+                class="mb-2 block text-base font-semibold text-slate-700"
+              >
+                BFP Email Address
+              </label>
+
+              <input
+                v-model="signupForm.email"
+                type="email"
+                placeholder="officer@bfp.gov.ph"
+                class="w-full h-14 rounded-lg border-2 border-slate-300 px-4 text-base text-slate-800 placeholder:text-slate-400 focus:border-[#8B1E23] focus:outline-none focus:ring-4 focus:ring-red-100 transition"
+              />
+
             </div>
 
-            <div class="grid grid-cols-2 gap-3">
+
+            <!-- BADGE / STATION -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+
               <div>
-                <label class="mb-1.5 block font-mono text-[10px] font-medium uppercase tracking-[0.22em] text-[#9A9086]">Badge Number</label>
-                <input v-model="signupForm.badgeNumber" type="text" placeholder="BFP-2026-XXXX" class="w-full rounded-md border border-[#3A3530] bg-[#100D0B] px-3.5 py-2 text-sm text-[#EDE6D6] placeholder:text-[#5A5148] focus:border-[#E8A33D]/60 focus:outline-none focus:ring-1 focus:ring-[#E8A33D]/30 transition-all" />
+
+                <label
+                  class="mb-2 block text-base font-semibold text-slate-700"
+                >
+                  Badge Number
+                </label>
+
+                <input
+                  v-model="signupForm.badgeNumber"
+                  type="text"
+                  placeholder="BFP-2026-XXXX"
+                  class="w-full h-14 rounded-lg border-2 border-slate-300 px-4 text-base text-slate-800 placeholder:text-slate-400 focus:border-[#8B1E23] focus:outline-none focus:ring-4 focus:ring-red-100 transition"
+                />
+
               </div>
+
+
               <div>
-                <label class="mb-1.5 block font-mono text-[10px] font-medium uppercase tracking-[0.22em] text-[#9A9086]">Station / Unit</label>
-                <select v-model="signupForm.station" class="w-full rounded-md border border-[#3A3530] bg-[#100D0B] px-3 py-2 text-sm text-[#EDE6D6] focus:border-[#E8A33D]/60 focus:outline-none focus:ring-1 focus:ring-[#E8A33D]/30 transition-all">
-                  <option value="" disabled selected>Select Station</option>
-                  <option value="Central Station">Central Station</option>
-                  <option value="Sub-Station 1">Sub-Station 1</option>
-                  <option value="Sub-Station 2">Sub-Station 2</option>
-                  <option value="HQ District">HQ District</option>
+
+                <label
+                  class="mb-2 block text-base font-semibold text-slate-700"
+                >
+                  Station / Unit
+                </label>
+
+                <select
+                  v-model="signupForm.station"
+                  class="w-full h-14 rounded-lg border-2 border-slate-300 bg-white px-4 text-base text-slate-800 focus:border-[#8B1E23] focus:outline-none focus:ring-4 focus:ring-red-100 transition"
+                >
+
+                  <option value="" disabled>
+                    Select Station
+                  </option>
+
+                  <option value="Central Station">
+                    Central Station
+                  </option>
+
+                  <option value="Sub-Station 1">
+                    Sub-Station 1
+                  </option>
+
+                  <option value="Sub-Station 2">
+                    Sub-Station 2
+                  </option>
+
+                  <option value="HQ District">
+                    HQ District
+                  </option>
+
                 </select>
+
               </div>
+
             </div>
 
-            <div class="grid grid-cols-2 gap-3">
+
+            <!-- PASSWORD -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+
               <div>
-                <label class="mb-1.5 block font-mono text-[10px] font-medium uppercase tracking-[0.22em] text-[#9A9086]">Password</label>
+
+                <label
+                  class="mb-2 block text-base font-semibold text-slate-700"
+                >
+                  Password
+                </label>
+
                 <div class="relative">
-                  <input v-model="signupForm.password" :type="showSignupPassword ? 'text' : 'password'" placeholder="••••••••" class="w-full rounded-md border border-[#3A3530] bg-[#100D0B] px-3.5 py-2 pr-10 text-sm text-[#EDE6D6] placeholder:text-[#5A5148] focus:border-[#E8A33D]/60 focus:outline-none focus:ring-1 focus:ring-[#E8A33D]/30 transition-all" />
-                  <button type="button" @click="showSignupPassword = !showSignupPassword" class="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-[10px] uppercase tracking-wide text-[#7A6F63] hover:text-[#B5ACA1]">
+
+                  <input
+                    v-model="signupForm.password"
+                    :type="showSignupPassword ? 'text' : 'password'"
+                    placeholder="Enter password"
+                    class="w-full h-14 rounded-lg border-2 border-slate-300 px-4 pr-20 text-base text-slate-800 placeholder:text-slate-400 focus:border-[#8B1E23] focus:outline-none focus:ring-4 focus:ring-red-100 transition"
+                  />
+
+                  <button
+                    type="button"
+                    @click="showSignupPassword = !showSignupPassword"
+                    class="absolute right-4 top-1/2 -translate-y-1/2 text-base font-semibold text-[#8B1E23] hover:underline"
+                  >
                     {{ showSignupPassword ? 'Hide' : 'Show' }}
                   </button>
+
                 </div>
+
               </div>
+
 
               <div>
-                <label class="mb-1.5 block font-mono text-[10px] font-medium uppercase tracking-[0.22em] text-[#9A9086]">Confirm</label>
-                <input v-model="signupForm.confirmPassword" :type="showSignupPassword ? 'text' : 'password'" placeholder="Re-enter" class="w-full rounded-md border border-[#3A3530] bg-[#100D0B] px-3.5 py-2 text-sm text-[#EDE6D6] placeholder:text-[#5A5148] focus:border-[#E8A33D]/60 focus:outline-none focus:ring-1 focus:ring-[#E8A33D]/30 transition-all" />
+
+                <label
+                  class="mb-2 block text-base font-semibold text-slate-700"
+                >
+                  Confirm Password
+                </label>
+
+                <input
+                  v-model="signupForm.confirmPassword"
+                  :type="showSignupPassword ? 'text' : 'password'"
+                  placeholder="Re-enter password"
+                  class="w-full h-14 rounded-lg border-2 border-slate-300 px-4 text-base text-slate-800 placeholder:text-slate-400 focus:border-[#8B1E23] focus:outline-none focus:ring-4 focus:ring-red-100 transition"
+                />
+
               </div>
+
             </div>
 
-            <button type="submit" class="mt-3 flex w-full items-center justify-center gap-2.5 rounded-md bg-[#C1272D] px-4 py-3 text-sm font-semibold tracking-wide text-[#EDE6D6] shadow-[0_10px_30px_rgba(193,39,45,0.25)] transition-colors duration-200 hover:bg-[#A82126] focus:outline-none focus:ring-1 focus:ring-[#E8A33D]/50">
-              <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 10.5l4 4 8-9"/></svg>
+
+            <!-- REGISTER BUTTON -->
+            <button
+              type="submit"
+              class="mt-4 w-full h-14 rounded-lg bg-[#8B1E23] text-white text-lg font-bold flex items-center justify-center gap-3 hover:bg-[#71181D] focus:outline-none focus:ring-4 focus:ring-red-200 transition shadow-md"
+            >
+
+              <svg
+                class="w-6 h-6"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M12 5v14" />
+                <path d="M5 12h14" />
+              </svg>
+
               Create Account
+
             </button>
+
           </form>
 
-          <p class="mt-6 text-center font-mono text-[10px] uppercase tracking-[0.18em] text-[#5A5148]">Official Operations Compliance Monitoring Portal</p>
+
+          <!-- FOOTER -->
+          <div
+            class="mt-8 pt-5 border-t border-slate-200 text-center"
+          >
+
+            <p class="text-sm text-slate-500">
+              FireNotify — Official Operations Compliance
+              Monitoring Portal
+            </p>
+
+            <p class="text-sm text-slate-400 mt-1">
+              Bureau of Fire Protection
+            </p>
+
+          </div>
+
         </div>
+
       </div>
+
     </div>
+
   </div>
 </template>
 
