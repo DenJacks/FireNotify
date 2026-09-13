@@ -1,0 +1,45 @@
+<template>
+  <div class="w-full min-w-0 space-y-6">
+    <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div><h2 class="text-2xl font-bold text-slate-900">Notifications</h2><p class="text-sm text-slate-500 mt-1">Important announcements, reminders, and system alerts</p></div>
+        <button class="px-5 py-3 rounded-xl bg-[#8B1E23] text-white font-semibold hover:bg-[#72181D] transition">Mark All as Read</button>
+      </div>
+    </section>
+
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm"><div class="flex items-center justify-between"><div><p class="text-sm text-slate-500">Unread</p><p class="text-3xl font-bold text-[#8B1E23] mt-1">03</p></div><div class="h-11 w-11 rounded-full bg-red-100 flex items-center justify-center"><span v-html="ICONS.siren" class="h-5 w-5 text-[#8B1E23]"></span></div></div></div>
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm"><div class="flex items-center justify-between"><div><p class="text-sm text-slate-500">Task Alerts</p><p class="text-3xl font-bold text-slate-900 mt-1">02</p></div><div class="h-11 w-11 rounded-full bg-blue-100 flex items-center justify-center"><span v-html="ICONS.tasks" class="h-5 w-5 text-blue-600"></span></div></div></div>
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm"><div class="flex items-center justify-between"><div><p class="text-sm text-slate-500">Report Alerts</p><p class="text-3xl font-bold text-slate-900 mt-1">04</p></div><div class="h-11 w-11 rounded-full bg-amber-100 flex items-center justify-center"><span v-html="ICONS.reports" class="h-5 w-5 text-amber-600"></span></div></div></div>
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm"><div class="flex items-center justify-between"><div><p class="text-sm text-slate-500">System Alerts</p><p class="text-3xl font-bold text-slate-900 mt-1">01</p></div><div class="h-11 w-11 rounded-full bg-green-100 flex items-center justify-center"><span v-html="ICONS.check" class="h-5 w-5 text-green-600"></span></div></div></div>
+    </section>
+
+    <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+      <div class="flex flex-col lg:flex-row gap-4"><div class="flex-1"><label class="text-sm font-semibold text-slate-700">Notification Type</label><select class="w-full mt-2 px-4 py-3 rounded-xl border border-slate-300 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#8B1E23]"><option>All Notifications</option><option>Task Alerts</option><option>Report Alerts</option><option>Activity Reminders</option><option>System Alerts</option></select></div><div class="flex-1"><label class="text-sm font-semibold text-slate-700">Status</label><select class="w-full mt-2 px-4 py-3 rounded-xl border border-slate-300 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#8B1E23]"><option>All</option><option>Unread</option><option>Read</option></select></div></div>
+    </section>
+
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="lg:col-span-2 space-y-4">
+        <div class="p-5 rounded-2xl border border-red-200 bg-red-50 shadow-sm"><div class="flex items-start gap-4"><div class="h-12 w-12 rounded-full bg-red-100 flex items-center justify-center shrink-0"><span v-html="ICONS.siren" class="h-6 w-6 text-[#8B1E23]"></span></div><div class="flex-1"><div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"><p class="text-base font-bold text-slate-900">Report Deadline Reminder</p><span class="text-xs font-semibold text-[#8B1E23]">UNREAD</span></div><p class="text-sm text-slate-600 mt-1">Your Fire Safety Inspection Report is due on September 12, 2026.</p><div class="flex items-center gap-2 mt-3"><span class="text-xs text-slate-400">10 minutes ago</span><span class="h-1 w-1 rounded-full bg-slate-300"></span><span class="text-xs font-medium text-red-600">Urgent</span></div></div><span class="h-3 w-3 rounded-full bg-[#8B1E23] shrink-0"></span></div></div>
+        <div class="p-5 rounded-2xl border border-blue-200 bg-blue-50 shadow-sm"><div class="flex items-start gap-4"><div class="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center shrink-0"><span v-html="ICONS.tasks" class="h-6 w-6 text-blue-600"></span></div><div class="flex-1"><div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"><p class="text-base font-bold text-slate-900">New Task Assigned</p><span class="text-xs font-semibold text-blue-600">UNREAD</span></div><p class="text-sm text-slate-600 mt-1">You have been assigned to the Public Market Fire Safety Inspection.</p><div class="flex items-center gap-2 mt-3"><span class="text-xs text-slate-400">1 hour ago</span><span class="h-1 w-1 rounded-full bg-slate-300"></span><span class="text-xs font-medium text-blue-600">Task Assignment</span></div></div></div></div>
+        <div class="p-5 rounded-2xl border border-green-200 bg-green-50 shadow-sm"><div class="flex items-start gap-4"><div class="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center shrink-0"><span v-html="ICONS.check" class="h-6 w-6 text-green-600"></span></div><div class="flex-1"><div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"><p class="text-base font-bold text-slate-900">Report Accepted</p><span class="text-xs font-semibold text-green-600">READ</span></div><p class="text-sm text-slate-600 mt-1">Your Routine Safety Patrol Report has been successfully recorded.</p><div class="flex items-center gap-2 mt-3"><span class="text-xs text-slate-400">Yesterday</span><span class="h-1 w-1 rounded-full bg-slate-300"></span><span class="text-xs font-medium text-green-600">Report Update</span></div></div></div></div>
+        <div class="p-5 rounded-2xl border border-amber-200 bg-amber-50 shadow-sm"><div class="flex items-start gap-4"><div class="h-12 w-12 rounded-full bg-amber-100 flex items-center justify-center shrink-0"><span v-html="ICONS.siren" class="h-6 w-6 text-amber-600"></span></div><div class="flex-1"><p class="text-base font-bold text-slate-900">Activity Reminder</p><p class="text-sm text-slate-600 mt-1">Your scheduled Fire Safety Seminar will begin tomorrow at 9:00 AM.</p><p class="text-xs text-slate-400 mt-3">Yesterday</p></div></div></div>
+        <div class="p-5 rounded-2xl border border-slate-200 bg-white shadow-sm"><div class="flex items-start gap-4"><div class="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center shrink-0"><span v-html="ICONS.check" class="h-6 w-6 text-slate-600"></span></div><div class="flex-1"><p class="text-base font-bold text-slate-900">System Update</p><p class="text-sm text-slate-600 mt-1">FireNotify notification services are operating normally.</p><p class="text-xs text-slate-400 mt-3">2 days ago</p></div></div></div>
+      </div>
+
+      <div class="space-y-6">
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6"><h3 class="text-lg font-bold text-slate-900">Notification Settings</h3><p class="text-sm text-slate-500 mt-1">Choose how you receive important alerts.</p><div class="mt-5 space-y-4"><div class="flex items-center justify-between"><div><p class="text-sm font-semibold text-slate-800">Task Reminders</p><p class="text-xs text-slate-500">Alerts for assigned tasks</p></div><input type="checkbox" checked class="h-5 w-5 accent-[#8B1E23]" /></div><div class="flex items-center justify-between"><div><p class="text-sm font-semibold text-slate-800">Report Deadlines</p><p class="text-xs text-slate-500">Reminders before deadlines</p></div><input type="checkbox" checked class="h-5 w-5 accent-[#8B1E23]" /></div><div class="flex items-center justify-between"><div><p class="text-sm font-semibold text-slate-800">Activity Alerts</p><p class="text-xs text-slate-500">Upcoming activity reminders</p></div><input type="checkbox" checked class="h-5 w-5 accent-[#8B1E23]" /></div></div></div>
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6"><h3 class="text-lg font-bold text-slate-900">Upcoming Deadlines</h3><div class="mt-4 space-y-4"><div class="p-4 rounded-xl bg-red-50 border border-red-100"><p class="text-sm font-bold text-slate-900">Fire Safety Inspection Report</p><p class="text-xs text-red-600 font-semibold mt-1">Due Today</p></div><div class="p-4 rounded-xl bg-amber-50 border border-amber-100"><p class="text-sm font-bold text-slate-900">Monthly Operations Report</p><p class="text-xs text-amber-600 font-semibold mt-1">Due in 5 days</p></div><div class="p-4 rounded-xl bg-slate-50 border border-slate-200"><p class="text-sm font-bold text-slate-900">Activity Compliance Report</p><p class="text-xs text-slate-500 font-semibold mt-1">Due in 8 days</p></div></div></div>
+      </div>
+    </section>
+  </div>
+</template>
+
+<script setup>
+defineProps({
+  ICONS: {
+    type: Object,
+    required: true
+  }
+})
+</script>

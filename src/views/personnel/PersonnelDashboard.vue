@@ -359,9 +359,11 @@
       <!-- ======================================================= -->
       <!-- PAGE -->
       <!-- ======================================================= -->
-      <main class="p-6 lg:p-8 space-y-7">
-
-        <div v-if="activeTab === 'Dashboard'" class="space-y-7">
+      <main class="flex-1 min-w-0 min-h-0 overflow-y-auto p-6 lg:p-8">
+<div 
+  v-if="activeTab === 'Dashboard'" 
+  class="flex-1 min-w-0 min-h-0 overflow-y-auto p-6 space-y-7"
+>
 
           <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
@@ -547,20 +549,27 @@
         <!-- ===================================================== -->
 <!-- MAIN GRID -->
 <!-- ===================================================== -->
-<section v-if="activeTab !== 'Dashboard'" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<section v-if="activeTab !== 'Dashboard'" class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full min-h-0">
 
   <!-- =================================================== -->
   <!-- LEFT CONTENT -->
   <!-- =================================================== -->
-  <div class="lg:col-span-2 space-y-6">
+  <div
+    :class="[
+      activeTab === 'Tasks' || activeTab === 'Reports' || activeTab === 'Notifications' || activeTab === 'Personnel Roster' || activeTab === 'Station Duty Log' || activeTab === 'Equipment Audit' || activeTab === 'Support' || activeTab === 'Settings'
+        ? 'lg:col-span-3 w-full min-w-0'
+        : 'lg:col-span-2',
+      'space-y-6'
+    ]"
+  >
 
     <!-- ================================================= -->
     <!-- DASHBOARD -->
     <!-- ================================================= -->
-    <div
-      v-if="activeTab === 'Dashboard'"
-      class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6"
-    >
+    <div 
+  v-if="activeTab === 'Dashboard'" 
+  class="w-full min-w-0 space-y-7"
+>
 
       <div class="border-b border-slate-200 pb-5">
         <h2 class="text-xl font-bold text-slate-900">
@@ -638,9 +647,9 @@
    <!-- ================================================= -->
 <!-- TASKS -->
 <!-- ================================================= -->
-<div
-  v-else-if="activeTab === 'Tasks'"
-  class="space-y-6"
+<div 
+  v-else-if="activeTab === 'Tasks'" 
+  class="w-full min-w-0 space-y-6"
 >
 
   <!-- TASK HEADER -->
@@ -1063,7 +1072,7 @@
     <!-- ================================================= -->
     <div
       v-else-if="activeTab === 'Reports'"
-      class="space-y-6"
+      class="w-full min-w-0 space-y-6"
     >
 
       <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">

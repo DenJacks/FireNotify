@@ -322,12 +322,23 @@
 <!-- MAIN PAGE -->
 <!-- ========================================================= -->
 <main class="p-6 lg:p-8 space-y-7">
+  <Dashboard v-if="activeMenu === 'Dashboard'" :current-user="currentUser" />
+  <ActivityManagement v-else-if="activeMenu === 'Activity Mgmt.'" :current-user="currentUser" />
+  <PersonnelManagement v-else-if="activeMenu === 'Personnel Mgmt.'" :current-user="currentUser" />
+  <ReportManagement v-else-if="activeMenu === 'Report Mgmt.'" :current-user="currentUser" />
+  <DeadlineMonitor v-else-if="activeMenu === 'Deadline Monitor'" :current-user="currentUser" />
+  <Notifications v-else-if="activeMenu === 'Notifications'" :current-user="currentUser" />
+  <WeeklyMonthlyLogs v-else-if="activeMenu === 'Weekly/Monthly Logs'" :current-user="currentUser" />
+  <AuditEscalations v-else-if="activeMenu === 'Audit & Escalations'" :current-user="currentUser" />
+  <ComplianceHealth v-else-if="activeMenu === 'Compliance Health'" :current-user="currentUser" />
+  <DocumentPipeline v-else-if="activeMenu === 'Document Pipeline'" :current-user="currentUser" />
+  <PrintExportPDF v-else-if="activeMenu === 'Print & Export PDF'" :current-user="currentUser" />
 
   <!-- ===================================================== -->
   <!-- DASHBOARD -->
   <!-- ===================================================== -->
   <div
-    v-if="activeMenu === 'Dashboard'"
+    v-if="false"
     class="space-y-7"
   >
 
@@ -785,6 +796,239 @@
 
     </section>
 
+
+    <!-- ================================================= -->
+    <!-- ADDITIONAL DASHBOARD CONTENT -->
+    <!-- ================================================= -->
+    <section class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+
+      <!-- MISSION READINESS -->
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+        <div class="flex items-center justify-between border-b border-slate-200 pb-5">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900">
+              Mission Readiness
+            </h2>
+            <p class="text-sm text-slate-500 mt-1">
+              Station preparedness summary
+            </p>
+          </div>
+
+          <span class="px-3 py-1.5 rounded-full bg-green-50 text-green-700 text-xs font-bold">
+            READY
+          </span>
+        </div>
+
+        <div class="mt-5 space-y-4">
+
+          <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
+            <div>
+              <p class="text-sm font-bold text-slate-900">Engine Availability</p>
+              <p class="text-xs text-slate-500 mt-1">4 of 5 engines operational</p>
+            </div>
+            <span class="text-sm font-bold text-green-600">80%</span>
+          </div>
+
+          <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
+            <div>
+              <p class="text-sm font-bold text-slate-900">Comm. Systems</p>
+              <p class="text-xs text-slate-500 mt-1">Radios and dispatch links stable</p>
+            </div>
+            <span class="text-sm font-bold text-blue-600">Stable</span>
+          </div>
+
+          <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
+            <div>
+              <p class="text-sm font-bold text-slate-900">Medical Kits</p>
+              <p class="text-xs text-slate-500 mt-1">Fully stocked across all units</p>
+            </div>
+            <span class="text-sm font-bold text-emerald-600">100%</span>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- PRIORITY ALERTS -->
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+        <div class="flex items-center justify-between border-b border-slate-200 pb-5">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900">
+              Priority Alerts
+            </h2>
+            <p class="text-sm text-slate-500 mt-1">
+              Items requiring immediate attention
+            </p>
+          </div>
+
+          <button
+            @click="activeMenu = 'Notifications'"
+            class="text-sm font-bold text-[#8B1E23] hover:underline"
+          >
+            View All
+          </button>
+        </div>
+
+        <div class="mt-5 space-y-4">
+
+          <div class="p-4 rounded-xl bg-red-50 border border-red-200">
+            <div class="flex justify-between items-start gap-3">
+              <div>
+                <p class="text-sm font-bold text-slate-900">Unresolved Fire Investigation</p>
+                <p class="text-xs text-slate-500 mt-1">Case #FI-2048 • Barangay San Roque</p>
+              </div>
+              <span class="px-2.5 py-1 rounded-full bg-red-100 text-[#8B1E23] text-xs font-bold">High</span>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-yellow-50 border border-yellow-200">
+            <div class="flex justify-between items-start gap-3">
+              <div>
+                <p class="text-sm font-bold text-slate-900">Equipment Calibration Due</p>
+                <p class="text-xs text-slate-500 mt-1">Portable pump unit • due tomorrow</p>
+              </div>
+              <span class="px-2.5 py-1 rounded-full bg-yellow-100 text-yellow-700 text-xs font-bold">Medium</span>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-blue-50 border border-blue-200">
+            <div class="flex justify-between items-start gap-3">
+              <div>
+                <p class="text-sm font-bold text-slate-900">Training Attendance Update</p>
+                <p class="text-xs text-slate-500 mt-1">2 personnel still pending attendance</p>
+              </div>
+              <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold">Info</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- OPERATIONS TIMELINE -->
+    <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+      <div class="flex items-center justify-between border-b border-slate-200 pb-5">
+        <div>
+          <h2 class="text-xl font-bold text-slate-900">
+            Operations Timeline
+          </h2>
+          <p class="text-sm text-slate-500 mt-1">
+            Key events and updates from today
+          </p>
+        </div>
+      </div>
+
+      <div class="mt-5 space-y-4">
+
+        <div class="flex gap-4 p-4 rounded-xl border border-slate-200 hover:bg-slate-50">
+          <div class="flex flex-col items-center">
+            <span class="h-3 w-3 rounded-full bg-[#8B1E23]"></span>
+            <span class="w-px h-full bg-slate-200 mt-2"></span>
+          </div>
+          <div class="flex-1">
+            <p class="text-sm font-bold text-slate-900">08:00 AM • Morning Briefing</p>
+            <p class="text-sm text-slate-500 mt-1">All station personnel attended the daily operations briefing and reviewed updated response protocols.</p>
+          </div>
+        </div>
+
+        <div class="flex gap-4 p-4 rounded-xl border border-slate-200 hover:bg-slate-50">
+          <div class="flex flex-col items-center">
+            <span class="h-3 w-3 rounded-full bg-blue-500"></span>
+            <span class="w-px h-full bg-slate-200 mt-2"></span>
+          </div>
+          <div class="flex-1">
+            <p class="text-sm font-bold text-slate-900">10:30 AM • Fire Safety Inspection</p>
+            <p class="text-sm text-slate-500 mt-1">Inspection status reported for three commercial establishments in the central district.</p>
+          </div>
+        </div>
+
+        <div class="flex gap-4 p-4 rounded-xl border border-slate-200 hover:bg-slate-50">
+          <div class="flex flex-col items-center">
+            <span class="h-3 w-3 rounded-full bg-green-500"></span>
+          </div>
+          <div class="flex-1">
+            <p class="text-sm font-bold text-slate-900">01:00 PM • Community Drill</p>
+            <p class="text-sm text-slate-500 mt-1">Final logistics approved for the barangay evacuation drill scheduled this afternoon.</p>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- REPORTS OVERVIEW -->
+    <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+      <div class="flex items-center justify-between border-b border-slate-200 pb-5">
+        <div>
+          <h2 class="text-xl font-bold text-slate-900">
+            Recent Reports
+          </h2>
+          <p class="text-sm text-slate-500 mt-1">
+            Latest submissions and their current status
+          </p>
+        </div>
+
+        <button
+          @click="activeMenu = 'Report Mgmt.'"
+          class="text-sm font-bold text-[#8B1E23] hover:underline"
+        >
+          Open Reports →
+        </button>
+      </div>
+
+      <div class="mt-5 overflow-x-auto">
+        <table class="w-full text-left">
+          <thead>
+            <tr class="border-b border-slate-200 text-xs font-bold uppercase tracking-wide text-slate-400">
+              <th class="pb-3 pr-4">Report</th>
+              <th class="pb-3 pr-4">Submitted By</th>
+              <th class="pb-3 pr-4">Date</th>
+              <th class="pb-3 text-right">Status</th>
+            </tr>
+          </thead>
+
+          <tbody class="divide-y divide-slate-100">
+            <tr class="hover:bg-slate-50">
+              <td class="py-4 pr-4 font-semibold text-slate-900">After-Operation Incident Report</td>
+              <td class="py-4 pr-4 text-sm text-slate-600">FO3 Juan Dela Cruz</td>
+              <td class="py-4 pr-4 text-sm text-slate-600">Sept. 9, 2026</td>
+              <td class="py-4 text-right">
+                <span class="px-3 py-1.5 rounded-full bg-yellow-50 text-yellow-700 text-xs font-bold">Pending</span>
+              </td>
+            </tr>
+
+            <tr class="hover:bg-slate-50">
+              <td class="py-4 pr-4 font-semibold text-slate-900">Monthly Compliance Summary</td>
+              <td class="py-4 pr-4 text-sm text-slate-600">SFO1 Maria Santos</td>
+              <td class="py-4 pr-4 text-sm text-slate-600">Sept. 8, 2026</td>
+              <td class="py-4 text-right">
+                <span class="px-3 py-1.5 rounded-full bg-green-50 text-green-700 text-xs font-bold">Approved</span>
+              </td>
+            </tr>
+
+            <tr class="hover:bg-slate-50">
+              <td class="py-4 pr-4 font-semibold text-slate-900">Barangay Fire Drill Summary</td>
+              <td class="py-4 pr-4 text-sm text-slate-600">FO2 R. Reyes</td>
+              <td class="py-4 pr-4 text-sm text-slate-600">Sept. 7, 2026</td>
+              <td class="py-4 text-right">
+                <span class="px-3 py-1.5 rounded-full bg-blue-50 text-blue-700 text-xs font-bold">Reviewed</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </section>
+
   </div>
 
 
@@ -792,7 +1036,7 @@
   <!-- ACTIVITY MANAGEMENT -->
   <!-- ===================================================== -->
   <div
-    v-else-if="activeMenu === 'Activity Mgmt.'"
+    v-if="false"
     class="space-y-6"
   >
 
@@ -1035,6 +1279,165 @@
 
     </section>
 
+
+    <!-- ================================================= -->
+    <!-- ACTIVITY MGMT. ADDITIONAL CONTENT -->
+    <!-- ================================================= -->
+    <section class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+
+      <!-- PLANNED ACTIVITIES -->
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+        <div class="flex items-center justify-between border-b border-slate-200 pb-5">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900">
+              Planned Activities
+            </h2>
+            <p class="text-sm text-slate-500 mt-1">
+              Upcoming schedule for the next 7 days
+            </p>
+          </div>
+
+          <span class="px-3 py-1.5 rounded-full bg-blue-50 text-blue-700 text-xs font-bold">
+            06 ITEMS
+          </span>
+        </div>
+
+        <div class="mt-5 space-y-4">
+
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="flex justify-between gap-3">
+              <div>
+                <p class="font-bold text-slate-900">Vehicle Maintenance Check</p>
+                <p class="text-xs text-slate-500 mt-1">Sept. 14 • 9:00 AM</p>
+              </div>
+              <span class="px-2.5 py-1 rounded-full bg-yellow-100 text-yellow-700 text-xs font-bold">Planned</span>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="flex justify-between gap-3">
+              <div>
+                <p class="font-bold text-slate-900">Barangay Rescue Coordination Drill</p>
+                <p class="text-xs text-slate-500 mt-1">Sept. 15 • 1:30 PM</p>
+              </div>
+              <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold">Prepared</span>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="flex justify-between gap-3">
+              <div>
+                <p class="font-bold text-slate-900">High-rise Building Inspection</p>
+                <p class="text-xs text-slate-500 mt-1">Sept. 16 • 8:00 AM</p>
+              </div>
+              <span class="px-2.5 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold">Confirmed</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- WORKLOAD SUMMARY -->
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+        <div class="flex items-center justify-between border-b border-slate-200 pb-5">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900">
+              Workload Summary
+            </h2>
+            <p class="text-sm text-slate-500 mt-1">
+              Personnel allocation by activity type
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-5 space-y-4">
+
+          <div>
+            <div class="flex justify-between text-sm font-semibold text-slate-700 mb-2">
+              <span>Inspections</span>
+              <span>48%</span>
+            </div>
+            <div class="h-2.5 rounded-full bg-slate-100 overflow-hidden">
+              <div class="h-full w-[48%] rounded-full bg-[#8B1E23]"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between text-sm font-semibold text-slate-700 mb-2">
+              <span>Drills</span>
+              <span>29%</span>
+            </div>
+            <div class="h-2.5 rounded-full bg-slate-100 overflow-hidden">
+              <div class="h-full w-[29%] rounded-full bg-blue-500"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between text-sm font-semibold text-slate-700 mb-2">
+              <span>Training</span>
+              <span>17%</span>
+            </div>
+            <div class="h-2.5 rounded-full bg-slate-100 overflow-hidden">
+              <div class="h-full w-[17%] rounded-full bg-green-500"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between text-sm font-semibold text-slate-700 mb-2">
+              <span>Response Ops</span>
+              <span>06%</span>
+            </div>
+            <div class="h-2.5 rounded-full bg-slate-100 overflow-hidden">
+              <div class="h-full w-[6%] rounded-full bg-yellow-500"></div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ACTIVITY NOTES -->
+    <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+      <div class="flex items-center justify-between border-b border-slate-200 pb-5">
+        <div>
+          <h2 class="text-xl font-bold text-slate-900">
+            Activity Notes
+          </h2>
+          <p class="text-sm text-slate-500 mt-1">
+            Additional reminders for team coordination
+          </p>
+        </div>
+      </div>
+
+      <div class="mt-5 space-y-4">
+
+        <div class="p-4 rounded-xl border border-lime-200 bg-lime-50">
+          <p class="text-sm font-bold text-slate-900">Reminder</p>
+          <p class="text-sm text-slate-600 mt-1">All inspection teams must bring updated checklist forms before deployment.</p>
+        </div>
+
+        <div class="p-4 rounded-xl border border-amber-200 bg-amber-50">
+          <p class="text-sm font-bold text-slate-900">Coordination</p>
+          <p class="text-sm text-slate-600 mt-1">Coordinate with the barangay office for drill participation and crowd control support.</p>
+        </div>
+
+        <div class="p-4 rounded-xl border border-sky-200 bg-sky-50">
+          <p class="text-sm font-bold text-slate-900">Escalation</p>
+          <p class="text-sm text-slate-600 mt-1">Any delay in scheduled drills must be logged and escalated to the operations section chief.</p>
+        </div>
+
+      </div>
+
+    </section>
+
   </div>
 
 
@@ -1042,7 +1445,7 @@
   <!-- PERSONNEL MANAGEMENT -->
   <!-- ===================================================== -->
   <div
-    v-else-if="activeMenu === 'Personnel Mgmt.'"
+    v-if="false"
     class="space-y-6"
   >
 
@@ -1284,6 +1687,152 @@
 
     </section>
 
+
+    <!-- ================================================= -->
+    <!-- PERSONNEL MGMT. ADDITIONAL CONTENT -->
+    <!-- ================================================= -->
+
+    <section class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+
+      <!-- RECENT ASSIGNMENTS -->
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+        <div class="flex items-center justify-between border-b border-slate-200 pb-5">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900">
+              Recent Assignments
+            </h2>
+            <p class="text-sm text-slate-500 mt-1">
+              Latest assignments and role changes
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-5 space-y-4">
+
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="flex justify-between gap-3">
+              <div>
+                <p class="font-bold text-slate-900">Juan Dela Cruz</p>
+                <p class="text-xs text-slate-500 mt-1">Assigned to Fire Safety Inspection Team</p>
+              </div>
+              <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold">Assigned</span>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="flex justify-between gap-3">
+              <div>
+                <p class="font-bold text-slate-900">Roberto Reyes</p>
+                <p class="text-xs text-slate-500 mt-1">Transferred to Night Shift Dispatch Support</p>
+              </div>
+              <span class="px-2.5 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold">Updated</span>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="flex justify-between gap-3">
+              <div>
+                <p class="font-bold text-slate-900">Maria Santos</p>
+                <p class="text-xs text-slate-500 mt-1">Promoted as Operations Lead for community drills</p>
+              </div>
+              <span class="px-2.5 py-1 rounded-full bg-yellow-100 text-yellow-700 text-xs font-bold">Promotion</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- TEAM AVAILABILITY -->
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+        <div class="flex items-center justify-between border-b border-slate-200 pb-5">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900">
+              Team Availability
+            </h2>
+            <p class="text-sm text-slate-500 mt-1">
+              Current staffing by shift
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-5 space-y-4">
+
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="flex justify-between items-center">
+              <div>
+                <p class="text-sm font-bold text-slate-900">Morning Shift</p>
+                <p class="text-xs text-slate-500 mt-1">18 personnel assigned</p>
+              </div>
+              <span class="text-sm font-bold text-green-600">Fully Staffed</span>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="flex justify-between items-center">
+              <div>
+                <p class="text-sm font-bold text-slate-900">Afternoon Shift</p>
+                <p class="text-xs text-slate-500 mt-1">15 personnel assigned</p>
+              </div>
+              <span class="text-sm font-bold text-blue-600">On Schedule</span>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="flex justify-between items-center">
+              <div>
+                <p class="text-sm font-bold text-slate-900">Night Shift</p>
+                <p class="text-xs text-slate-500 mt-1">12 personnel assigned</p>
+              </div>
+              <span class="text-sm font-bold text-yellow-600">Low Coverage</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- PERSONNEL NOTES -->
+    <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+      <div class="flex items-center justify-between border-b border-slate-200 pb-5">
+        <div>
+          <h2 class="text-xl font-bold text-slate-900">
+            Personnel Notes
+          </h2>
+          <p class="text-sm text-slate-500 mt-1">
+            Admin reminders and coordination updates
+          </p>
+        </div>
+      </div>
+
+      <div class="mt-5 space-y-4">
+
+        <div class="p-4 rounded-xl border border-emerald-200 bg-emerald-50">
+          <p class="text-sm font-bold text-slate-900">Training Readiness</p>
+          <p class="text-sm text-slate-600 mt-1">All new trainees have completed orientation and are scheduled for field drills next week.</p>
+        </div>
+
+        <div class="p-4 rounded-xl border border-orange-200 bg-orange-50">
+          <p class="text-sm font-bold text-slate-900">Coverage Alert</p>
+          <p class="text-sm text-slate-600 mt-1">Night shift requires two additional personnel for full emergency response coverage.</p>
+        </div>
+
+        <div class="p-4 rounded-xl border border-indigo-200 bg-indigo-50">
+          <p class="text-sm font-bold text-slate-900">Leave Management</p>
+          <p class="text-sm text-slate-600 mt-1">Two approved leave requests are scheduled this week and have been covered by backup assignments.</p>
+        </div>
+
+      </div>
+
+    </section>
+
   </div>
 
 
@@ -1291,7 +1840,7 @@
   <!-- REPORT MANAGEMENT -->
   <!-- ===================================================== -->
   <div
-    v-else-if="activeMenu === 'Report Mgmt.'"
+    v-if="false"
     class="space-y-6"
   >
 
@@ -1526,6 +2075,145 @@
 
     </section>
 
+
+    <!-- ================================================= -->
+    <!-- REPORT MGMT. ADDITIONAL CONTENT -->
+    <!-- ================================================= -->
+    <section class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+
+      <!-- REPORT ANALYTICS -->
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+        <div class="flex items-center justify-between border-b border-slate-200 pb-5">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900">
+              Report Analytics
+            </h2>
+            <p class="text-sm text-slate-500 mt-1">
+              Submission efficiency this month
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-5 space-y-4">
+
+          <div>
+            <div class="flex justify-between text-sm font-semibold text-slate-700 mb-2">
+              <span>On-Time Submission</span>
+              <span>86%</span>
+            </div>
+            <div class="h-2.5 rounded-full bg-slate-100 overflow-hidden">
+              <div class="h-full w-[86%] rounded-full bg-green-500"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between text-sm font-semibold text-slate-700 mb-2">
+              <span>Approval Rate</span>
+              <span>68%</span>
+            </div>
+            <div class="h-2.5 rounded-full bg-slate-100 overflow-hidden">
+              <div class="h-full w-[68%] rounded-full bg-blue-500"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between text-sm font-semibold text-slate-700 mb-2">
+              <span>Corrections Needed</span>
+              <span>24%</span>
+            </div>
+            <div class="h-2.5 rounded-full bg-slate-100 overflow-hidden">
+              <div class="h-full w-[24%] rounded-full bg-yellow-500"></div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- RECENTLY UPLOADED FILES -->
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+        <div class="flex items-center justify-between border-b border-slate-200 pb-5">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900">
+              Recently Uploaded Files
+            </h2>
+            <p class="text-sm text-slate-500 mt-1">
+              Latest attachments and documents
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-5 space-y-4">
+
+          <div class="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50">
+            <div>
+              <p class="text-sm font-bold text-slate-900">InspectionChecklist_Sept9.pdf</p>
+              <p class="text-xs text-slate-500 mt-1">Uploaded by FO3 Juan Dela Cruz</p>
+            </div>
+            <span class="text-xs font-bold text-slate-500">PDF</span>
+          </div>
+
+          <div class="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50">
+            <div>
+              <p class="text-sm font-bold text-slate-900">BarangayDrillSummary.xlsx</p>
+              <p class="text-xs text-slate-500 mt-1">Uploaded by FO2 Roberto Reyes</p>
+            </div>
+            <span class="text-xs font-bold text-slate-500">XLSX</span>
+          </div>
+
+          <div class="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50">
+            <div>
+              <p class="text-sm font-bold text-slate-900">IncidentPhotos_Set2.jpg</p>
+              <p class="text-xs text-slate-500 mt-1">Uploaded by SFO1 Maria Santos</p>
+            </div>
+            <span class="text-xs font-bold text-slate-500">IMG</span>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- REPORT NOTES -->
+    <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+      <div class="flex items-center justify-between border-b border-slate-200 pb-5">
+        <div>
+          <h2 class="text-xl font-bold text-slate-900">
+            Review Notes
+          </h2>
+          <p class="text-sm text-slate-500 mt-1">
+            Notes for report coordinators and approvers
+          </p>
+        </div>
+      </div>
+
+      <div class="mt-5 space-y-4">
+
+        <div class="p-4 rounded-xl border border-red-200 bg-red-50">
+          <p class="text-sm font-bold text-slate-900">Priority Reminder</p>
+          <p class="text-sm text-slate-600 mt-1">Fire incident reports submitted after deadline require immediate supervisor review and follow-up.</p>
+        </div>
+
+        <div class="p-4 rounded-xl border border-amber-200 bg-amber-50">
+          <p class="text-sm font-bold text-slate-900">Correction Needed</p>
+          <p class="text-sm text-slate-600 mt-1">A few inspection reports are missing photographs; request resubmission before approval.</p>
+        </div>
+
+        <div class="p-4 rounded-xl border border-blue-200 bg-blue-50">
+          <p class="text-sm font-bold text-slate-900">Documentation</p>
+          <p class="text-sm text-slate-600 mt-1">Ensure all attachments are properly named and linked to the corresponding report ID.</p>
+        </div>
+
+      </div>
+
+    </section>
+
   </div>
 
 
@@ -1533,7 +2221,7 @@
   <!-- DEADLINE MONITOR -->
   <!-- ===================================================== -->
   <div
-    v-else-if="activeMenu === 'Deadline Monitor'"
+    v-if="false"
     class="space-y-6"
   >
 
@@ -1729,6 +2417,151 @@
 
     </section>
 
+
+    <!-- ================================================= -->
+    <!-- DEADLINE MONITOR ADDITIONAL CONTENT -->
+    <!-- ================================================= -->
+    <section class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+
+      <!-- DEADLINE TRENDS -->
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+        <div class="flex items-center justify-between border-b border-slate-200 pb-5">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900">
+              Deadline Trends
+            </h2>
+            <p class="text-sm text-slate-500 mt-1">
+              Weekly performance summary
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-5 space-y-4">
+
+          <div>
+            <div class="flex justify-between text-sm font-semibold text-slate-700 mb-2">
+              <span>On-Time Rate</span>
+              <span>79%</span>
+            </div>
+            <div class="h-2.5 rounded-full bg-slate-100 overflow-hidden">
+              <div class="h-full w-[79%] rounded-full bg-emerald-500"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between text-sm font-semibold text-slate-700 mb-2">
+              <span>Escalations Sent</span>
+              <span>11</span>
+            </div>
+            <div class="h-2.5 rounded-full bg-slate-100 overflow-hidden">
+              <div class="h-full w-[58%] rounded-full bg-red-500"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between text-sm font-semibold text-slate-700 mb-2">
+              <span>Resolved Before Deadline</span>
+              <span>67%</span>
+            </div>
+            <div class="h-2.5 rounded-full bg-slate-100 overflow-hidden">
+              <div class="h-full w-[67%] rounded-full bg-blue-500"></div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- ESCALATION QUEUE -->
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+        <div class="flex items-center justify-between border-b border-slate-200 pb-5">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900">
+              Escalation Queue
+            </h2>
+            <p class="text-sm text-slate-500 mt-1">
+              Reports needing action from higher units
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-5 space-y-4">
+
+          <div class="p-4 rounded-xl border border-red-200 bg-red-50">
+            <div class="flex justify-between gap-3">
+              <div>
+                <p class="font-bold text-slate-900">After-Operation Fire Incident Report</p>
+                <p class="text-xs text-slate-500 mt-1">Escalated to Station Operations Chief</p>
+              </div>
+              <span class="px-2.5 py-1 rounded-full bg-red-100 text-[#8B1E23] text-xs font-bold">High</span>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl border border-yellow-200 bg-yellow-50">
+            <div class="flex justify-between gap-3">
+              <div>
+                <p class="font-bold text-slate-900">Monthly Compliance Report</p>
+                <p class="text-xs text-slate-500 mt-1">Pending review from Admin Office</p>
+              </div>
+              <span class="px-2.5 py-1 rounded-full bg-yellow-100 text-yellow-700 text-xs font-bold">Medium</span>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl border border-blue-200 bg-blue-50">
+            <div class="flex justify-between gap-3">
+              <div>
+                <p class="font-bold text-slate-900">Barangay Fire Drill Summary</p>
+                <p class="text-xs text-slate-500 mt-1">Awaiting validation of attendance logs</p>
+              </div>
+              <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold">Info</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- DEADLINE NOTES -->
+    <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+      <div class="flex items-center justify-between border-b border-slate-200 pb-5">
+        <div>
+          <h2 class="text-xl font-bold text-slate-900">
+            Compliance Notes
+          </h2>
+          <p class="text-sm text-slate-500 mt-1">
+            Operational reminders and monitoring details
+          </p>
+        </div>
+      </div>
+
+      <div class="mt-5 space-y-4">
+
+        <div class="p-4 rounded-xl border border-emerald-200 bg-emerald-50">
+          <p class="text-sm font-bold text-slate-900">Reminder</p>
+          <p class="text-sm text-slate-600 mt-1">Late submissions should be resequenced immediately after review to avoid backlogs in the next cycle.</p>
+        </div>
+
+        <div class="p-4 rounded-xl border border-orange-200 bg-orange-50">
+          <p class="text-sm font-bold text-slate-900">Attention</p>
+          <p class="text-sm text-slate-600 mt-1">2 overdue reports require an escalation note to the operations head before the end of the day.</p>
+        </div>
+
+        <div class="p-4 rounded-xl border border-indigo-200 bg-indigo-50">
+          <p class="text-sm font-bold text-slate-900">Follow-Up</p>
+          <p class="text-sm text-slate-600 mt-1">Monitor the final status of all approved reports and ensure attachments are saved in the archive.</p>
+        </div>
+
+      </div>
+
+    </section>
+
   </div>
 
 
@@ -1736,7 +2569,7 @@
   <!-- NOTIFICATIONS -->
   <!-- ===================================================== -->
   <div
-    v-else-if="activeMenu === 'Notifications'"
+    v-if="false"
     class="space-y-6"
   >
 
@@ -1955,6 +2788,1406 @@
 
     </section>
 
+
+    <!-- ================================================= -->
+    <!-- NOTIFICATION ADDITIONAL CONTENT -->
+    <!-- ================================================= -->
+    <section class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+
+      <!-- CHANNEL SUMMARY -->
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+        <div class="flex items-center justify-between border-b border-slate-200 pb-5">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900">
+              Channel Summary
+            </h2>
+            <p class="text-sm text-slate-500 mt-1">
+              Message volume by source
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-5 space-y-4">
+
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="flex justify-between items-center">
+              <div>
+                <p class="text-sm font-bold text-slate-900">System Alerts</p>
+                <p class="text-xs text-slate-500 mt-1">12 messages today</p>
+              </div>
+              <span class="text-sm font-bold text-[#8B1E23]">42%</span>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="flex justify-between items-center">
+              <div>
+                <p class="text-sm font-bold text-slate-900">Personnel Updates</p>
+                <p class="text-xs text-slate-500 mt-1">9 messages today</p>
+              </div>
+              <span class="text-sm font-bold text-blue-600">31%</span>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="flex justify-between items-center">
+              <div>
+                <p class="text-sm font-bold text-slate-900">Reports & Compliance</p>
+                <p class="text-xs text-slate-500 mt-1">8 messages today</p>
+              </div>
+              <span class="text-sm font-bold text-green-600">27%</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- MESSAGE FILTERS -->
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+        <div class="flex items-center justify-between border-b border-slate-200 pb-5">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900">
+              Message Filters
+            </h2>
+            <p class="text-sm text-slate-500 mt-1">
+              Quick sorting for incoming updates
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-5 space-y-4">
+
+          <button class="w-full text-left px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-sm font-semibold text-slate-700">
+            All Notifications
+          </button>
+
+          <button class="w-full text-left px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-sm font-semibold text-slate-700">
+            Deadline Alerts
+          </button>
+
+          <button class="w-full text-left px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-sm font-semibold text-slate-700">
+            Personnel Updates
+          </button>
+
+          <button class="w-full text-left px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-sm font-semibold text-slate-700">
+            System Announcements
+          </button>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ANNOUNCEMENTS -->
+    <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+      <div class="flex items-center justify-between border-b border-slate-200 pb-5">
+        <div>
+          <h2 class="text-xl font-bold text-slate-900">
+            Announcements
+          </h2>
+          <p class="text-sm text-slate-500 mt-1">
+            Administrative updates for all BFP units
+          </p>
+        </div>
+      </div>
+
+      <div class="mt-5 space-y-4">
+
+        <div class="p-4 rounded-xl border border-emerald-200 bg-emerald-50">
+          <p class="text-sm font-bold text-slate-900">Operations Update</p>
+          <p class="text-sm text-slate-600 mt-1">All station units are reminded to check radio signal stability before the next dispatch cycle.</p>
+        </div>
+
+        <div class="p-4 rounded-xl border border-indigo-200 bg-indigo-50">
+          <p class="text-sm font-bold text-slate-900">Training Notice</p>
+          <p class="text-sm text-slate-600 mt-1">Community fire drill briefing will be held tomorrow at 7:30 AM at the barangay hall.</p>
+        </div>
+
+        <div class="p-4 rounded-xl border border-amber-200 bg-amber-50">
+          <p class="text-sm font-bold text-slate-900">Compliance Advisory</p>
+          <p class="text-sm text-slate-600 mt-1">All approved reports must be archived within 24 hours to maintain digital records compliance.</p>
+        </div>
+
+      </div>
+
+    </section>
+
+  </div>
+
+
+  <!-- ===================================================== -->
+  <!-- WEEKLY / MONTHLY LOGS -->
+  <!-- ===================================================== -->
+  <div
+    v-if="false"
+    class="space-y-6"
+  >
+
+    <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+
+        <div>
+
+          <p class="text-sm font-bold uppercase tracking-wide text-[#8B1E23]">
+            Record Archives
+          </p>
+
+          <h2 class="text-2xl font-bold text-slate-900 mt-1">
+            Weekly / Monthly Logs
+          </h2>
+
+          <p class="text-base text-slate-500 mt-1">
+            Review station summaries, recurring reports, and compliance records.
+          </p>
+
+        </div>
+
+        <button
+          class="px-5 py-3 rounded-xl bg-[#8B1E23] text-white font-bold hover:bg-[#72181D] transition"
+        >
+          + Add Log Entry
+        </button>
+
+      </div>
+
+    </section>
+
+
+    <!-- LOG SUMMARY -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <p class="text-3xl font-bold text-[#8B1E23]">12</p>
+        <p class="text-sm text-slate-500 mt-1">Weekly Logs</p>
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <p class="text-3xl font-bold text-blue-600">08</p>
+        <p class="text-sm text-slate-500 mt-1">Monthly Reports</p>
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <p class="text-3xl font-bold text-green-600">06</p>
+        <p class="text-sm text-slate-500 mt-1">Submitted</p>
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <p class="text-3xl font-bold text-yellow-600">02</p>
+        <p class="text-sm text-slate-500 mt-1">Pending Review</p>
+      </div>
+
+    </section>
+
+
+    <!-- WEEKLY / MONTHLY HIGHLIGHTS -->
+    <section class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+        <div class="flex items-center justify-between border-b border-slate-200 pb-5">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900">
+              Weekly Highlights
+            </h2>
+            <p class="text-sm text-slate-500 mt-1">
+              This week’s important operational notes
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-5 space-y-4">
+
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+            <p class="text-sm font-bold text-slate-900">Fire Safety Orientation</p>
+            <p class="text-sm text-slate-600 mt-1">Covered 5 barangays with 98% attendance from local responders and volunteers.</p>
+          </div>
+
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+            <p class="text-sm font-bold text-slate-900">Equipment Readiness</p>
+            <p class="text-sm text-slate-600 mt-1">All assigned rescue tools were checked, cleaned, and tagged for dispatch readiness.</p>
+          </div>
+
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+            <p class="text-sm font-bold text-slate-900">Dispatch Coordination</p>
+            <p class="text-sm text-slate-600 mt-1">Dispatch teams coordinated with local emergency units for three scheduled activities.</p>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+        <div class="flex items-center justify-between border-b border-slate-200 pb-5">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900">
+              Monthly Highlights
+            </h2>
+            <p class="text-sm text-slate-500 mt-1">
+              Station compliance and performance summary
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-5 space-y-4">
+
+          <div class="p-4 rounded-xl border border-emerald-200 bg-emerald-50">
+            <p class="text-sm font-bold text-slate-900">Compliance Rate</p>
+            <p class="text-sm text-slate-600 mt-1">Monthly compliance increased to 94.5%, surpassing the previous cycle by 4.2%.</p>
+          </div>
+
+          <div class="p-4 rounded-xl border border-blue-200 bg-blue-50">
+            <p class="text-sm font-bold text-slate-900">Report Turnaround</p>
+            <p class="text-sm text-slate-600 mt-1">Average report submission turnaround improved to 2.3 days across all stations.</p>
+          </div>
+
+          <div class="p-4 rounded-xl border border-amber-200 bg-amber-50">
+            <p class="text-sm font-bold text-slate-900">Staff Performance</p>
+            <p class="text-sm text-slate-600 mt-1">Operations staff maintained steady productivity while balancing drills, inspections, and training.</p>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- LOG ENTRY TABLE -->
+    <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+      <div class="flex items-center justify-between border-b border-slate-200 pb-5">
+        <div>
+          <h2 class="text-xl font-bold text-slate-900">
+            Recent Weekly / Monthly Entries
+          </h2>
+          <p class="text-sm text-slate-500 mt-1">
+            Latest archived logs submitted by personnel
+          </p>
+        </div>
+      </div>
+
+      <div class="mt-5 overflow-x-auto">
+        <table class="min-w-full border-separate border-spacing-y-3">
+          <thead>
+            <tr class="text-left text-xs font-bold uppercase tracking-wide text-slate-500">
+              <th class="pb-2 pr-4">Activity</th>
+              <th class="pb-2 pr-4">Personnel</th>
+              <th class="pb-2 pr-4">Deadline</th>
+              <th class="pb-2">Status</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr
+              v-for="item in logs"
+              :key="item.activity"
+              class="bg-slate-50 rounded-xl"
+            >
+              <td class="py-4 pr-4 font-semibold text-slate-900 rounded-l-xl">
+                {{ item.activity }}
+              </td>
+              <td class="py-4 pr-4 text-slate-600">
+                {{ item.personnel }}
+              </td>
+              <td class="py-4 pr-4 text-slate-600">
+                {{ item.deadline }}
+              </td>
+              <td class="py-4 pr-4">
+                <span
+                  class="px-3 py-1 rounded-full text-xs font-bold"
+                  :class="item.status === 'Completed'
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-yellow-100 text-yellow-700'"
+                >
+                  {{ item.status }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </section>
+
+  </div>
+
+
+  <!-- ===================================================== -->
+  <!-- AUDIT & ESCALATIONS -->
+  <!-- ===================================================== -->
+  <div
+    v-if="false"
+    class="space-y-6"
+  >
+
+    <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+
+        <div>
+
+          <p class="text-sm font-bold uppercase tracking-wide text-[#8B1E23]">
+            Governance Overview
+          </p>
+
+          <h2 class="text-2xl font-bold text-slate-900 mt-1">
+            Audit & Escalations
+          </h2>
+
+          <p class="text-base text-slate-500 mt-1">
+            Review compliance checks, investigate findings, and monitor escalated cases.
+          </p>
+
+        </div>
+
+        <button
+          class="px-5 py-3 rounded-xl border border-slate-300 bg-white text-slate-700 font-bold hover:bg-slate-100 transition"
+        >
+          Export Audit Report
+        </button>
+
+      </div>
+
+    </section>
+
+
+    <!-- AUDIT SUMMARY -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <p class="text-3xl font-bold text-[#8B1E23]">18</p>
+        <p class="text-sm text-slate-500 mt-1">Open Findings</p>
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <p class="text-3xl font-bold text-yellow-600">06</p>
+        <p class="text-sm text-slate-500 mt-1">Escalated</p>
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <p class="text-3xl font-bold text-green-600">92%</p>
+        <p class="text-sm text-slate-500 mt-1">Resolution Rate</p>
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <p class="text-3xl font-bold text-blue-600">04</p>
+        <p class="text-sm text-slate-500 mt-1">Pending Reviews</p>
+      </div>
+
+    </section>
+
+
+    <!-- AUDIT OVERVIEW -->
+    <section class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+
+      <!-- ESCALATION QUEUE -->
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+        <div class="flex items-center justify-between border-b border-slate-200 pb-5">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900">
+              Escalation Queue
+            </h2>
+            <p class="text-sm text-slate-500 mt-1">
+              Cases requiring higher-level attention
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-5 space-y-4">
+
+          <div class="p-4 rounded-xl border border-red-200 bg-red-50">
+            <div class="flex justify-between gap-3">
+              <div>
+                <p class="font-bold text-slate-900">Late Fire Incident Report</p>
+                <p class="text-xs text-slate-500 mt-1">Assigned to FO3 Juan Dela Cruz • 2 hours overdue</p>
+              </div>
+              <span class="px-2.5 py-1 rounded-full bg-red-100 text-[#8B1E23] text-xs font-bold">High</span>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl border border-yellow-200 bg-yellow-50">
+            <div class="flex justify-between gap-3">
+              <div>
+                <p class="font-bold text-slate-900">Monthly Compliance Report</p>
+                <p class="text-xs text-slate-500 mt-1">Pending review from Admin Office • 3 documents incomplete</p>
+              </div>
+              <span class="px-2.5 py-1 rounded-full bg-yellow-100 text-yellow-700 text-xs font-bold">Medium</span>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl border border-blue-200 bg-blue-50">
+            <div class="flex justify-between gap-3">
+              <div>
+                <p class="font-bold text-slate-900">Barangay Drill Attendance Review</p>
+                <p class="text-xs text-slate-500 mt-1">Awaiting validation of attendance logs and signatures</p>
+              </div>
+              <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold">Low</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- AUDIT FINDINGS -->
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+        <div class="flex items-center justify-between border-b border-slate-200 pb-5">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900">
+              Audit Findings
+            </h2>
+            <p class="text-sm text-slate-500 mt-1">
+              Recent compliance and operational observations
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-5 space-y-4">
+
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="flex justify-between items-start gap-4">
+              <div>
+                <p class="text-sm font-bold text-slate-900">Documentation Gap</p>
+                <p class="text-xs text-slate-500 mt-1">Two submitted reports were missing attachment references.</p>
+              </div>
+              <span class="px-2.5 py-1 rounded-full bg-yellow-100 text-yellow-700 text-xs font-bold">Review</span>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="flex justify-between items-start gap-4">
+              <div>
+                <p class="text-sm font-bold text-slate-900">Equipment Check Delay</p>
+                <p class="text-xs text-slate-500 mt-1">One station missed its scheduled maintenance verification window.</p>
+              </div>
+              <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold">Action</span>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="flex justify-between items-start gap-4">
+              <div>
+                <p class="text-sm font-bold text-slate-900">Training Completion</p>
+                <p class="text-xs text-slate-500 mt-1">All new personnel completed required orientation modules.</p>
+              </div>
+              <span class="px-2.5 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold">Resolved</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- AUDIT TRACKER -->
+    <section class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+
+      <!-- PERFORMANCE METRICS -->
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+        <div class="flex items-center justify-between border-b border-slate-200 pb-5">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900">
+              Performance Metrics
+            </h2>
+            <p class="text-sm text-slate-500 mt-1">
+              Current audit score trends
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-5 space-y-4">
+
+          <div>
+            <div class="flex justify-between text-sm font-semibold text-slate-700 mb-2">
+              <span>Reporting Compliance</span>
+              <span>96%</span>
+            </div>
+            <div class="h-2.5 rounded-full bg-slate-100 overflow-hidden">
+              <div class="h-full w-[96%] rounded-full bg-emerald-500"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between text-sm font-semibold text-slate-700 mb-2">
+              <span>On-Time Submission</span>
+              <span>88%</span>
+            </div>
+            <div class="h-2.5 rounded-full bg-slate-100 overflow-hidden">
+              <div class="h-full w-[88%] rounded-full bg-blue-500"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between text-sm font-semibold text-slate-700 mb-2">
+              <span>Attachment Completeness</span>
+              <span>81%</span>
+            </div>
+            <div class="h-2.5 rounded-full bg-slate-100 overflow-hidden">
+              <div class="h-full w-[81%] rounded-full bg-yellow-500"></div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- ACTION NOTES -->
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+        <div class="flex items-center justify-between border-b border-slate-200 pb-5">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900">
+              Action Notes
+            </h2>
+            <p class="text-sm text-slate-500 mt-1">
+              Follow-up reminders for administrators
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-5 space-y-4">
+
+          <div class="p-4 rounded-xl border border-emerald-200 bg-emerald-50">
+            <p class="text-sm font-bold text-slate-900">Reminder</p>
+            <p class="text-sm text-slate-600 mt-1">Ensure all stations attach supporting evidence before submitting monthly compliance reports.</p>
+          </div>
+
+          <div class="p-4 rounded-xl border border-orange-200 bg-orange-50">
+            <p class="text-sm font-bold text-slate-900">Attention</p>
+            <p class="text-sm text-slate-600 mt-1">Two delayed incident reports need closure notes and supervisor approval before end of day.</p>
+          </div>
+
+          <div class="p-4 rounded-xl border border-indigo-200 bg-indigo-50">
+            <p class="text-sm font-bold text-slate-900">Follow-Up</p>
+            <p class="text-sm text-slate-600 mt-1">Schedule a review meeting with Station Chiefs to address recurring documentation inconsistencies.</p>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </div>
+
+
+  <!-- ===================================================== -->
+  <!-- COMPLIANCE HEALTH -->
+  <!-- ===================================================== -->
+  <div
+    v-if="false"
+    class="space-y-6"
+  >
+
+    <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+
+        <div>
+
+          <p class="text-sm font-bold uppercase tracking-wide text-[#8B1E23]">
+            Operational Health
+          </p>
+
+          <h2 class="text-2xl font-bold text-slate-900 mt-1">
+            Compliance Health
+          </h2>
+
+          <p class="text-base text-slate-500 mt-1">
+            Monitor station compliance, review health indicators, and track corrective actions.
+          </p>
+
+        </div>
+
+        <button
+          class="px-5 py-3 rounded-xl border border-slate-300 bg-white text-slate-700 font-bold hover:bg-slate-100 transition"
+        >
+          View Full Report
+        </button>
+
+      </div>
+
+    </section>
+
+
+    <!-- HEALTH SUMMARY -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <p class="text-3xl font-bold text-[#8B1E23]">94.5%</p>
+        <p class="text-sm text-slate-500 mt-1">Overall Health</p>
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <p class="text-3xl font-bold text-green-600">07</p>
+        <p class="text-sm text-slate-500 mt-1">Good Standing</p>
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <p class="text-3xl font-bold text-yellow-600">02</p>
+        <p class="text-sm text-slate-500 mt-1">Needs Attention</p>
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <p class="text-3xl font-bold text-blue-600">89%</p>
+        <p class="text-sm text-slate-500 mt-1">Deadline Adherence</p>
+      </div>
+
+    </section>
+
+
+    <!-- COMPLIANCE OVERVIEW -->
+    <section class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+
+      <!-- STATION COMPLIANCE SNAPSHOT -->
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+        <div class="flex items-center justify-between border-b border-slate-200 pb-5">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900">
+              Station Compliance Snapshot
+            </h2>
+            <p class="text-sm text-slate-500 mt-1">
+              Performance of each station and unit
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-5 space-y-4">
+
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="flex justify-between items-center">
+              <div>
+                <p class="text-sm font-bold text-slate-900">Station 1</p>
+                <p class="text-xs text-slate-500 mt-1">Submission quality and adherence</p>
+              </div>
+              <span class="text-sm font-bold text-green-600">95%</span>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="flex justify-between items-center">
+              <div>
+                <p class="text-sm font-bold text-slate-900">Station 2</p>
+                <p class="text-xs text-slate-500 mt-1">Equipment checks and reporting</p>
+              </div>
+              <span class="text-sm font-bold text-yellow-600">82%</span>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="flex justify-between items-center">
+              <div>
+                <p class="text-sm font-bold text-slate-900">Station 3</p>
+                <p class="text-xs text-slate-500 mt-1">Documentation completeness</p>
+              </div>
+              <span class="text-sm font-bold text-green-600">91%</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- STANDARDS CHECK STATUS -->
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+        <div class="flex items-center justify-between border-b border-slate-200 pb-5">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900">
+              Standards Check Status
+            </h2>
+            <p class="text-sm text-slate-500 mt-1">
+              Current compliance checklist progress
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-5 space-y-4">
+
+          <div>
+            <div class="flex justify-between text-sm font-semibold text-slate-700 mb-2">
+              <span>Daily Logs</span>
+              <span>98%</span>
+            </div>
+            <div class="h-2.5 rounded-full bg-slate-100 overflow-hidden">
+              <div class="h-full w-[98%] rounded-full bg-emerald-500"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between text-sm font-semibold text-slate-700 mb-2">
+              <span>Equipment Verification</span>
+              <span>87%</span>
+            </div>
+            <div class="h-2.5 rounded-full bg-slate-100 overflow-hidden">
+              <div class="h-full w-[87%] rounded-full bg-blue-500"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between text-sm font-semibold text-slate-700 mb-2">
+              <span>Attachment Completeness</span>
+              <span>84%</span>
+            </div>
+            <div class="h-2.5 rounded-full bg-slate-100 overflow-hidden">
+              <div class="h-full w-[84%] rounded-full bg-yellow-500"></div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- RISK AND ACTIONS -->
+    <section class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+
+      <!-- RISK AREAS -->
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+        <div class="flex items-center justify-between border-b border-slate-200 pb-5">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900">
+              Risk Areas
+            </h2>
+            <p class="text-sm text-slate-500 mt-1">
+              Potential gaps affecting compliance
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-5 space-y-4">
+
+          <div class="p-4 rounded-xl border border-red-200 bg-red-50">
+            <p class="text-sm font-bold text-slate-900">Delayed Report Submission</p>
+            <p class="text-sm text-slate-600 mt-1">Two station reports remain unsubmitted beyond target deadlines.</p>
+          </div>
+
+          <div class="p-4 rounded-xl border border-yellow-200 bg-yellow-50">
+            <p class="text-sm font-bold text-slate-900">Incomplete Attachments</p>
+            <p class="text-sm text-slate-600 mt-1">Several reports lack required photos, signatures, or supporting documents.</p>
+          </div>
+
+          <div class="p-4 rounded-xl border border-blue-200 bg-blue-50">
+            <p class="text-sm font-bold text-slate-900">Equipment Verification Window</p>
+            <p class="text-sm text-slate-600 mt-1">One station missed a scheduled maintenance verification audit this cycle.</p>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- REMEDIATION PLAN -->
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+        <div class="flex items-center justify-between border-b border-slate-200 pb-5">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900">
+              Remediation Plan
+            </h2>
+            <p class="text-sm text-slate-500 mt-1">
+              Immediate steps to improve health scores
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-5 space-y-4">
+
+          <div class="p-4 rounded-xl border border-emerald-200 bg-emerald-50">
+            <p class="text-sm font-bold text-slate-900">Priority 1</p>
+            <p class="text-sm text-slate-600 mt-1">Complete all overdue reports and apply review notes before end of day.</p>
+          </div>
+
+          <div class="p-4 rounded-xl border border-orange-200 bg-orange-50">
+            <p class="text-sm font-bold text-slate-900">Priority 2</p>
+            <p class="text-sm text-slate-600 mt-1">Reconcile missing attachments and require station-level verification before submission.</p>
+          </div>
+
+          <div class="p-4 rounded-xl border border-indigo-200 bg-indigo-50">
+            <p class="text-sm font-bold text-slate-900">Priority 3</p>
+            <p class="text-sm text-slate-600 mt-1">Reschedule equipment verification for the affected station and document corrective action.</p>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </div>
+
+
+  <!-- ===================================================== -->
+  <!-- DOCUMENT PIPELINE -->
+  <!-- ===================================================== -->
+  <div
+    v-if="false"
+    class="space-y-6"
+  >
+
+    <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+
+        <div>
+
+          <p class="text-sm font-bold uppercase tracking-wide text-[#8B1E23]">
+            Records Workflow
+          </p>
+
+          <h2 class="text-2xl font-bold text-slate-900 mt-1">
+            Document Pipeline
+          </h2>
+
+          <p class="text-base text-slate-500 mt-1">
+            Track submitted documents, monitor approval stages, and manage the digital record flow.
+          </p>
+
+        </div>
+
+        <button
+          class="px-5 py-3 rounded-xl bg-[#8B1E23] text-white font-bold hover:bg-[#72181D] transition"
+        >
+          + New Document
+        </button>
+
+      </div>
+
+    </section>
+
+
+    <!-- PIPELINE SUMMARY -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <p class="text-3xl font-bold text-[#8B1E23]">146</p>
+        <p class="text-sm text-slate-500 mt-1">Documents In Queue</p>
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <p class="text-3xl font-bold text-green-600">98</p>
+        <p class="text-sm text-slate-500 mt-1">Approved</p>
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <p class="text-3xl font-bold text-yellow-600">24</p>
+        <p class="text-sm text-slate-500 mt-1">Pending Review</p>
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <p class="text-3xl font-bold text-blue-600">09</p>
+        <p class="text-sm text-slate-500 mt-1">Archived Today</p>
+      </div>
+
+    </section>
+
+
+    <!-- PIPELINE STAGES -->
+    <section class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+
+      <!-- DOCUMENT FLOW -->
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+        <div class="flex items-center justify-between border-b border-slate-200 pb-5">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900">
+              Document Flow
+            </h2>
+            <p class="text-sm text-slate-500 mt-1">
+              Current status of submitted records
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-5 space-y-4">
+
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="flex justify-between items-center">
+              <div>
+                <p class="text-sm font-bold text-slate-900">Submission</p>
+                <p class="text-xs text-slate-500 mt-1">42 new documents uploaded today</p>
+              </div>
+              <span class="text-sm font-bold text-[#8B1E23]">Active</span>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="flex justify-between items-center">
+              <div>
+                <p class="text-sm font-bold text-slate-900">Validation</p>
+                <p class="text-xs text-slate-500 mt-1">18 documents awaiting admin review</p>
+              </div>
+              <span class="text-sm font-bold text-blue-600">In Progress</span>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="flex justify-between items-center">
+              <div>
+                <p class="text-sm font-bold text-slate-900">Approval</p>
+                <p class="text-xs text-slate-500 mt-1">31 documents approved this cycle</p>
+              </div>
+              <span class="text-sm font-bold text-green-600">Ready</span>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="flex justify-between items-center">
+              <div>
+                <p class="text-sm font-bold text-slate-900">Archive</p>
+                <p class="text-xs text-slate-500 mt-1">12 records successfully filed</p>
+              </div>
+              <span class="text-sm font-bold text-emerald-600">Completed</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- PENDING APPROVALS -->
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+        <div class="flex items-center justify-between border-b border-slate-200 pb-5">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900">
+              Pending Approvals
+            </h2>
+            <p class="text-sm text-slate-500 mt-1">
+              Documents waiting for final action
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-5 space-y-4">
+
+          <div class="p-4 rounded-xl border border-yellow-200 bg-yellow-50">
+            <div class="flex justify-between gap-3">
+              <div>
+                <p class="font-bold text-slate-900">Monthly Compliance Summary</p>
+                <p class="text-xs text-slate-500 mt-1">Uploaded by Station 2 • 1 hour ago</p>
+              </div>
+              <span class="px-2.5 py-1 rounded-full bg-yellow-100 text-yellow-700 text-xs font-bold">Review</span>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl border border-blue-200 bg-blue-50">
+            <div class="flex justify-between gap-3">
+              <div>
+                <p class="font-bold text-slate-900">Barangay Fire Drill Attendance</p>
+                <p class="text-xs text-slate-500 mt-1">Uploaded by Admin Office • 3 hours ago</p>
+              </div>
+              <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold">Validation</span>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl border border-red-200 bg-red-50">
+            <div class="flex justify-between gap-3">
+              <div>
+                <p class="font-bold text-slate-900">Incident Photo Documentation</p>
+                <p class="text-xs text-slate-500 mt-1">Uploaded by FO3 Juan Dela Cruz • 5 hours ago</p>
+              </div>
+              <span class="px-2.5 py-1 rounded-full bg-red-100 text-[#8B1E23] text-xs font-bold">Urgent</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- PROCESS SUMMARY -->
+    <section class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+
+      <!-- DOCUMENT TYPES -->
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+        <div class="flex items-center justify-between border-b border-slate-200 pb-5">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900">
+              Document Types
+            </h2>
+            <p class="text-sm text-slate-500 mt-1">
+              Most used record categories
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-5 space-y-4">
+
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="flex justify-between items-center">
+              <div>
+                <p class="text-sm font-bold text-slate-900">Incident Reports</p>
+                <p class="text-xs text-slate-500 mt-1">64 files</p>
+              </div>
+              <span class="text-sm font-bold text-[#8B1E23]">44%</span>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="flex justify-between items-center">
+              <div>
+                <p class="text-sm font-bold text-slate-900">Compliance Reports</p>
+                <p class="text-xs text-slate-500 mt-1">39 files</p>
+              </div>
+              <span class="text-sm font-bold text-blue-600">27%</span>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="flex justify-between items-center">
+              <div>
+                <p class="text-sm font-bold text-slate-900">Training & Activity Logs</p>
+                <p class="text-xs text-slate-500 mt-1">25 files</p>
+              </div>
+              <span class="text-sm font-bold text-green-600">18%</span>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="flex justify-between items-center">
+              <div>
+                <p class="text-sm font-bold text-slate-900">Other Records</p>
+                <p class="text-xs text-slate-500 mt-1">18 files</p>
+              </div>
+              <span class="text-sm font-bold text-yellow-600">11%</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- RECENT ARCHIVE ACTIVITY -->
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+        <div class="flex items-center justify-between border-b border-slate-200 pb-5">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900">
+              Recent Archive Activity
+            </h2>
+            <p class="text-sm text-slate-500 mt-1">
+              Latest filed documents and updates
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-5 space-y-4">
+
+          <div class="p-4 rounded-xl border border-emerald-200 bg-emerald-50">
+            <p class="text-sm font-bold text-slate-900">Station 1 Weekly Summary</p>
+            <p class="text-sm text-slate-600 mt-1">Filed successfully and synced to the archive this morning.</p>
+          </div>
+
+          <div class="p-4 rounded-xl border border-indigo-200 bg-indigo-50">
+            <p class="text-sm font-bold text-slate-900">Barangay Safety Seminar Notes</p>
+            <p class="text-sm text-slate-600 mt-1">Approved and stored under training records after final review.</p>
+          </div>
+
+          <div class="p-4 rounded-xl border border-amber-200 bg-amber-50">
+            <p class="text-sm font-bold text-slate-900">Engine Maintenance Checklist</p>
+            <p class="text-sm text-slate-600 mt-1">Auto-saved in the document archive pending audit verification.</p>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </div>
+
+
+  <!-- ===================================================== -->
+  <!-- PRINT & EXPORT PDF -->
+  <!-- ===================================================== -->
+  <div
+    v-if="false"
+    class="space-y-6"
+  >
+
+    <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+
+        <div>
+
+          <p class="text-sm font-bold uppercase tracking-wide text-[#8B1E23]">
+            Reporting Tools
+          </p>
+
+          <h2 class="text-2xl font-bold text-slate-900 mt-1">
+            Print & Export PDF
+          </h2>
+
+          <p class="text-base text-slate-500 mt-1">
+            Generate printable reports, export summaries, and prepare official documents for distribution.
+          </p>
+
+        </div>
+
+        <button
+          class="px-5 py-3 rounded-xl bg-[#8B1E23] text-white font-bold hover:bg-[#72181D] transition"
+        >
+          Generate PDF
+        </button>
+
+      </div>
+
+    </section>
+
+
+    <!-- EXPORT SUMMARY -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <p class="text-3xl font-bold text-[#8B1E23]">14</p>
+        <p class="text-sm text-slate-500 mt-1">Reports Ready</p>
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <p class="text-3xl font-bold text-green-600">07</p>
+        <p class="text-sm text-slate-500 mt-1">Recently Exported</p>
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <p class="text-3xl font-bold text-yellow-600">03</p>
+        <p class="text-sm text-slate-500 mt-1">Queued</p>
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <p class="text-3xl font-bold text-blue-600">05</p>
+        <p class="text-sm text-slate-500 mt-1">Templates</p>
+      </div>
+
+    </section>
+
+
+    <!-- EXPORT OPTIONS -->
+    <section class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+
+      <!-- REPORT TEMPLATES -->
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+        <div class="flex items-center justify-between border-b border-slate-200 pb-5">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900">
+              Report Templates
+            </h2>
+            <p class="text-sm text-slate-500 mt-1">
+              Standard document formats available
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-5 space-y-4">
+
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="flex justify-between items-start gap-4">
+              <div>
+                <p class="text-sm font-bold text-slate-900">Monthly Compliance Report</p>
+                <p class="text-xs text-slate-500 mt-1">Standard template for station summaries</p>
+              </div>
+              <span class="px-2.5 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold">Ready</span>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="flex justify-between items-start gap-4">
+              <div>
+                <p class="text-sm font-bold text-slate-900">Incident Summary PDF</p>
+                <p class="text-xs text-slate-500 mt-1">Used for formal incident documentation</p>
+              </div>
+              <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold">Updated</span>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="flex justify-between items-start gap-4">
+              <div>
+                <p class="text-sm font-bold text-slate-900">Weekly Activity Log</p>
+                <p class="text-xs text-slate-500 mt-1">Printable log for operational review</p>
+              </div>
+              <span class="px-2.5 py-1 rounded-full bg-yellow-100 text-yellow-700 text-xs font-bold">Draft</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- EXPORT STATUS -->
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+        <div class="flex items-center justify-between border-b border-slate-200 pb-5">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900">
+              Export Status
+            </h2>
+            <p class="text-sm text-slate-500 mt-1">
+              Current PDF generation progress
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-5 space-y-4">
+
+          <div>
+            <div class="flex justify-between text-sm font-semibold text-slate-700 mb-2">
+              <span>Daily Summary</span>
+              <span>96%</span>
+            </div>
+            <div class="h-2.5 rounded-full bg-slate-100 overflow-hidden">
+              <div class="h-full w-[96%] rounded-full bg-emerald-500"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between text-sm font-semibold text-slate-700 mb-2">
+              <span>Incident Report Bundle</span>
+              <span>78%</span>
+            </div>
+            <div class="h-2.5 rounded-full bg-slate-100 overflow-hidden">
+              <div class="h-full w-[78%] rounded-full bg-blue-500"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between text-sm font-semibold text-slate-700 mb-2">
+              <span>Monthly Compliance Pack</span>
+              <span>54%</span>
+            </div>
+            <div class="h-2.5 rounded-full bg-slate-100 overflow-hidden">
+              <div class="h-full w-[54%] rounded-full bg-yellow-500"></div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- EXPORT HISTORY -->
+    <section class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+
+      <!-- RECENT EXPORTS -->
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+        <div class="flex items-center justify-between border-b border-slate-200 pb-5">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900">
+              Recent Exports
+            </h2>
+            <p class="text-sm text-slate-500 mt-1">
+              Most recent generated files
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-5 space-y-4">
+
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="flex justify-between items-start gap-4">
+              <div>
+                <p class="text-sm font-bold text-slate-900">Weekly Accomplishment Report</p>
+                <p class="text-xs text-slate-500 mt-1">Exported 10 minutes ago</p>
+              </div>
+              <span class="px-2.5 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold">Success</span>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="flex justify-between items-start gap-4">
+              <div>
+                <p class="text-sm font-bold text-slate-900">Barangay Fire Drill Summary</p>
+                <p class="text-xs text-slate-500 mt-1">Exported 1 hour ago</p>
+              </div>
+              <span class="px-2.5 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold">Success</span>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="flex justify-between items-start gap-4">
+              <div>
+                <p class="text-sm font-bold text-slate-900">Incident Photo Bundle</p>
+                <p class="text-xs text-slate-500 mt-1">Exported yesterday</p>
+              </div>
+              <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold">Saved</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- PRINT SETTINGS -->
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+        <div class="flex items-center justify-between border-b border-slate-200 pb-5">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900">
+              Print Settings
+            </h2>
+            <p class="text-sm text-slate-500 mt-1">
+              Preferred options for generated outputs
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-5 space-y-4">
+
+          <div class="p-4 rounded-xl border border-emerald-200 bg-emerald-50">
+            <p class="text-sm font-bold text-slate-900">Paper Size</p>
+            <p class="text-sm text-slate-600 mt-1">A4 default with margin optimization for official documentation.</p>
+          </div>
+
+          <div class="p-4 rounded-xl border border-indigo-200 bg-indigo-50">
+            <p class="text-sm font-bold text-slate-900">Orientation</p>
+            <p class="text-sm text-slate-600 mt-1">Portrait for summaries and landscape for multi-table reports.</p>
+          </div>
+
+          <div class="p-4 rounded-xl border border-amber-200 bg-amber-50">
+            <p class="text-sm font-bold text-slate-900">Watermark</p>
+            <p class="text-sm text-slate-600 mt-1">Official document watermark applied for printable compliance reports.</p>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
   </div>
 
 
@@ -1962,7 +4195,7 @@
   <!-- FALLBACK -->
   <!-- ===================================================== -->
   <div
-    v-else
+    v-if="false"
     class="bg-white border border-slate-200 rounded-2xl shadow-sm p-10 text-center"
   >
 
@@ -2083,6 +4316,17 @@
 
 <script setup>
 import { ref } from 'vue'
+import Dashboard from './Dashboard.vue'
+import ActivityManagement from './ActivityManagement.vue'
+import PersonnelManagement from './PersonnelManagement.vue'
+import ReportManagement from './ReportManagement.vue'
+import DeadlineMonitor from './DeadlineMonitor.vue'
+import Notifications from './Notifications.vue'
+import WeeklyMonthlyLogs from './WeeklyMonthlyLogs.vue'
+import AuditEscalations from './AuditEscalations.vue'
+import ComplianceHealth from './ComplianceHealth.vue'
+import DocumentPipeline from './DocumentPipeline.vue'
+import PrintExportPDF from './PrintExportPDF.vue'
 
 const props = defineProps({
   currentUser: {
