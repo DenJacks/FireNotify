@@ -587,66 +587,7 @@
             </div>
 
 
-            <!-- BADGE / STATION -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-
-              <div>
-
-                <label
-                  class="mb-2 block text-base font-semibold text-slate-700"
-                >
-                  Badge Number
-                </label>
-
-                <input
-                  v-model="signupForm.badgeNumber"
-                  type="text"
-                  placeholder="BFP-2026-XXXX"
-                  class="w-full h-14 rounded-lg border-2 border-slate-300 px-4 text-base text-slate-800 placeholder:text-slate-400 focus:border-[#8B1E23] focus:outline-none focus:ring-4 focus:ring-red-100 transition"
-                />
-
-              </div>
-
-
-              <div>
-
-                <label
-                  class="mb-2 block text-base font-semibold text-slate-700"
-                >
-                  Station / Unit
-                </label>
-
-                <select
-                  v-model="signupForm.station"
-                  class="w-full h-14 rounded-lg border-2 border-slate-300 bg-white px-4 text-base text-slate-800 focus:border-[#8B1E23] focus:outline-none focus:ring-4 focus:ring-red-100 transition"
-                >
-
-                  <option value="" disabled>
-                    Select Station
-                  </option>
-
-                  <option value="Central Station">
-                    Central Station
-                  </option>
-
-                  <option value="Sub-Station 1">
-                    Sub-Station 1
-                  </option>
-
-                  <option value="Sub-Station 2">
-                    Sub-Station 2
-                  </option>
-
-                  <option value="HQ District">
-                    HQ District
-                  </option>
-
-                </select>
-
-              </div>
-
-            </div>
-
+  
 
             <!-- PASSWORD -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">

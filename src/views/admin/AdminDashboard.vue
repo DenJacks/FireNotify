@@ -251,7 +251,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import Dashboard from './Dashboard.vue'
 import ActivityManagement from './ActivityManagement.vue'
 import PersonnelManagement from './PersonnelManagement.vue'
@@ -273,7 +273,20 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['logout'])
-const activeMenu = ref('Dashboard')
+
+
+const ACTIVE_MENU_KEY = 'fireNotifyAdminActiveMenu'
+
+const activeMenu = ref(
+  localStorage.getItem(ACTIVE_MENU_KEY) || 'Dashboard'
+)
+
+watch(activeMenu, (newMenu) => {
+  localStorage.setItem(ACTIVE_MENU_KEY, newMenu)
+})
+
+
+
 const showLogoutConfirm = ref(false)
 
 const ICONS = {
@@ -307,8 +320,13 @@ const capstoneItems = [
 
 const confirmLogout = () => {
   showLogoutConfirm.value = false
+
+  // Reset Admin page to Dashboard
+  localStorage.removeItem(ACTIVE_MENU_KEY)
+
   emit('logout')
 }
+
 
 const getSvgPath = (key) => {
   return `<path d="${ICONS[key] || ICONS.default}"/>`

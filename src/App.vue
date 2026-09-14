@@ -1,5 +1,6 @@
 <template>
   <div>
+    <!-- LOGIN PAGE -->
     <LoginSignup
       v-if="!isLoggedIn"
       :registered-users="registeredUsers"
@@ -7,40 +8,74 @@
       @register-user="handleRegisterUser"
     />
 
-    <div v-else-if="isLoggedIn && currentUser">
+    <!-- LOGGED-IN USER -->
+    <div v-else-if="currentUser">
+
+      <!-- ADMIN -->
       <AdminDashboard
         v-if="currentUser.role === 'admin'"
         :current-user="currentUser"
         @logout="handleLogout"
       />
 
+      <!-- PERSONNEL / AUTH / INSPECTOR -->
       <PersonnelDashboard
-        v-else-if="['auth', 'personnel', 'inspector'].includes(currentUser.role)"
+        v-else-if="
+          ['auth', 'personnel', 'inspector'].includes(
+            currentUser.role
+          )
+        "
         :current-user="currentUser"
         @logout="handleLogout"
       />
 
-      <div v-else class="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center">
+      <!-- UNKNOWN ROLE -->
+      <div
+        v-else
+        class="min-h-screen bg-slate-950 text-white flex items-center justify-center"
+      >
         <div class="text-center">
-          <h1 class="text-3xl font-bold mb-4">⚠️ Error</h1>
-          <p class="text-slate-400 mb-6">Unknown user role: {{ currentUser.role }}</p>
-          <button @click="handleLogout" class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-white">
+          <h1 class="text-3xl font-bold mb-4">
+            ⚠️ Unknown User Role
+          </h1>
+
+          <p class="text-slate-400 mb-6">
+            Role: {{ currentUser.role }}
+          </p>
+
+          <button
+            @click="handleLogout"
+            class="px-5 py-3 bg-red-600 hover:bg-red-700 rounded-xl font-semibold"
+          >
             Back to Login
           </button>
         </div>
       </div>
+
     </div>
   </div>
 </template>
 
+
 <script setup>
 import { ref, computed } from 'vue'
+
 import LoginSignup from './views/auth/LoginSignup.vue'
 import AdminDashboard from './views/admin/AdminDashboard.vue'
 import PersonnelDashboard from './views/personnel/PersonnelDashboard.vue'
 
-const STORAGE_KEY = 'fireNotifyRegisteredUsers'
+
+/* =========================================================
+   STORAGE KEYS
+========================================================= */
+
+const USERS_STORAGE_KEY = 'fireNotifyRegisteredUsers'
 const CURRENT_USER_KEY = 'fireNotifyCurrentUser'
+
+
+/* =========================================================
+   DEFAULT USERS
+========================================================= */
 
 const defaultUsers = [
   {
@@ -50,6 +85,7 @@ const defaultUsers = [
     firstName: 'Master',
     lastName: 'Admin'
   },
+
   {
     identifier: 'personnel@bfp.gov.ph',
     password: 'personnel',
@@ -57,6 +93,7 @@ const defaultUsers = [
     firstName: 'Fire',
     lastName: 'Officer'
   },
+
   {
     identifier: 'auth@bfp.gov.ph',
     password: 'auth',
@@ -66,102 +103,175 @@ const defaultUsers = [
   }
 ]
 
+
+/* =========================================================
+   STATE
+========================================================= */
+
 const registeredUsers = ref([])
 const currentUser = ref(null)
 
-const savedUser = localStorage.getItem(CURRENT_USER_KEY)
-if (savedUser) {
+
+/* =========================================================
+   AUTHENTICATION STATE
+========================================================= */
+
+const isLoggedIn = computed(() => {
+  return currentUser.value !== null
+})
+
+
+/* =========================================================
+   LOAD SAVED SESSION
+========================================================= */
+
+const loadCurrentUser = () => {
+  const savedUser = localStorage.getItem(CURRENT_USER_KEY)
+
+  if (!savedUser) {
+    return
+  }
+
   try {
-    currentUser.value = JSON.parse(savedUser)
+    const user = JSON.parse(savedUser)
+
+    if (
+      user &&
+      user.identifier &&
+      user.role
+    ) {
+      currentUser.value = user
+    }
   } catch (error) {
-    console.error('Failed to parse saved user:', error)
+    console.error(
+      'Failed to restore user session:',
+      error
+    )
+
+    localStorage.removeItem(CURRENT_USER_KEY)
   }
 }
 
-const isLoggedIn = computed(() => currentUser.value !== null)
+
+/* =========================================================
+   LOAD REGISTERED USERS
+========================================================= */
 
 const loadRegisteredUsers = () => {
-  const savedUsers = localStorage.getItem(STORAGE_KEY)
+  const savedUsers = localStorage.getItem(
+    USERS_STORAGE_KEY
+  )
 
   if (savedUsers) {
     try {
       const parsedUsers = JSON.parse(savedUsers)
-      if (Array.isArray(parsedUsers) && parsedUsers.length) {
-        registeredUsers.value = parsedUsers.map((user) => ({
-          ...user,
-          role: user.role || 'personnel'
-        }))
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(registeredUsers.value))
+
+      if (
+        Array.isArray(parsedUsers) &&
+        parsedUsers.length > 0
+      ) {
+        registeredUsers.value = parsedUsers.map(
+          user => ({
+            ...user,
+            role: user.role || 'personnel'
+          })
+        )
+
         return
       }
     } catch (error) {
-      console.error('Failed to parse saved users:', error)
+      console.error(
+        'Failed to load registered users:',
+        error
+      )
     }
   }
 
   registeredUsers.value = [...defaultUsers]
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(registeredUsers.value))
+
+  localStorage.setItem(
+    USERS_STORAGE_KEY,
+    JSON.stringify(
+      registeredUsers.value
+    )
+  )
 }
 
+
+/* =========================================================
+   LOGIN SUCCESS
+========================================================= */
+
 const handleLoginSuccess = (user) => {
-  currentUser.value = user
-  localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user))
+  if (!user) return
+
+  // Always start from Dashboard after login
+  localStorage.removeItem('fireNotifyAdminActiveMenu')
+  localStorage.removeItem('fireNotifyPersonnelActiveTab')
+
+  currentUser.value = { ...user }
+
+  localStorage.setItem(
+    CURRENT_USER_KEY,
+    JSON.stringify(currentUser.value)
+  )
 }
+
+
+/* =========================================================
+   LOGOUT
+========================================================= */
 
 const handleLogout = () => {
   currentUser.value = null
-  localStorage.removeItem(CURRENT_USER_KEY)
+
+  localStorage.removeItem(
+    CURRENT_USER_KEY
+  )
 }
 
+
+/* =========================================================
+   REGISTER USER
+========================================================= */
+
 const handleRegisterUser = (newUser) => {
-  if (!newUser || newUser.role === 'admin') {
+  if (
+    !newUser ||
+    newUser.role === 'admin'
+  ) {
     return
   }
 
-  const duplicate = registeredUsers.value.some(
-    (user) => user.identifier.toLowerCase() === newUser.identifier.toLowerCase()
-  )
+  const duplicate =
+    registeredUsers.value.some(
+      user =>
+        user.identifier.toLowerCase() ===
+        newUser.identifier.toLowerCase()
+    )
 
   if (duplicate) {
     return
   }
 
-  registeredUsers.value = [...registeredUsers.value, newUser]
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(registeredUsers.value))
+  registeredUsers.value = [
+    ...registeredUsers.value,
+    newUser
+  ]
+
+  localStorage.setItem(
+    USERS_STORAGE_KEY,
+    JSON.stringify(
+      registeredUsers.value
+    )
+  )
 }
+
+
+/* =========================================================
+   INITIALIZE APPLICATION
+========================================================= */
 
 loadRegisteredUsers()
+loadCurrentUser()
 </script>
-
-<style scoped>
-@keyframes sidebarItemEnter {
-  from {
-    opacity: 0;
-    transform: translateX(-12px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-.animate-sidebar-item {
-  animation: sidebarItemEnter 0.45s ease-out both;
-}
-
-@keyframes logoFloat {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(-2px);
-  }
-}
-
-.sidebar-logo {
-  animation: logoFloat 3s ease-in-out infinite;
-}
-</style>

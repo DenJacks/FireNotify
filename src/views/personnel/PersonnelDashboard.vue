@@ -315,7 +315,7 @@
 
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 
 import Dashboard from './Dashboard.vue'
 import Tasks from './Tasks.vue'
@@ -333,6 +333,8 @@ import Settings from './Settings.vue'
    PROPS / EMITS
    ========================================================= */
 
+   
+
 const props = defineProps({
   currentUser: {
     type: Object,
@@ -348,7 +350,17 @@ const emit = defineEmits(['logout'])
    SHARED SHELL STATE
    ========================================================= */
 
-const activeTab = ref('Dashboard')
+const ACTIVE_TAB_KEY = 'fireNotifyPersonnelActiveTab'
+
+const activeTab = ref(
+  localStorage.getItem(ACTIVE_TAB_KEY) || 'Dashboard'
+)
+
+watch(activeTab, (newTab) => {
+  localStorage.setItem(ACTIVE_TAB_KEY, newTab)
+})
+
+
 const showLogoutConfirm = ref(false)
 
 
