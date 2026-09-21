@@ -1,25 +1,28 @@
 <template>
-  <div
-    class="min-h-screen w-full bg-slate-100 flex items-center justify-center p-4 sm:p-6 lg:p-10 font-sans"
-  >
+  <div class="auth-page">
 
-    <!-- MAIN CARD -->
-    <div
-      class="w-full max-w-6xl bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200"
-    >
+    <!-- =====================================================
+         MAIN AUTH CONTAINER
+    ====================================================== -->
+    <div class="auth-container">
 
-      <!-- TOP HEADER -->
-      <div class="bg-[#8B1E23] text-white px-6 sm:px-8 py-5">
-        <div class="flex items-center gap-4">
+      <!-- ===================================================
+           LEFT BRAND / INFORMATION PANEL
+      ==================================================== -->
+      <section class="auth-brand">
 
-          <!-- FIRE ICON -->
-          <div
-            class="w-14 h-14 rounded-xl bg-white flex items-center justify-center shadow-md flex-shrink-0"
-          >
+        <!-- Decorative background -->
+        <div class="brand-glow brand-glow-top"></div>
+        <div class="brand-glow brand-glow-bottom"></div>
+
+        <!-- Logo -->
+        <div class="auth-logo">
+
+          <div class="auth-logo-icon">
             <svg
-              class="w-8 h-8 text-[#8B1E23]"
               viewBox="0 0 24 24"
               fill="currentColor"
+              class="w-8 h-8"
             >
               <path
                 d="M13.5 2.5c.3 3.2-1.5 5.1-3.1 7-1.3 1.5-2.5 3-2.5 5.3
@@ -32,242 +35,193 @@
           </div>
 
           <div>
-            <h1 class="text-2xl sm:text-3xl font-bold tracking-wide">
-              FIRE<span class="text-[#F5C542]">NOTIFY</span>
+            <h1 class="auth-logo-name">
+              FIRE<span>NOTIFY</span>
             </h1>
 
-            <p class="text-sm sm:text-base text-white/90 mt-1">
+            <p class="auth-logo-subtitle">
               Bureau of Fire Protection
             </p>
           </div>
 
         </div>
-      </div>
 
 
-      <!-- CONTENT -->
-      <div class="grid lg:grid-cols-[0.9fr_1.1fr]">
+        <!-- Main brand content -->
+        <div class="auth-brand-content">
 
-        <!-- LEFT INFORMATION PANEL -->
-        <div
-          class="hidden lg:flex bg-slate-50 border-r border-slate-200 p-10 flex-col justify-between"
-        >
+          <!-- Secure badge -->
+          <div class="auth-badge">
 
-          <div>
+            <span class="auth-badge-dot"></span>
 
-            <div
-              class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-red-50 border border-red-200 text-[#8B1E23]"
-            >
-              <span
-                class="w-3 h-3 rounded-full bg-green-500"
-              ></span>
-
-              <span class="text-sm font-semibold">
-                Secure Personnel Portal
-              </span>
-            </div>
-
-
-            <h2
-              class="mt-8 text-3xl font-bold text-slate-800 leading-tight"
-            >
-              Operations Compliance
-              <br />
-              Monitoring System
-            </h2>
-
-
-            <p
-              class="mt-5 text-lg leading-8 text-slate-600"
-            >
-              FireNotify helps BFP personnel manage assigned
-              activities, reports, deadlines, and operational
-              compliance in one place.
-            </p>
-
-
-            <!-- FEATURES -->
-            <div class="mt-8 space-y-5">
-
-              <div class="flex items-start gap-4">
-
-                <div
-                  class="w-11 h-11 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0"
-                >
-                  <svg
-                    class="w-6 h-6 text-[#8B1E23]"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M9 12l2 2 4-4"
-                    />
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M12 3l7 4v5c0 4.5-3 7.8-7 9-4-1.2-7-4.5-7-9V7l7-4z"
-                    />
-                  </svg>
-                </div>
-
-                <div>
-                  <h3 class="font-bold text-lg text-slate-800">
-                    Track Compliance
-                  </h3>
-
-                  <p class="text-base text-slate-600 mt-1">
-                    Monitor assigned activities and report submissions.
-                  </p>
-                </div>
-
-              </div>
-
-
-              <div class="flex items-start gap-4">
-
-                <div
-                  class="w-11 h-11 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0"
-                >
-                  <svg
-                    class="w-6 h-6 text-amber-700"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M15 17h5l-1.5-1.5V11a6.5 6.5 0 00-13 0v4.5L4 17h5"
-                    />
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M10 21h4"
-                    />
-                  </svg>
-                </div>
-
-                <div>
-                  <h3 class="font-bold text-lg text-slate-800">
-                    Receive Notifications
-                  </h3>
-
-                  <p class="text-base text-slate-600 mt-1">
-                    Stay informed about deadlines and assigned tasks.
-                  </p>
-                </div>
-
-              </div>
-
-
-              <div class="flex items-start gap-4">
-
-                <div
-                  class="w-11 h-11 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0"
-                >
-                  <svg
-                    class="w-6 h-6 text-green-700"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M9 17v-2a4 4 0 014-4h6"
-                    />
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M15 7h6v6"
-                    />
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M3 5h6v6"
-                    />
-                  </svg>
-                </div>
-
-                <div>
-                  <h3 class="font-bold text-lg text-slate-800">
-                    View Reports
-                  </h3>
-
-                  <p class="text-base text-slate-600 mt-1">
-                    Access accomplishment and compliance reports.
-                  </p>
-                </div>
-
-              </div>
-
-            </div>
+            <span>
+              Secure Personnel Portal
+            </span>
 
           </div>
 
 
-          <!-- STATUS -->
-          <div
-            class="mt-10 bg-white rounded-xl border border-slate-200 p-5"
-          >
+          <!-- Heading -->
+          <h2 class="auth-brand-title">
+            Operations Compliance
+            <br />
+            Monitoring System
+          </h2>
 
-            <div class="flex items-center justify-between">
 
-              <span class="text-base font-semibold text-slate-700">
-                System Status
-              </span>
+          <!-- Description -->
+          <p class="auth-brand-description">
+            FireNotify helps BFP personnel manage assigned
+            activities, reports, deadlines, and operational
+            compliance in one place.
+          </p>
 
-              <span
-                class="flex items-center gap-2 text-green-700 font-semibold"
-              >
-                <span class="w-3 h-3 rounded-full bg-green-500"></span>
-                Online
-              </span>
+
+          <!-- =================================================
+               FEATURES
+          ================================================== -->
+          <div class="auth-features">
+
+            <!-- Feature 1 -->
+            <div class="auth-feature">
+
+              <div class="auth-feature-icon feature-red">
+
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  class="w-6 h-6"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M12 3l7 4v5c0 4.5-3 7.8-7 9-4-1.2-7-4.5-7-9V7l7-4z"
+                  />
+
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M9 12l2 2 4-4"
+                  />
+                </svg>
+
+              </div>
+
+              <div class="auth-feature-text">
+
+                <strong>
+                  Track Compliance
+                </strong>
+
+                <span>
+                  Monitor assigned activities and report submissions.
+                </span>
+
+              </div>
 
             </div>
 
-            <div
-              class="grid grid-cols-3 mt-5 divide-x divide-slate-200"
-            >
 
-              <div class="text-center px-2">
-                <p class="text-2xl font-bold text-[#8B1E23]">
-                  48
-                </p>
+            <!-- Feature 2 -->
+            <div class="auth-feature">
 
-                <p class="text-sm text-slate-500 mt-1">
-                  On Duty
-                </p>
+              <div class="auth-feature-icon feature-gold">
+
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  class="w-6 h-6"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M15 17h5l-1.5-1.5V11a6.5 6.5 0 00-13 0v4.5L4 17h5"
+                  />
+
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M10 21h4"
+                  />
+                </svg>
+
               </div>
 
-              <div class="text-center px-2">
-                <p class="text-2xl font-bold text-[#8B1E23]">
-                  12
-                </p>
+              <div class="auth-feature-text">
 
-                <p class="text-sm text-slate-500 mt-1">
-                  Reports
-                </p>
+                <strong>
+                  Receive Notifications
+                </strong>
+
+                <span>
+                  Stay informed about deadlines and assigned tasks.
+                </span>
+
               </div>
 
-              <div class="text-center px-2">
-                <p class="text-2xl font-bold text-[#8B1E23]">
-                  94.5%
-                </p>
+            </div>
 
-                <p class="text-sm text-slate-500 mt-1">
-                  Readiness
-                </p>
+
+            <!-- Feature 3 -->
+            <div class="auth-feature">
+
+              <div class="auth-feature-icon feature-green">
+
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  class="w-6 h-6"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M4 19V5"
+                  />
+
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M4 19h16"
+                  />
+
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M8 16v-5"
+                  />
+
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M12 16V8"
+                  />
+
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M16 16v-8"
+                  />
+                </svg>
+
+              </div>
+
+              <div class="auth-feature-text">
+
+                <strong>
+                  View Reports
+                </strong>
+
+                <span>
+                  Access accomplishment and compliance reports.
+                </span>
+
               </div>
 
             </div>
@@ -277,221 +231,362 @@
         </div>
 
 
-        <!-- RIGHT FORM PANEL -->
-        <div class="p-6 sm:p-8 lg:p-12">
+        <!-- =================================================
+             SYSTEM STATUS
+        ================================================== -->
+        <div class="auth-status">
 
-          <!-- TITLE -->
-          <div class="mb-8">
+          <div class="status-header">
 
-            <p
-              class="text-sm font-semibold text-[#8B1E23] uppercase tracking-wide"
-            >
-              Personnel Access
-            </p>
+            <span>
+              System Status
+            </span>
 
-            <h2
-              class="mt-2 text-3xl font-bold text-slate-800"
-            >
-              {{ isLogin ? 'Welcome Back' : 'Create Your Account' }}
-            </h2>
+            <span class="status-online">
 
-            <p class="mt-2 text-base text-slate-600">
-              {{
-                isLogin
-                  ? 'Sign in to access your FireNotify account.'
-                  : 'Register your BFP personnel account.'
-              }}
-            </p>
+              <span class="status-dot"></span>
 
-          </div>
+              Online
 
-
-          <!-- TABS -->
-          <div
-            class="grid grid-cols-2 border-b-2 border-slate-200 mb-8"
-          >
-
-            <button
-              @click="switchToLogin"
-              type="button"
-              class="py-4 text-base sm:text-lg font-bold transition-colors"
-              :class="
-                isLogin
-                  ? 'text-[#8B1E23] border-b-4 border-[#8B1E23] -mb-[2px]'
-                  : 'text-slate-500 hover:text-slate-700'
-              "
-            >
-              Sign In
-            </button>
-
-
-            <button
-              @click="switchToRegister"
-              type="button"
-              class="py-4 text-base sm:text-lg font-bold transition-colors"
-              :class="
-                !isLogin
-                  ? 'text-[#8B1E23] border-b-4 border-[#8B1E23] -mb-[2px]'
-                  : 'text-slate-500 hover:text-slate-700'
-              "
-            >
-              Register
-            </button>
-
-          </div>
-
-
-          <!-- ERROR MESSAGE -->
-          <div
-            v-if="errorMessage"
-            class="mb-6 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-4"
-          >
-
-            <svg
-              class="w-6 h-6 text-red-600 flex-shrink-0"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 14a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z"
-                clip-rule="evenodd"
-              />
-            </svg>
-
-            <span class="text-base font-medium text-red-700">
-              {{ errorMessage }}
             </span>
 
           </div>
 
 
-          <!-- SUCCESS MESSAGE -->
-          <div
-            v-else-if="successMessage"
-            class="mb-6 flex items-start gap-3 rounded-lg border border-green-200 bg-green-50 px-4 py-4"
-          >
+          <div class="status-metrics">
 
-            <svg
-              class="w-6 h-6 text-green-600 flex-shrink-0"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M12 2a10 10 0 100 20 10 10 0 000-20zm5 7l-6 6-3-3 1.4-1.4L11 12.2l4.6-4.6L17 9z"
-                clip-rule="evenodd"
-              />
-            </svg>
+            <div class="status-metric">
 
-            <span class="text-base font-medium text-green-700">
-              {{ successMessage }}
-            </span>
+              <strong>
+                48
+              </strong>
+
+              <span>
+                On Duty
+              </span>
+
+            </div>
+
+
+            <div class="status-divider"></div>
+
+
+            <div class="status-metric">
+
+              <strong>
+                12
+              </strong>
+
+              <span>
+                Reports
+              </span>
+
+            </div>
+
+
+            <div class="status-divider"></div>
+
+
+            <div class="status-metric">
+
+              <strong>
+                94.5%
+              </strong>
+
+              <span>
+                Readiness
+              </span>
+
+            </div>
 
           </div>
 
+        </div>
 
-          <!-- ========================= -->
-          <!-- LOGIN FORM -->
-          <!-- ========================= -->
 
-          <form
-            v-if="isLogin"
-            @submit.prevent="handleLogin"
-            class="space-y-6"
+        <!-- Decorative bottom -->
+        <div class="brand-stripe brand-stripe-one"></div>
+        <div class="brand-stripe brand-stripe-two"></div>
+        <div class="brand-stripe brand-stripe-three"></div>
+
+      </section>
+
+
+      <!-- ===================================================
+           RIGHT AUTH PANEL
+      ==================================================== -->
+      <section class="auth-form-panel">
+
+        <!-- Small decorative line -->
+        <div class="form-top-line"></div>
+
+
+        <!-- Header -->
+        <div class="form-header">
+
+          <p class="form-eyebrow">
+            Personnel Access
+          </p>
+
+          <h2>
+            {{ isLogin ? 'Welcome Back' : 'Create Your Account' }}
+          </h2>
+
+          <p>
+            {{
+              isLogin
+                ? 'Sign in to access your FireNotify account.'
+                : 'Register your BFP personnel account.'
+            }}
+          </p>
+
+        </div>
+
+
+        <!-- =================================================
+             AUTH TABS
+        ================================================== -->
+        <div class="auth-tabs">
+
+          <button
+            type="button"
+            @click="switchToLogin"
+            :class="[
+              'auth-tab',
+              isLogin ? 'auth-tab-active' : ''
+            ]"
           >
 
-            <!-- EMAIL -->
-            <div>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              class="w-5 h-5"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M15 21v-2a4 4 0 00-4-4H7a4 4 0 00-4 4v2"
+              />
 
-              <label
-                class="mb-2 block text-base font-semibold text-slate-700"
+              <circle
+                cx="9"
+                cy="7"
+                r="4"
+              />
+
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M19 8v6"
+              />
+
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M16 11h6"
+              />
+            </svg>
+
+            Sign In
+
+          </button>
+
+
+          <button
+            type="button"
+            @click="switchToRegister"
+            :class="[
+              'auth-tab',
+              !isLogin ? 'auth-tab-active' : ''
+            ]"
+          >
+
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              class="w-5 h-5"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"
+              />
+
+              <circle
+                cx="9"
+                cy="7"
+                r="4"
+              />
+
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M19 8v6"
+              />
+
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M16 11h6"
+              />
+            </svg>
+
+            Register
+
+          </button>
+
+        </div>
+
+
+        <!-- =================================================
+             ERROR MESSAGE
+        ================================================== -->
+        <div
+          v-if="errorMessage"
+          class="message-box message-error"
+        >
+
+          <div class="message-icon">
+
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              class="w-5 h-5"
+            >
+              <circle
+                cx="12"
+                cy="12"
+                r="9"
+              />
+
+              <path d="M12 8v4" />
+
+              <path d="M12 16h.01" />
+            </svg>
+
+          </div>
+
+          <span>
+            {{ errorMessage }}
+          </span>
+
+        </div>
+
+
+        <!-- =================================================
+             SUCCESS MESSAGE
+        ================================================== -->
+        <div
+          v-if="successMessage"
+          class="message-box message-success"
+        >
+
+          <div class="message-icon">
+
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              class="w-5 h-5"
+            >
+              <circle
+                cx="12"
+                cy="12"
+                r="9"
+              />
+
+              <path d="M8 12l2.5 2.5L16 9" />
+
+            </svg>
+
+          </div>
+
+          <span>
+            {{ successMessage }}
+          </span>
+
+        </div>
+
+
+        <!-- =================================================
+             LOGIN FORM
+        ================================================== -->
+        <form
+          v-if="isLogin"
+          @submit.prevent="handleLogin"
+          class="auth-form"
+        >
+
+          <!-- Email -->
+          <div class="form-field">
+
+            <label>
+              BFP Email Address
+            </label>
+
+            <div class="input-wrapper">
+
+              <svg
+                class="input-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
               >
-                BFP Email Address
-              </label>
+                <rect
+                  x="3"
+                  y="5"
+                  width="18"
+                  height="14"
+                  rx="2"
+                />
+
+                <path d="M3 7l9 6 9-6" />
+              </svg>
 
               <input
                 v-model="loginForm.identifier"
                 type="email"
                 required
+                autocomplete="email"
                 placeholder="Enter your BFP email"
-                class="w-full h-14 rounded-lg border-2 border-slate-300 bg-white px-4 text-base text-slate-800 placeholder:text-slate-400 focus:border-[#8B1E23] focus:outline-none focus:ring-4 focus:ring-red-100 transition"
               />
 
             </div>
 
-
-            <!-- PASSWORD -->
-            <div>
-
-              <div class="mb-2 flex items-center justify-between">
-
-                <label
-                  class="text-base font-semibold text-slate-700"
-                >
-                  Password
-                </label>
-
-                <button
-                  type="button"
-                  class="text-base font-semibold text-[#8B1E23] hover:underline"
-                >
-                  Forgot Password?
-                </button>
-
-              </div>
+          </div>
 
 
-              <div class="relative">
+          <!-- Password -->
+          <div class="form-field">
 
-                <input
-                  v-model="loginForm.password"
-                  :type="showLoginPassword ? 'text' : 'password'"
-                  required
-                  placeholder="Enter your password"
-                  class="w-full h-14 rounded-lg border-2 border-slate-300 bg-white px-4 pr-20 text-base text-slate-800 placeholder:text-slate-400 focus:border-[#8B1E23] focus:outline-none focus:ring-4 focus:ring-red-100 transition"
-                />
+            <div class="field-label-row">
 
-                <button
-                  type="button"
-                  @click="showLoginPassword = !showLoginPassword"
-                  class="absolute right-4 top-1/2 -translate-y-1/2 text-base font-semibold text-[#8B1E23] hover:underline"
-                >
-                  {{ showLoginPassword ? 'Hide' : 'Show' }}
-                </button>
+              <label>
+                Password
+              </label>
 
-              </div>
+              <button
+                type="button"
+                class="forgot-button"
+              >
+                Forgot Password?
+              </button>
 
             </div>
 
 
-            <!-- REMEMBER -->
-            <label
-              class="flex items-center gap-3 cursor-pointer text-base text-slate-700"
-            >
-
-              <input
-                id="remember-me"
-                v-model="loginForm.remember"
-                type="checkbox"
-                class="w-5 h-5 rounded border-slate-300 text-[#8B1E23] focus:ring-[#8B1E23]"
-              />
-
-              <span>
-                Keep me logged in
-              </span>
-
-            </label>
-
-
-            <!-- LOGIN BUTTON -->
-            <button
-              type="submit"
-              class="w-full h-14 rounded-lg bg-[#8B1E23] text-white text-lg font-bold flex items-center justify-center gap-3 hover:bg-[#71181D] focus:outline-none focus:ring-4 focus:ring-red-200 transition shadow-md"
-            >
+            <div class="input-wrapper">
 
               <svg
-                class="w-6 h-6"
+                class="input-icon"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -510,186 +605,551 @@
                 />
               </svg>
 
-              Sign In
 
-            </button>
+              <input
+                v-model="loginForm.password"
+                :type="showLoginPassword ? 'text' : 'password'"
+                required
+                autocomplete="current-password"
+                placeholder="Enter your password"
+              />
 
-          </form>
+
+              <button
+                type="button"
+                class="password-button"
+                @click="showLoginPassword = !showLoginPassword"
+              >
+
+                <svg
+                  v-if="!showLoginPassword"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"
+                  />
+
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="3"
+                  />
+                </svg>
+
+                <svg
+                  v-else
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    d="M3 3l18 18"
+                  />
+
+                  <path
+                    d="M10.6 10.6a2 2 0 002.8 2.8"
+                  />
+
+                  <path
+                    d="M9.9 5.2A10.7 10.7 0 0112 5c6.5 0 10 7 10 7a17 17 0 01-3 3.8"
+                  />
+
+                  <path
+                    d="M6.6 6.6C3.7 8.5 2 12 2 12s3.5 7 10 7c1.4 0 2.7-.3 3.8-.8"
+                  />
+                </svg>
+
+              </button>
+
+            </div>
+
+          </div>
 
 
-          <!-- ========================= -->
-          <!-- REGISTER FORM -->
-          <!-- ========================= -->
+          <!-- Remember -->
+          <label class="remember-row">
 
-          <form
-            v-else
-            @submit.prevent="handleSignup"
-            class="space-y-5"
+            <input
+              v-model="loginForm.remember"
+              type="checkbox"
+            />
+
+            <span>
+              Keep me logged in
+            </span>
+
+          </label>
+
+
+          <!-- Sign In -->
+          <button
+            type="submit"
+            class="primary-button"
           >
 
-            <!-- FIRST / LAST NAME -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"
+              />
 
-              <div>
+              <path
+                d="M10 17l5-5-5-5"
+              />
 
-                <label
-                  class="mb-2 block text-base font-semibold text-slate-700"
+              <path
+                d="M15 12H3"
+              />
+            </svg>
+
+            Sign In
+
+          </button>
+
+
+          <!-- Divider -->
+          <div class="divider">
+
+            <span></span>
+
+            <small>OR</small>
+
+            <span></span>
+
+          </div>
+
+
+          <!-- BFP Account -->
+          <button
+            type="button"
+            class="secondary-button"
+          >
+
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                d="M12 3l7 4v5c0 4.5-3 7.8-7 9-4-1.2-7-4.5-7-9V7l7-4z"
+              />
+
+              <path
+                d="M9 12l2 2 4-4"
+              />
+            </svg>
+
+            Login with BFP Account
+
+          </button>
+
+        </form>
+
+
+        <!-- =================================================
+             REGISTER FORM
+        ================================================== -->
+        <form
+          v-else
+          @submit.prevent="handleSignup"
+          class="auth-form register-form"
+        >
+
+          <!-- Names -->
+          <div class="two-column">
+
+            <div class="form-field">
+
+              <label>
+                First Name
+              </label>
+
+              <div class="input-wrapper">
+
+                <svg
+                  class="input-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
                 >
-                  First Name
-                </label>
+                  <circle
+                    cx="12"
+                    cy="7"
+                    r="4"
+                  />
+
+                  <path
+                    d="M4 21a8 8 0 0116 0"
+                  />
+                </svg>
 
                 <input
                   v-model="signupForm.firstName"
                   type="text"
+                  required
+                  autocomplete="given-name"
                   placeholder="Enter first name"
-                  class="w-full h-14 rounded-lg border-2 border-slate-300 px-4 text-base text-slate-800 placeholder:text-slate-400 focus:border-[#8B1E23] focus:outline-none focus:ring-4 focus:ring-red-100 transition"
                 />
 
               </div>
 
+            </div>
 
-              <div>
 
-                <label
-                  class="mb-2 block text-base font-semibold text-slate-700"
+            <div class="form-field">
+
+              <label>
+                Last Name
+              </label>
+
+              <div class="input-wrapper">
+
+                <svg
+                  class="input-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
                 >
-                  Last Name
-                </label>
+                  <circle
+                    cx="12"
+                    cy="7"
+                    r="4"
+                  />
+
+                  <path
+                    d="M4 21a8 8 0 0116 0"
+                  />
+                </svg>
 
                 <input
                   v-model="signupForm.lastName"
                   type="text"
+                  required
+                  autocomplete="family-name"
                   placeholder="Enter last name"
-                  class="w-full h-14 rounded-lg border-2 border-slate-300 px-4 text-base text-slate-800 placeholder:text-slate-400 focus:border-[#8B1E23] focus:outline-none focus:ring-4 focus:ring-red-100 transition"
                 />
 
               </div>
 
             </div>
 
-
-            <!-- EMAIL -->
-            <div>
-
-              <label
-                class="mb-2 block text-base font-semibold text-slate-700"
-              >
-                BFP Email Address
-              </label>
-
-              <input
-                v-model="signupForm.email"
-                type="email"
-                placeholder="officer@bfp.gov.ph"
-                class="w-full h-14 rounded-lg border-2 border-slate-300 px-4 text-base text-slate-800 placeholder:text-slate-400 focus:border-[#8B1E23] focus:outline-none focus:ring-4 focus:ring-red-100 transition"
-              />
-
-            </div>
+          </div>
 
 
-  
+          <!-- Email -->
+          <div class="form-field">
 
-            <!-- PASSWORD -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <label>
+              BFP Email Address
+            </label>
 
-              <div>
-
-                <label
-                  class="mb-2 block text-base font-semibold text-slate-700"
-                >
-                  Password
-                </label>
-
-                <div class="relative">
-
-                  <input
-                    v-model="signupForm.password"
-                    :type="showSignupPassword ? 'text' : 'password'"
-                    placeholder="Enter password"
-                    class="w-full h-14 rounded-lg border-2 border-slate-300 px-4 pr-20 text-base text-slate-800 placeholder:text-slate-400 focus:border-[#8B1E23] focus:outline-none focus:ring-4 focus:ring-red-100 transition"
-                  />
-
-                  <button
-                    type="button"
-                    @click="showSignupPassword = !showSignupPassword"
-                    class="absolute right-4 top-1/2 -translate-y-1/2 text-base font-semibold text-[#8B1E23] hover:underline"
-                  >
-                    {{ showSignupPassword ? 'Hide' : 'Show' }}
-                  </button>
-
-                </div>
-
-              </div>
-
-
-              <div>
-
-                <label
-                  class="mb-2 block text-base font-semibold text-slate-700"
-                >
-                  Confirm Password
-                </label>
-
-                <input
-                  v-model="signupForm.confirmPassword"
-                  :type="showSignupPassword ? 'text' : 'password'"
-                  placeholder="Re-enter password"
-                  class="w-full h-14 rounded-lg border-2 border-slate-300 px-4 text-base text-slate-800 placeholder:text-slate-400 focus:border-[#8B1E23] focus:outline-none focus:ring-4 focus:ring-red-100 transition"
-                />
-
-              </div>
-
-            </div>
-
-
-            <!-- REGISTER BUTTON -->
-            <button
-              type="submit"
-              class="mt-4 w-full h-14 rounded-lg bg-[#8B1E23] text-white text-lg font-bold flex items-center justify-center gap-3 hover:bg-[#71181D] focus:outline-none focus:ring-4 focus:ring-red-200 transition shadow-md"
-            >
+            <div class="input-wrapper">
 
               <svg
-                class="w-6 h-6"
+                class="input-icon"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
                 stroke-width="2"
               >
-                <path d="M12 5v14" />
-                <path d="M5 12h14" />
+                <rect
+                  x="3"
+                  y="5"
+                  width="18"
+                  height="14"
+                  rx="2"
+                />
+
+                <path
+                  d="M3 7l9 6 9-6"
+                />
               </svg>
 
-              Create Account
+              <input
+                v-model="signupForm.email"
+                type="email"
+                required
+                autocomplete="email"
+                placeholder="officer@bfp.gov.ph"
+              />
 
-            </button>
+            </div>
 
-          </form>
+          </div>
 
 
-          <!-- FOOTER -->
-          <div
-            class="mt-8 pt-5 border-t border-slate-200 text-center"
+          <!-- Passwords -->
+          <div class="two-column">
+
+            <!-- Password -->
+            <div class="form-field">
+
+              <label>
+                Password
+              </label>
+
+              <div class="input-wrapper">
+
+                <svg
+                  class="input-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <rect
+                    x="4"
+                    y="10"
+                    width="16"
+                    height="11"
+                    rx="2"
+                  />
+
+                  <path
+                    d="M8 10V7a4 4 0 018 0v3"
+                  />
+                </svg>
+
+                <input
+                  v-model="signupForm.password"
+                  :type="showSignupPassword ? 'text' : 'password'"
+                  required
+                  autocomplete="new-password"
+                  placeholder="Enter password"
+                />
+
+                <button
+                  type="button"
+                  class="password-button"
+                  @click="showSignupPassword = !showSignupPassword"
+                >
+
+                  <svg
+                    v-if="!showSignupPassword"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"
+                    />
+
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="3"
+                    />
+                  </svg>
+
+                  <svg
+                    v-else
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      d="M3 3l18 18"
+                    />
+
+                    <path
+                      d="M9.9 5.2A10.7 10.7 0 0112 5c6.5 0 10 7 10 7a17 17 0 01-3 3.8"
+                    />
+
+                    <path
+                      d="M6.6 6.6C3.7 8.5 2 12 2 12s3.5 7 10 7c1.4 0 2.7-.3 3.8-.8"
+                    />
+                  </svg>
+
+                </button>
+
+              </div>
+
+            </div>
+
+
+            <!-- Confirm -->
+            <div class="form-field">
+
+              <label>
+                Confirm Password
+              </label>
+
+              <div class="input-wrapper">
+
+                <svg
+                  class="input-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <rect
+                    x="4"
+                    y="10"
+                    width="16"
+                    height="11"
+                    rx="2"
+                  />
+
+                  <path
+                    d="M8 10V7a4 4 0 018 0v3"
+                  />
+                </svg>
+
+                <input
+                  v-model="signupForm.confirmPassword"
+                  :type="showSignupPassword ? 'text' : 'password'"
+                  required
+                  autocomplete="new-password"
+                  placeholder="Re-enter password"
+                />
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <!-- Create Account -->
+          <button
+            type="submit"
+            class="primary-button"
           >
 
-            <p class="text-sm text-slate-500">
-              FireNotify — Official Operations Compliance
-              Monitoring Portal
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                d="M12 5v14"
+              />
+
+              <path
+                d="M5 12h14"
+              />
+            </svg>
+
+            Create Account
+
+          </button>
+
+
+          <!-- Divider -->
+          <div class="divider">
+
+            <span></span>
+
+            <small>OR</small>
+
+            <span></span>
+
+          </div>
+
+
+          <!-- BFP Register -->
+          <button
+            type="button"
+            class="secondary-button"
+          >
+
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                d="M12 3l7 4v5c0 4.5-3 7.8-7 9-4-1.2-7-4.5-7-9V7l7-4z"
+              />
+
+              <path
+                d="M9 12l2 2 4-4"
+              />
+            </svg>
+
+            Register with BFP Account
+
+          </button>
+
+        </form>
+
+
+        <!-- =================================================
+             FOOTER
+        ================================================== -->
+        <div class="auth-footer">
+
+          <div class="footer-emblem">
+
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.4"
+            >
+              <circle
+                cx="12"
+                cy="12"
+                r="8"
+              />
+
+              <path
+                d="M12 6v12"
+              />
+
+              <path
+                d="M6 12h12"
+              />
+
+              <path
+                d="M8 8l8 8"
+              />
+
+              <path
+                d="M16 8l-8 8"
+              />
+            </svg>
+
+          </div>
+
+          <div>
+
+            <p>
+              FireNotify — Official Operations
+              Compliance Monitoring Portal
             </p>
 
-            <p class="text-sm text-slate-400 mt-1">
+            <span>
               Bureau of Fire Protection
-            </p>
+            </span>
 
           </div>
 
         </div>
 
-      </div>
+      </section>
 
     </div>
 
   </div>
 </template>
+
 
 <script setup>
 import { ref, reactive } from 'vue'
@@ -701,13 +1161,28 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['login-success', 'register-user'])
+const emit = defineEmits([
+  'login-success',
+  'register-user'
+])
+
+
+// =====================================================
+// STATE
+// =====================================================
 
 const isLogin = ref(true)
+
 const errorMessage = ref('')
 const successMessage = ref('')
+
 const showLoginPassword = ref(false)
 const showSignupPassword = ref(false)
+
+
+// =====================================================
+// LOGIN FORM
+// =====================================================
 
 const loginForm = reactive({
   identifier: '',
@@ -715,128 +1190,1768 @@ const loginForm = reactive({
   remember: false
 })
 
+
+// =====================================================
+// SIGNUP FORM
+// =====================================================
+
 const signupForm = reactive({
   firstName: '',
   lastName: '',
-  badgeNumber: '',
-  station: '',
   email: '',
   password: '',
   confirmPassword: ''
 })
 
+
+// =====================================================
+// SWITCH TO LOGIN
+// =====================================================
+
 const switchToLogin = () => {
   isLogin.value = true
+
   errorMessage.value = ''
   successMessage.value = ''
+
+  showLoginPassword.value = false
 }
+
+
+// =====================================================
+// SWITCH TO REGISTER
+// =====================================================
 
 const switchToRegister = () => {
   isLogin.value = false
+
   errorMessage.value = ''
   successMessage.value = ''
+
+  showSignupPassword.value = false
 }
+
+
+// =====================================================
+// LOGIN
+// =====================================================
 
 const handleLogin = () => {
+
   errorMessage.value = ''
   successMessage.value = ''
 
-  if (!loginForm.identifier.trim() || !loginForm.password.trim()) {
-    errorMessage.value = 'Please enter both your email and password.'
+  const identifier = loginForm.identifier.trim().toLowerCase()
+  const password = loginForm.password
+
+  if (!identifier || !password) {
+
+    errorMessage.value =
+      'Please enter both your email and password.'
+
     return
   }
 
+
   const userFound = props.registeredUsers.find(
-    (user) => user.identifier.toLowerCase() === loginForm.identifier.trim().toLowerCase() && user.password === loginForm.password
+    (user) =>
+      user.identifier &&
+      user.identifier.toLowerCase() === identifier &&
+      user.password === password
   )
 
+
   if (userFound) {
+
     emit('login-success', userFound)
+
   } else {
-    errorMessage.value = 'Invalid email or password. Please try again.'
+
+    errorMessage.value =
+      'Invalid email or password. Please try again.'
+
   }
 }
 
+
+// =====================================================
+// SIGN UP
+// =====================================================
+
 const handleSignup = () => {
+
   errorMessage.value = ''
   successMessage.value = ''
 
-  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  const email = signupForm.email.trim().toLowerCase()
 
-  if (!signupForm.firstName.trim() || !signupForm.lastName.trim()) {
-    errorMessage.value = 'Please complete your first and last name.'
+
+  // Email validation
+  const emailPattern =
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+
+  // Names
+  if (
+    !signupForm.firstName.trim() ||
+    !signupForm.lastName.trim()
+  ) {
+
+    errorMessage.value =
+      'Please complete your first and last name.'
+
     return
   }
 
-  if (!signupForm.email.trim() || !emailPattern.test(signupForm.email.trim())) {
-    errorMessage.value = 'Please enter a valid BFP email address.'
+
+  // Email
+  if (
+    !email ||
+    !emailPattern.test(email)
+  ) {
+
+    errorMessage.value =
+      'Please enter a valid BFP email address.'
+
     return
   }
 
-  if (!signupForm.badgeNumber.trim()) {
-    errorMessage.value = 'Please enter your badge number.'
+
+  // Password
+  if (
+    !signupForm.password ||
+    signupForm.password.length < 8
+  ) {
+
+    errorMessage.value =
+      'Password must be at least 8 characters long.'
+
     return
   }
 
-  if (!signupForm.station) {
-    errorMessage.value = 'Please select your assigned station.'
+
+  // Confirm password
+  if (
+    signupForm.password !==
+    signupForm.confirmPassword
+  ) {
+
+    errorMessage.value =
+      'Passwords do not match.'
+
     return
   }
 
-  if (!signupForm.password || signupForm.password.length < 8) {
-    errorMessage.value = 'Password must be at least 8 characters long.'
-    return
-  }
 
-  if (signupForm.password !== signupForm.confirmPassword) {
-    errorMessage.value = 'Passwords do not match.'
-    return
-  }
+  // Check duplicate
+  const emailExists =
+    props.registeredUsers.some(
+      (user) =>
+        user.identifier &&
+        user.identifier.toLowerCase() === email
+    )
 
-  const emailExists = props.registeredUsers.some(
-    (user) => user.identifier.toLowerCase() === signupForm.email.trim().toLowerCase()
-  )
 
   if (emailExists) {
-    errorMessage.value = 'This email is already registered.'
+
+    errorMessage.value =
+      'This email is already registered.'
+
     return
   }
 
+
+  // ===================================================
+  // NEW USER
+  // ===================================================
+
   const newUser = {
-    identifier: signupForm.email.trim(),
+
+    identifier: email,
+
     password: signupForm.password,
-    firstName: signupForm.firstName.trim(),
-    lastName: signupForm.lastName.trim(),
-    badgeNumber: signupForm.badgeNumber.trim(),
-    station: signupForm.station,
+
+    firstName:
+      signupForm.firstName.trim(),
+
+    lastName:
+      signupForm.lastName.trim(),
+
+    name:
+      `${signupForm.firstName.trim()} ${signupForm.lastName.trim()}`,
+
     role: 'personnel'
+
   }
 
-  emit('register-user', newUser)
-  successMessage.value = 'Registration successful. You may now sign in with your account.'
 
-  Object.assign(signupForm, {
-    firstName: '',
-    lastName: '',
-    badgeNumber: '',
-    station: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
-  })
+  // Send to parent
+  emit(
+    'register-user',
+    newUser
+  )
 
+
+  // Success
+  successMessage.value =
+    'Registration successful. You may now sign in with your account.'
+
+
+  // Clear form
+  Object.assign(
+    signupForm,
+    {
+      firstName: '',
+      lastName: '',
+      email: '',
+      password: '',
+      confirmPassword: ''
+    }
+  )
+
+
+  // Go to login
   isLogin.value = true
+
+  showSignupPassword.value = false
 }
 </script>
 
-<style>
-.font-display {
-  font-family: 'Oswald', 'Arial Narrow', sans-serif;
+
+<style scoped>
+
+/* =========================================================
+   FIRENOTIFY AUTH DESIGN
+   ========================================================= */
+
+* {
+  box-sizing: border-box;
 }
-.font-body {
-  font-family: 'IBM Plex Sans', 'Helvetica Neue', sans-serif;
+
+
+/* =========================================================
+   PAGE
+   ========================================================= */
+
+.auth-page {
+
+  min-height: 100vh;
+
+  width: 100%;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  padding: 28px;
+
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(139, 30, 35, 0.12),
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at bottom right,
+      rgba(245, 197, 66, 0.10),
+      transparent 30%
+    ),
+    #eef2f6;
+
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
 }
-.font-mono {
-  font-family: 'IBM Plex Mono', 'SFMono-Regular', monospace;
+
+
+/* =========================================================
+   MAIN CARD
+   ========================================================= */
+
+.auth-container {
+
+  width: min(1180px, 100%);
+
+  min-height: 720px;
+
+  display: grid;
+
+  grid-template-columns:
+    46% 54%;
+
+  background: white;
+
+  border-radius: 24px;
+
+  overflow: hidden;
+
+  border: 1px solid
+    rgba(255, 255, 255, 0.9);
+
+  box-shadow:
+    0 30px 80px
+    rgba(15, 23, 42, 0.16),
+
+    0 8px 25px
+    rgba(15, 23, 42, 0.08);
 }
+
+
+/* =========================================================
+   LEFT BRAND PANEL
+   ========================================================= */
+
+.auth-brand {
+
+  position: relative;
+
+  padding: 48px;
+
+  overflow: hidden;
+
+  color: white;
+
+  background:
+    linear-gradient(
+      145deg,
+      #4e080c 0%,
+      #74151a 42%,
+      #9f1d24 100%
+    );
+
+  display: flex;
+
+  flex-direction: column;
+
+  justify-content: space-between;
+}
+
+
+/* =========================================================
+   DECORATIVE GLOW
+   ========================================================= */
+
+.brand-glow {
+
+  position: absolute;
+
+  border-radius: 50%;
+
+  pointer-events: none;
+}
+
+.brand-glow-top {
+
+  width: 420px;
+
+  height: 420px;
+
+  right: -200px;
+
+  top: -200px;
+
+  background:
+    rgba(255, 255, 255, 0.07);
+}
+
+.brand-glow-bottom {
+
+  width: 420px;
+
+  height: 420px;
+
+  left: -250px;
+
+  bottom: -250px;
+
+  background:
+    rgba(244, 197, 66, 0.08);
+}
+
+
+/* =========================================================
+   LOGO
+   ========================================================= */
+
+.auth-logo {
+
+  position: relative;
+
+  z-index: 5;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 16px;
+}
+
+.auth-logo-icon {
+
+  width: 62px;
+
+  height: 62px;
+
+  flex-shrink: 0;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  border-radius: 15px;
+
+  background: white;
+
+  color: #9f1d24;
+
+  box-shadow:
+    0 8px 25px
+    rgba(0, 0, 0, 0.20);
+}
+
+.auth-logo-name {
+
+  margin: 0;
+
+  font-size: 28px;
+
+  line-height: 1;
+
+  font-weight: 900;
+
+  letter-spacing: -0.5px;
+}
+
+.auth-logo-name span {
+
+  color: #f5c542;
+}
+
+.auth-logo-subtitle {
+
+  margin-top: 8px;
+
+  font-size: 14px;
+
+  color:
+    rgba(255, 255, 255, 0.88);
+}
+
+
+/* =========================================================
+   BRAND CONTENT
+   ========================================================= */
+
+.auth-brand-content {
+
+  position: relative;
+
+  z-index: 5;
+
+  margin-top: 45px;
+}
+
+
+.auth-badge {
+
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 9px;
+
+  padding: 9px 14px;
+
+  border-radius: 8px;
+
+  background:
+    rgba(255, 255, 255, 0.09);
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.18);
+
+  backdrop-filter:
+    blur(8px);
+
+  font-size: 13px;
+
+  font-weight: 600;
+}
+
+
+.auth-badge-dot {
+
+  width: 8px;
+
+  height: 8px;
+
+  border-radius: 50%;
+
+  background: #22c55e;
+
+  box-shadow:
+    0 0 0 4px
+    rgba(34, 197, 94, 0.14);
+}
+
+
+/* =========================================================
+   BRAND TITLE
+   ========================================================= */
+
+.auth-brand-title {
+
+  margin-top: 25px;
+
+  font-size: clamp(
+    32px,
+    3.2vw,
+    43px
+  );
+
+  line-height: 1.08;
+
+  font-weight: 900;
+
+  letter-spacing: -1.5px;
+}
+
+
+.auth-brand-description {
+
+  margin-top: 20px;
+
+  max-width: 440px;
+
+  font-size: 16px;
+
+  line-height: 1.8;
+
+  color:
+    rgba(255, 255, 255, 0.82);
+}
+
+
+/* =========================================================
+   FEATURES
+   ========================================================= */
+
+.auth-features {
+
+  margin-top: 38px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 21px;
+}
+
+
+.auth-feature {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 15px;
+}
+
+
+.auth-feature-icon {
+
+  width: 47px;
+
+  height: 47px;
+
+  flex-shrink: 0;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  border-radius: 12px;
+
+  background:
+    rgba(255, 255, 255, 0.12);
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.12);
+}
+
+
+.feature-red {
+
+  color: #ffb3b7;
+}
+
+
+.feature-gold {
+
+  color: #f5c542;
+}
+
+
+.feature-green {
+
+  color: #5ee59b;
+}
+
+
+.auth-feature-text {
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 4px;
+}
+
+
+.auth-feature-text strong {
+
+  font-size: 16px;
+
+  font-weight: 800;
+
+  color: white;
+}
+
+
+.auth-feature-text span {
+
+  font-size: 13px;
+
+  line-height: 1.45;
+
+  color:
+    rgba(255, 255, 255, 0.70);
+}
+
+
+/* =========================================================
+   SYSTEM STATUS
+   ========================================================= */
+
+.auth-status {
+
+  position: relative;
+
+  z-index: 5;
+
+  margin-top: 35px;
+
+  padding: 19px;
+
+  border-radius: 13px;
+
+  background:
+    rgba(15, 7, 8, 0.35);
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.18);
+
+  backdrop-filter:
+    blur(10px);
+}
+
+
+.status-header {
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  font-size: 14px;
+
+  font-weight: 700;
+}
+
+
+.status-online {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 8px;
+
+  color: #4ade80;
+}
+
+
+.status-dot {
+
+  width: 9px;
+
+  height: 9px;
+
+  border-radius: 50%;
+
+  background: #22c55e;
+
+  box-shadow:
+    0 0 0 4px
+    rgba(34, 197, 94, 0.13);
+}
+
+
+.status-metrics {
+
+  display: grid;
+
+  grid-template-columns:
+    1fr auto 1fr auto 1fr;
+
+  margin-top: 17px;
+
+  align-items: center;
+}
+
+
+.status-metric {
+
+  text-align: center;
+}
+
+
+.status-metric strong {
+
+  display: block;
+
+  font-size: 24px;
+
+  color: #f5c542;
+
+  font-weight: 900;
+}
+
+
+.status-metric span {
+
+  display: block;
+
+  margin-top: 4px;
+
+  font-size: 11px;
+
+  color:
+    rgba(255, 255, 255, 0.62);
+}
+
+
+.status-divider {
+
+  height: 35px;
+
+  width: 1px;
+
+  background:
+    rgba(255, 255, 255, 0.15);
+}
+
+
+/* =========================================================
+   DECORATIVE STRIPES
+   ========================================================= */
+
+.brand-stripe {
+
+  position: absolute;
+
+  height: 16px;
+
+  bottom: -5px;
+
+  transform: rotate(-10deg);
+
+  z-index: 3;
+}
+
+
+.brand-stripe-one {
+
+  width: 180px;
+
+  left: -25px;
+
+  background: #8b1e23;
+}
+
+
+.brand-stripe-two {
+
+  width: 180px;
+
+  left: 100px;
+
+  background: #f5c542;
+}
+
+
+.brand-stripe-three {
+
+  width: 180px;
+
+  left: 220px;
+
+  background: #b2222b;
+}
+
+
+/* =========================================================
+   RIGHT FORM PANEL
+   ========================================================= */
+
+.auth-form-panel {
+
+  position: relative;
+
+  padding: 48px 52px 35px;
+
+  background: #ffffff;
+
+  display: flex;
+
+  flex-direction: column;
+}
+
+
+.form-top-line {
+
+  width: 55px;
+
+  height: 5px;
+
+  border-radius: 10px;
+
+  background:
+    linear-gradient(
+      90deg,
+      #9f1d24,
+      #f5c542
+    );
+
+  margin-bottom: 25px;
+}
+
+
+/* =========================================================
+   FORM HEADER
+   ========================================================= */
+
+.form-header {
+
+  margin-bottom: 25px;
+}
+
+
+.form-eyebrow {
+
+  margin: 0;
+
+  font-size: 13px;
+
+  font-weight: 800;
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.8px;
+
+  color: #9f1d24;
+}
+
+
+.form-header h2 {
+
+  margin-top: 8px;
+
+  margin-bottom: 7px;
+
+  color: #10233f;
+
+  font-size: 34px;
+
+  line-height: 1.15;
+
+  font-weight: 900;
+
+  letter-spacing: -0.8px;
+}
+
+
+.form-header > p:last-child {
+
+  margin: 0;
+
+  font-size: 14px;
+
+  color: #68778c;
+}
+
+
+/* =========================================================
+   TABS
+   ========================================================= */
+
+.auth-tabs {
+
+  display: grid;
+
+  grid-template-columns:
+    1fr 1fr;
+
+  gap: 0;
+
+  border-bottom:
+    1px solid #dce2ea;
+
+  margin-bottom: 27px;
+}
+
+
+.auth-tab {
+
+  position: relative;
+
+  min-height: 51px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 9px;
+
+  border: none;
+
+  background: transparent;
+
+  color: #718096;
+
+  font-size: 15px;
+
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    color 0.2s ease,
+    background 0.2s ease;
+}
+
+
+.auth-tab:hover {
+
+  color: #9f1d24;
+
+  background:
+    rgba(159, 29, 36, 0.025);
+}
+
+
+.auth-tab-active {
+
+  color: #9f1d24;
+}
+
+
+.auth-tab-active::after {
+
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+
+  right: 0;
+
+  bottom: -1px;
+
+  height: 3px;
+
+  border-radius:
+    5px 5px 0 0;
+
+  background: #9f1d24;
+}
+
+
+/* =========================================================
+   MESSAGE
+   ========================================================= */
+
+.message-box {
+
+  display: flex;
+
+  align-items: flex-start;
+
+  gap: 10px;
+
+  padding: 12px 14px;
+
+  border-radius: 9px;
+
+  margin-bottom: 18px;
+
+  font-size: 13px;
+
+  font-weight: 600;
+
+  line-height: 1.5;
+}
+
+
+.message-icon {
+
+  flex-shrink: 0;
+}
+
+
+.message-error {
+
+  color: #a61b24;
+
+  background: #fff1f2;
+
+  border:
+    1px solid #fecdd3;
+}
+
+
+.message-success {
+
+  color: #167a43;
+
+  background: #effdf5;
+
+  border:
+    1px solid #bbf7d0;
+}
+
+
+/* =========================================================
+   FORM
+   ========================================================= */
+
+.auth-form {
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 20px;
+}
+
+
+.register-form {
+
+  gap: 17px;
+}
+
+
+.form-field {
+
+  width: 100%;
+}
+
+
+.form-field label {
+
+  display: block;
+
+  margin-bottom: 8px;
+
+  font-size: 13px;
+
+  font-weight: 800;
+
+  color: #25364f;
+}
+
+
+.field-label-row {
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  margin-bottom: 8px;
+}
+
+
+.field-label-row label {
+
+  margin-bottom: 0;
+}
+
+
+.forgot-button {
+
+  border: none;
+
+  background: transparent;
+
+  color: #9f1d24;
+
+  font-size: 12px;
+
+  font-weight: 700;
+
+  cursor: pointer;
+
+  padding: 0;
+}
+
+
+.forgot-button:hover {
+
+  text-decoration: underline;
+}
+
+
+/* =========================================================
+   INPUT
+   ========================================================= */
+
+.input-wrapper {
+
+  position: relative;
+
+  width: 100%;
+}
+
+
+.input-wrapper input {
+
+  width: 100%;
+
+  height: 53px;
+
+  border-radius: 9px;
+
+  border: 1.5px solid #ccd5e1;
+
+  background: #ffffff;
+
+  color: #17243a;
+
+  font-size: 14px;
+
+  outline: none;
+
+  padding:
+    0 46px 0 44px;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+
+.input-wrapper input::placeholder {
+
+  color: #9aa8bb;
+}
+
+
+.input-wrapper input:hover {
+
+  border-color: #b8c4d3;
+}
+
+
+.input-wrapper input:focus {
+
+  border-color: #9f1d24;
+
+  background: #fff;
+
+  box-shadow:
+    0 0 0 4px
+    rgba(159, 29, 36, 0.09);
+}
+
+
+.input-icon {
+
+  position: absolute;
+
+  left: 15px;
+
+  top: 50%;
+
+  width: 18px;
+
+  height: 18px;
+
+  transform: translateY(-50%);
+
+  color: #8492a6;
+
+  pointer-events: none;
+
+  z-index: 2;
+}
+
+
+.password-button {
+
+  position: absolute;
+
+  right: 13px;
+
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  width: 30px;
+
+  height: 30px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  border: none;
+
+  background: transparent;
+
+  color: #738196;
+
+  cursor: pointer;
+
+  border-radius: 6px;
+}
+
+
+.password-button:hover {
+
+  color: #9f1d24;
+
+  background:
+    rgba(159, 29, 36, 0.06);
+}
+
+
+.password-button svg {
+
+  width: 18px;
+
+  height: 18px;
+}
+
+
+/* =========================================================
+   TWO COLUMN
+   ========================================================= */
+
+.two-column {
+
+  display: grid;
+
+  grid-template-columns:
+    1fr 1fr;
+
+  gap: 15px;
+}
+
+
+/* =========================================================
+   REMEMBER ME
+   ========================================================= */
+
+.remember-row {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 9px;
+
+  margin-top: -4px;
+
+  color: #53647a;
+
+  font-size: 13px;
+
+  cursor: pointer;
+
+  user-select: none;
+}
+
+
+.remember-row input {
+
+  width: 17px;
+
+  height: 17px;
+
+  margin: 0;
+
+  accent-color: #9f1d24;
+
+  cursor: pointer;
+}
+
+
+/* =========================================================
+   PRIMARY BUTTON
+   ========================================================= */
+
+.primary-button {
+
+  width: 100%;
+
+  height: 54px;
+
+  border: none;
+
+  border-radius: 9px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 10px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #9f1d24,
+      #8b1e23
+    );
+
+  color: white;
+
+  font-size: 15px;
+
+  font-weight: 800;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 8px 18px
+    rgba(139, 30, 35, 0.20);
+
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+}
+
+
+.primary-button svg {
+
+  width: 20px;
+
+  height: 20px;
+}
+
+
+.primary-button:hover {
+
+  transform: translateY(-1px);
+
+  background:
+    linear-gradient(
+      135deg,
+      #b1222b,
+      #8b1e23
+    );
+
+  box-shadow:
+    0 11px 25px
+    rgba(139, 30, 35, 0.28);
+}
+
+
+.primary-button:active {
+
+  transform: translateY(0);
+}
+
+
+/* =========================================================
+   DIVIDER
+   ========================================================= */
+
+.divider {
+
+  display: grid;
+
+  grid-template-columns:
+    1fr auto 1fr;
+
+  align-items: center;
+
+  gap: 12px;
+
+  margin: -2px 0;
+}
+
+
+.divider span {
+
+  height: 1px;
+
+  background: #e0e5eb;
+}
+
+
+.divider small {
+
+  font-size: 11px;
+
+  color: #99a5b5;
+
+  font-weight: 700;
+
+  letter-spacing: 0.8px;
+}
+
+
+/* =========================================================
+   SECONDARY BUTTON
+   ========================================================= */
+
+.secondary-button {
+
+  width: 100%;
+
+  min-height: 50px;
+
+  border-radius: 9px;
+
+  border: 1px solid #aeb9c8;
+
+  background: white;
+
+  color: #33445d;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 9px;
+
+  font-size: 13px;
+
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease,
+    background 0.2s ease;
+}
+
+
+.secondary-button svg {
+
+  width: 19px;
+
+  height: 19px;
+}
+
+
+.secondary-button:hover {
+
+  border-color: #9f1d24;
+
+  color: #9f1d24;
+
+  background: #fff8f8;
+}
+
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+.auth-footer {
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 12px;
+
+  margin-top: auto;
+
+  padding-top: 25px;
+
+  border-top: 1px solid #e6eaf0;
+
+  color: #8491a4;
+
+  text-align: left;
+}
+
+
+.auth-footer p {
+
+  margin: 0;
+
+  font-size: 11px;
+
+  line-height: 1.5;
+}
+
+
+.auth-footer span {
+
+  display: block;
+
+  margin-top: 2px;
+
+  font-size: 10px;
+
+  color: #a2acba;
+}
+
+
+.footer-emblem {
+
+  width: 42px;
+
+  height: 42px;
+
+  flex-shrink: 0;
+
+  color: #9aa5b4;
+}
+
+
+.footer-emblem svg {
+
+  width: 100%;
+
+  height: 100%;
+}
+
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 1024px) {
+
+  .auth-page {
+
+    padding: 20px;
+  }
+
+
+  .auth-container {
+
+    grid-template-columns:
+      42% 58%;
+
+    min-height: 680px;
+  }
+
+
+  .auth-brand {
+
+    padding: 35px;
+  }
+
+
+  .auth-form-panel {
+
+    padding:
+      38px 38px 30px;
+  }
+
+
+  .auth-brand-title {
+
+    font-size: 34px;
+  }
+
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 768px) {
+
+  .auth-page {
+
+    padding: 0;
+
+    align-items: stretch;
+  }
+
+
+  .auth-container {
+
+    width: 100%;
+
+    min-height: 100vh;
+
+    border-radius: 0;
+
+    display: block;
+
+    box-shadow: none;
+  }
+
+
+  .auth-brand {
+
+    min-height: auto;
+
+    padding: 28px 24px 30px;
+  }
+
+
+  .auth-brand-content {
+
+    margin-top: 30px;
+  }
+
+
+  .auth-brand-title {
+
+    font-size: 30px;
+  }
+
+
+  .auth-brand-description {
+
+    font-size: 14px;
+
+    line-height: 1.7;
+  }
+
+
+  .auth-features {
+
+    margin-top: 25px;
+
+    gap: 15px;
+  }
+
+
+  .auth-feature-text span {
+
+    font-size: 12px;
+  }
+
+
+  .auth-status {
+
+    margin-top: 25px;
+  }
+
+
+  .auth-form-panel {
+
+    padding:
+      32px 24px 25px;
+  }
+
+
+  .form-header h2 {
+
+    font-size: 30px;
+  }
+
+
+  .auth-footer {
+
+    margin-top: 30px;
+  }
+
+}
+
+
+/* =========================================================
+   SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 500px) {
+
+  .auth-logo-icon {
+
+    width: 52px;
+
+    height: 52px;
+  }
+
+
+  .auth-logo-name {
+
+    font-size: 23px;
+  }
+
+
+  .auth-brand-title {
+
+    font-size: 27px;
+  }
+
+
+  .status-metric strong {
+
+    font-size: 20px;
+  }
+
+
+  .two-column {
+
+    grid-template-columns: 1fr;
+
+    gap: 17px;
+  }
+
+
+  .form-header h2 {
+
+    font-size: 27px;
+  }
+
+
+  .auth-form-panel {
+
+    padding:
+      28px 20px 22px;
+  }
+
+}
+
 </style>

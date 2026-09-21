@@ -1,6 +1,10 @@
 <template>
   <div>
+
+    <!-- ===================================================== -->
     <!-- LOGIN PAGE -->
+    <!-- ===================================================== -->
+
     <LoginSignup
       v-if="!isLoggedIn"
       :registered-users="registeredUsers"
@@ -8,7 +12,11 @@
       @register-user="handleRegisterUser"
     />
 
+
+    <!-- ===================================================== -->
     <!-- LOGGED-IN USER -->
+    <!-- ===================================================== -->
+
     <div v-else-if="currentUser">
 
       <!-- ADMIN -->
@@ -17,6 +25,7 @@
         :current-user="currentUser"
         @logout="handleLogout"
       />
+
 
       <!-- PERSONNEL / AUTH / INSPECTOR -->
       <PersonnelDashboard
@@ -27,14 +36,18 @@
         "
         :current-user="currentUser"
         @logout="handleLogout"
+        @update-user="handleUserUpdate"
       />
+
 
       <!-- UNKNOWN ROLE -->
       <div
         v-else
         class="min-h-screen bg-slate-950 text-white flex items-center justify-center"
       >
+
         <div class="text-center">
+
           <h1 class="text-3xl font-bold mb-4">
             ⚠️ Unknown User Role
           </h1>
@@ -49,15 +62,19 @@
           >
             Back to Login
           </button>
+
         </div>
+
       </div>
 
     </div>
+
   </div>
 </template>
 
 
 <script setup>
+
 import { ref, computed } from 'vue'
 
 import LoginSignup from './views/auth/LoginSignup.vue'
@@ -83,7 +100,11 @@ const defaultUsers = [
     password: 'admin',
     role: 'admin',
     firstName: 'Master',
-    lastName: 'Admin'
+    lastName: 'Admin',
+    name: 'Master Admin',
+    rank: 'ADMIN',
+    position: 'System Administrator',
+    station: 'BFP Station'
   },
 
   {
@@ -91,7 +112,11 @@ const defaultUsers = [
     password: 'personnel',
     role: 'personnel',
     firstName: 'Fire',
-    lastName: 'Officer'
+    lastName: 'Officer',
+    name: 'Fire Officer',
+    rank: 'FO3',
+    position: 'Fire Officer',
+    station: 'BFP Station'
   },
 
   {
@@ -99,7 +124,11 @@ const defaultUsers = [
     password: 'auth',
     role: 'auth',
     firstName: 'Auth',
-    lastName: 'Officer'
+    lastName: 'Officer',
+    name: 'Auth Officer',
+    rank: 'FO3',
+    position: 'Fire Officer',
+    station: 'BFP Station'
   }
 ]
 
@@ -122,17 +151,21 @@ const isLoggedIn = computed(() => {
 
 
 /* =========================================================
-   LOAD SAVED SESSION
+   LOAD CURRENT USER
 ========================================================= */
 
 const loadCurrentUser = () => {
-  const savedUser = localStorage.getItem(CURRENT_USER_KEY)
+
+  const savedUser = localStorage.getItem(
+    CURRENT_USER_KEY
+  )
 
   if (!savedUser) {
     return
   }
 
   try {
+
     const user = JSON.parse(savedUser)
 
     if (
@@ -140,15 +173,22 @@ const loadCurrentUser = () => {
       user.identifier &&
       user.role
     ) {
+
       currentUser.value = user
+
     }
+
   } catch (error) {
+
     console.error(
       'Failed to restore user session:',
       error
     )
 
-    localStorage.removeItem(CURRENT_USER_KEY)
+    localStorage.removeItem(
+      CURRENT_USER_KEY
+    )
+
   }
 }
 
@@ -158,36 +198,48 @@ const loadCurrentUser = () => {
 ========================================================= */
 
 const loadRegisteredUsers = () => {
+
   const savedUsers = localStorage.getItem(
     USERS_STORAGE_KEY
   )
 
   if (savedUsers) {
+
     try {
-      const parsedUsers = JSON.parse(savedUsers)
+
+      const parsedUsers = JSON.parse(
+        savedUsers
+      )
 
       if (
         Array.isArray(parsedUsers) &&
         parsedUsers.length > 0
       ) {
-        registeredUsers.value = parsedUsers.map(
-          user => ({
+
+        registeredUsers.value =
+          parsedUsers.map(user => ({
             ...user,
             role: user.role || 'personnel'
-          })
-        )
+          }))
 
         return
+
       }
+
     } catch (error) {
+
       console.error(
         'Failed to load registered users:',
         error
       )
+
     }
+
   }
 
-  registeredUsers.value = [...defaultUsers]
+  registeredUsers.value = [
+    ...defaultUsers
+  ]
 
   localStorage.setItem(
     USERS_STORAGE_KEY,
@@ -203,17 +255,109 @@ const loadRegisteredUsers = () => {
 ========================================================= */
 
 const handleLoginSuccess = (user) => {
-  if (!user) return
 
-  // Always start from Dashboard after login
-  localStorage.removeItem('fireNotifyAdminActiveMenu')
-  localStorage.removeItem('fireNotifyPersonnelActiveTab')
+  if (!user) {
+    return
+  }
 
-  currentUser.value = { ...user }
+  /*
+   * Always start from Dashboard
+   */
+
+  localStorage.removeItem(
+    'fireNotifyAdminActiveMenu'
+  )
+
+  localStorage.removeItem(
+    'fireNotifyPersonnelActiveTab'
+  )
+
+  currentUser.value = {
+    ...user,
+
+    name:
+      user.name ||
+      `${user.firstName || ''} ${user.lastName || ''}`.trim()
+  }
 
   localStorage.setItem(
     CURRENT_USER_KEY,
-    JSON.stringify(currentUser.value)
+    JSON.stringify(
+      currentUser.value
+    )
+  )
+}
+
+
+/* =========================================================
+   UPDATE CURRENT USER
+========================================================= */
+
+const handleUserUpdate = (updatedUser) => {
+
+  if (!updatedUser) {
+    return
+  }
+
+  /*
+   * Update active session
+   */
+
+  currentUser.value = {
+    ...currentUser.value,
+    ...updatedUser,
+
+    name:
+      updatedUser.name ||
+      `${updatedUser.firstName || ''} ${updatedUser.lastName || ''}`.trim()
+  }
+
+
+  /*
+   * Update current session storage
+   */
+
+  localStorage.setItem(
+    CURRENT_USER_KEY,
+    JSON.stringify(
+      currentUser.value
+    )
+  )
+
+
+  /*
+   * Update registered users list
+   */
+
+  registeredUsers.value =
+    registeredUsers.value.map(user => {
+
+      if (
+        user.identifier ===
+        currentUser.value.identifier
+      ) {
+
+        return {
+          ...user,
+          ...currentUser.value
+        }
+
+      }
+
+      return user
+
+    })
+
+
+  /*
+   * Save updated users
+   */
+
+  localStorage.setItem(
+    USERS_STORAGE_KEY,
+    JSON.stringify(
+      registeredUsers.value
+    )
   )
 }
 
@@ -223,10 +367,23 @@ const handleLoginSuccess = (user) => {
 ========================================================= */
 
 const handleLogout = () => {
+
   currentUser.value = null
 
   localStorage.removeItem(
     CURRENT_USER_KEY
+  )
+
+  /*
+   * Return to Dashboard next time user logs in
+   */
+
+  localStorage.removeItem(
+    'fireNotifyPersonnelActiveTab'
+  )
+
+  localStorage.removeItem(
+    'fireNotifyAdminActiveMenu'
   )
 }
 
@@ -236,28 +393,48 @@ const handleLogout = () => {
 ========================================================= */
 
 const handleRegisterUser = (newUser) => {
+
   if (
     !newUser ||
     newUser.role === 'admin'
   ) {
+
     return
   }
+
 
   const duplicate =
     registeredUsers.value.some(
       user =>
+        user.identifier &&
+        newUser.identifier &&
         user.identifier.toLowerCase() ===
         newUser.identifier.toLowerCase()
     )
+
 
   if (duplicate) {
     return
   }
 
+
+  const userToSave = {
+    ...newUser,
+
+    name:
+      newUser.name ||
+      `${newUser.firstName || ''} ${newUser.lastName || ''}`.trim(),
+
+    role:
+      newUser.role || 'personnel'
+  }
+
+
   registeredUsers.value = [
     ...registeredUsers.value,
-    newUser
+    userToSave
   ]
+
 
   localStorage.setItem(
     USERS_STORAGE_KEY,
@@ -274,4 +451,5 @@ const handleRegisterUser = (newUser) => {
 
 loadRegisteredUsers()
 loadCurrentUser()
+
 </script>

@@ -13,7 +13,7 @@
           </p>
 
           <h2 class="text-2xl lg:text-3xl font-bold text-slate-900">
-            Welcome back, {{ currentUser?.firstName || 'Juan' }}!
+            Welcome back, {{ currentUser?.firstName }} {{ currentUser?.lastName }}!
           </h2>
 
           <p class="mt-2 text-base text-slate-500">

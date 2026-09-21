@@ -1,11 +1,14 @@
+```vue
 <template>
   <div class="w-full min-w-0 space-y-6">
 
     <!-- ===================================================== -->
     <!-- PAGE HEADER -->
     <!-- ===================================================== -->
+
     <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
       <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+
         <div>
           <p class="text-sm font-semibold text-[#8B1E23]">
             FIRENOTIFY PERSONNEL PORTAL
@@ -26,6 +29,7 @@
             class="h-8 w-8 text-[#8B1E23]"
           ></span>
         </div>
+
       </div>
     </section>
 
@@ -33,20 +37,25 @@
     <!-- ===================================================== -->
     <!-- MAIN SETTINGS -->
     <!-- ===================================================== -->
+
     <section class="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
       <!-- =================================================== -->
       <!-- LEFT / MAIN COLUMN -->
       <!-- =================================================== -->
+
       <div class="xl:col-span-2 space-y-6">
 
         <!-- ================================================= -->
         <!-- PROFILE INFORMATION -->
         <!-- ================================================= -->
+
         <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
 
           <div class="border-b border-slate-200 pb-4">
+
             <div class="flex items-center justify-between gap-4">
+
               <div>
                 <h3 class="text-lg font-bold text-slate-900">
                   Profile Information
@@ -63,7 +72,9 @@
               >
                 Unsaved changes
               </span>
+
             </div>
+
           </div>
 
 
@@ -77,6 +88,7 @@
 
               <input
                 v-model="form.firstName"
+                @input="markUnsaved"
                 type="text"
                 placeholder="Enter first name"
                 class="w-full mt-2 px-4 py-3 rounded-xl border border-slate-300 text-sm outline-none transition focus:border-[#8B1E23] focus:ring-2 focus:ring-[#8B1E23]/10"
@@ -92,6 +104,7 @@
 
               <input
                 v-model="form.lastName"
+                @input="markUnsaved"
                 type="text"
                 placeholder="Enter last name"
                 class="w-full mt-2 px-4 py-3 rounded-xl border border-slate-300 text-sm outline-none transition focus:border-[#8B1E23] focus:ring-2 focus:ring-[#8B1E23]/10"
@@ -107,6 +120,7 @@
 
               <input
                 v-model="form.rank"
+                @input="markUnsaved"
                 type="text"
                 placeholder="e.g. FO3"
                 class="w-full mt-2 px-4 py-3 rounded-xl border border-slate-300 text-sm outline-none transition focus:border-[#8B1E23] focus:ring-2 focus:ring-[#8B1E23]/10"
@@ -122,6 +136,7 @@
 
               <input
                 v-model="form.position"
+                @input="markUnsaved"
                 type="text"
                 placeholder="Enter position"
                 class="w-full mt-2 px-4 py-3 rounded-xl border border-slate-300 text-sm outline-none transition focus:border-[#8B1E23] focus:ring-2 focus:ring-[#8B1E23]/10"
@@ -137,6 +152,7 @@
 
               <input
                 v-model="form.station"
+                @input="markUnsaved"
                 type="text"
                 placeholder="Enter station"
                 class="w-full mt-2 px-4 py-3 rounded-xl border border-slate-300 text-sm outline-none transition focus:border-[#8B1E23] focus:ring-2 focus:ring-[#8B1E23]/10"
@@ -147,12 +163,14 @@
 
 
           <div class="mt-5 flex justify-end">
+
             <button
               @click="saveProfile"
               class="px-5 py-3 rounded-xl bg-[#8B1E23] text-white text-sm font-bold hover:bg-[#72181D] transition"
             >
               Save Profile
             </button>
+
           </div>
 
         </section>
@@ -161,9 +179,11 @@
         <!-- ================================================= -->
         <!-- NOTIFICATION PREFERENCES -->
         <!-- ================================================= -->
+
         <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
 
           <div class="border-b border-slate-200 pb-4">
+
             <h3 class="text-lg font-bold text-slate-900">
               Notification Preferences
             </h3>
@@ -171,6 +191,7 @@
             <p class="text-sm text-slate-500 mt-1">
               Choose which alerts you receive in the portal.
             </p>
+
           </div>
 
 
@@ -193,10 +214,9 @@
               </div>
 
 
-              <!-- Toggle -->
               <button
                 type="button"
-                @click="item.enabled = !item.enabled"
+                @click="item.enabled = !item.enabled; markUnsaved()"
                 :aria-pressed="item.enabled"
                 class="relative flex-shrink-0 w-12 h-7 rounded-full transition"
                 :class="item.enabled ? 'bg-[#8B1E23]' : 'bg-slate-300'"
@@ -219,9 +239,11 @@
         <!-- ================================================= -->
         <!-- SECURITY -->
         <!-- ================================================= -->
+
         <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
 
           <div class="border-b border-slate-200 pb-4">
+
             <h3 class="text-lg font-bold text-slate-900">
               Security
             </h3>
@@ -229,12 +251,12 @@
             <p class="text-sm text-slate-500 mt-1">
               Keep your personnel account protected.
             </p>
+
           </div>
 
 
           <div class="mt-5 space-y-4">
 
-            <!-- Password -->
             <div
               class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 rounded-xl bg-slate-50 border border-slate-200"
             >
@@ -259,7 +281,6 @@
             </div>
 
 
-            <!-- 2FA -->
             <div
               class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 rounded-xl bg-green-50 border border-green-100"
             >
@@ -292,11 +313,11 @@
       <!-- =================================================== -->
       <!-- RIGHT COLUMN -->
       <!-- =================================================== -->
+
       <div class="space-y-6">
 
-        <!-- ================================================= -->
         <!-- PORTAL PREFERENCES -->
-        <!-- ================================================= -->
+
         <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
 
           <h3 class="text-lg font-bold text-slate-900">
@@ -310,7 +331,6 @@
 
           <div class="mt-5 space-y-5">
 
-            <!-- Language -->
             <div>
               <label class="text-sm font-semibold text-slate-700">
                 Language
@@ -318,6 +338,7 @@
 
               <select
                 v-model="preferences.language"
+                @change="markUnsaved"
                 class="w-full mt-2 px-4 py-3 rounded-xl border border-slate-300 bg-white text-sm outline-none focus:border-[#8B1E23] focus:ring-2 focus:ring-[#8B1E23]/10"
               >
                 <option>English</option>
@@ -326,7 +347,6 @@
             </div>
 
 
-            <!-- Time Zone -->
             <div>
               <label class="text-sm font-semibold text-slate-700">
                 Time Zone
@@ -334,6 +354,7 @@
 
               <select
                 v-model="preferences.timezone"
+                @change="markUnsaved"
                 class="w-full mt-2 px-4 py-3 rounded-xl border border-slate-300 bg-white text-sm outline-none focus:border-[#8B1E23] focus:ring-2 focus:ring-[#8B1E23]/10"
               >
                 <option>Asia/Manila (UTC+8)</option>
@@ -342,7 +363,6 @@
             </div>
 
 
-            <!-- Default Landing Page -->
             <div>
               <label class="text-sm font-semibold text-slate-700">
                 Default Landing Page
@@ -350,6 +370,7 @@
 
               <select
                 v-model="preferences.landingPage"
+                @change="markUnsaved"
                 class="w-full mt-2 px-4 py-3 rounded-xl border border-slate-300 bg-white text-sm outline-none focus:border-[#8B1E23] focus:ring-2 focus:ring-[#8B1E23]/10"
               >
                 <option>Dashboard</option>
@@ -365,9 +386,8 @@
         </section>
 
 
-        <!-- ================================================= -->
         <!-- DISPLAY -->
-        <!-- ================================================= -->
+
         <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
 
           <h3 class="text-lg font-bold text-slate-900">
@@ -381,7 +401,6 @@
 
           <div class="mt-5 space-y-5">
 
-            <!-- Compact Sidebar -->
             <div class="flex items-center justify-between gap-5">
 
               <div>
@@ -396,20 +415,21 @@
 
               <button
                 type="button"
-                @click="display.compactSidebar = !display.compactSidebar"
+                @click="display.compactSidebar = !display.compactSidebar; markUnsaved()"
                 class="relative flex-shrink-0 w-12 h-7 rounded-full transition"
                 :class="display.compactSidebar ? 'bg-[#8B1E23]' : 'bg-slate-300'"
               >
+
                 <span
                   class="absolute top-1 h-5 w-5 rounded-full bg-white shadow transition"
                   :class="display.compactSidebar ? 'left-6' : 'left-1'"
                 ></span>
+
               </button>
 
             </div>
 
 
-            <!-- Reduced Motion -->
             <div class="flex items-center justify-between gap-5">
 
               <div>
@@ -424,14 +444,16 @@
 
               <button
                 type="button"
-                @click="display.reducedMotion = !display.reducedMotion"
+                @click="display.reducedMotion = !display.reducedMotion; markUnsaved()"
                 class="relative flex-shrink-0 w-12 h-7 rounded-full transition"
                 :class="display.reducedMotion ? 'bg-[#8B1E23]' : 'bg-slate-300'"
               >
+
                 <span
                   class="absolute top-1 h-5 w-5 rounded-full bg-white shadow transition"
                   :class="display.reducedMotion ? 'left-6' : 'left-1'"
                 ></span>
+
               </button>
 
             </div>
@@ -441,9 +463,8 @@
         </section>
 
 
-        <!-- ================================================= -->
         <!-- ACCOUNT SUMMARY -->
-        <!-- ================================================= -->
+
         <section class="bg-[#8B1E23] rounded-2xl shadow-sm p-6 text-white">
 
           <div class="flex items-center gap-4">
@@ -455,13 +476,17 @@
             </div>
 
             <div>
+
               <p class="font-bold">
                 {{ fullName }}
               </p>
 
               <p class="text-xs text-white/70 mt-1">
-                {{ form.rank }} • {{ form.position }}
+                {{ form.rank || 'No rank' }}
+                •
+                {{ form.position || 'No position' }}
               </p>
+
             </div>
 
           </div>
@@ -474,7 +499,7 @@
             </p>
 
             <p class="text-sm font-semibold mt-1">
-              {{ form.station }}
+              {{ form.station || 'No station assigned' }}
             </p>
 
           </div>
@@ -489,11 +514,13 @@
     <!-- ===================================================== -->
     <!-- SAVE CHANGES -->
     <!-- ===================================================== -->
+
     <section
       class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white border border-slate-200 rounded-2xl shadow-sm p-6"
     >
 
       <div>
+
         <h3 class="text-lg font-bold text-slate-900">
           Save your changes
         </h3>
@@ -501,6 +528,7 @@
         <p class="text-sm text-slate-500 mt-1">
           Profile and preference updates apply to this account.
         </p>
+
       </div>
 
 
@@ -528,6 +556,7 @@
     <!-- ===================================================== -->
     <!-- CHANGE PASSWORD MODAL -->
     <!-- ===================================================== -->
+
     <div
       v-if="showPasswordModal"
       class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4"
@@ -541,6 +570,7 @@
           <div class="flex items-center justify-between">
 
             <div>
+
               <h3 class="text-lg font-bold text-slate-900">
                 Change Password
               </h3>
@@ -548,6 +578,7 @@
               <p class="text-sm text-slate-500 mt-1">
                 Update your personnel account password.
               </p>
+
             </div>
 
             <button
@@ -564,8 +595,8 @@
 
         <div class="p-6 space-y-4">
 
-          <!-- Current Password -->
           <div>
+
             <label class="text-sm font-semibold text-slate-700">
               Current Password
             </label>
@@ -586,11 +617,12 @@
               </button>
 
             </div>
+
           </div>
 
 
-          <!-- New Password -->
           <div>
+
             <label class="text-sm font-semibold text-slate-700">
               New Password
             </label>
@@ -611,11 +643,12 @@
               </button>
 
             </div>
+
           </div>
 
 
-          <!-- Confirm Password -->
           <div>
+
             <label class="text-sm font-semibold text-slate-700">
               Confirm New Password
             </label>
@@ -625,6 +658,7 @@
               type="password"
               class="w-full mt-2 px-4 py-3 rounded-xl border border-slate-300 text-sm outline-none focus:border-[#8B1E23] focus:ring-2 focus:ring-[#8B1E23]/10"
             />
+
           </div>
 
 
@@ -664,6 +698,7 @@
     <!-- ===================================================== -->
     <!-- TOAST -->
     <!-- ===================================================== -->
+
     <transition
       enter-active-class="transition duration-200"
       enter-from-class="opacity-0 translate-y-2"
@@ -709,10 +744,17 @@ const props = defineProps({
 
 
 // ============================================================
+// EMITS
+// ============================================================
+
+const emit = defineEmits(['update-user'])
+
+
+// ============================================================
 // STORAGE
 // ============================================================
 
-const SETTINGS_KEY = 'fireNotifyPersonnelSettings'
+const SETTINGS_KEY_PREFIX = 'fireNotifyPersonnelSettings_'
 
 
 // ============================================================
@@ -720,11 +762,11 @@ const SETTINGS_KEY = 'fireNotifyPersonnelSettings'
 // ============================================================
 
 const form = ref({
-  firstName: 'Juan',
-  lastName: 'Dela Cruz',
-  rank: 'FO3',
-  position: 'Station Inspector',
-  station: 'BFP Balingasag'
+  firstName: '',
+  lastName: '',
+  rank: '',
+  position: '',
+  station: ''
 })
 
 
@@ -813,31 +855,53 @@ let toastTimer = null
 // ============================================================
 
 const fullName = computed(() => {
-  return `${form.value.firstName} ${form.value.lastName}`.trim()
+  const first = form.value.firstName?.trim() || ''
+  const last = form.value.lastName?.trim() || ''
+
+  return `${first} ${last}`.trim() || 'User'
 })
 
 
 // ============================================================
-// INITIALIZE FROM CURRENT USER
+// USER STORAGE KEY
+// ============================================================
+
+const getUserStorageKey = () => {
+  const identifier =
+    props.currentUser?.identifier ||
+    props.currentUser?.email ||
+    props.currentUser?.username ||
+    props.currentUser?.id ||
+    'current'
+
+  return `${SETTINGS_KEY_PREFIX}${identifier}`
+}
+
+
+// ============================================================
+// INITIALIZE USER
 // ============================================================
 
 const initializeUser = () => {
-  if (!props.currentUser) return
+
+  if (!props.currentUser) {
+    return
+  }
 
   form.value.firstName =
-    props.currentUser.firstName || form.value.firstName
+    props.currentUser.firstName || ''
 
   form.value.lastName =
-    props.currentUser.lastName || form.value.lastName
+    props.currentUser.lastName || ''
 
   form.value.rank =
-    props.currentUser.rank || form.value.rank
+    props.currentUser.rank || ''
 
   form.value.position =
-    props.currentUser.position || form.value.position
+    props.currentUser.position || ''
 
   form.value.station =
-    props.currentUser.station || form.value.station
+    props.currentUser.station || ''
 }
 
 
@@ -846,11 +910,17 @@ const initializeUser = () => {
 // ============================================================
 
 const loadSettings = () => {
-  const saved = localStorage.getItem(SETTINGS_KEY)
 
-  if (!saved) return
+  const saved = localStorage.getItem(
+    getUserStorageKey()
+  )
+
+  if (!saved) {
+    return
+  }
 
   try {
+
     const settings = JSON.parse(saved)
 
     if (settings.form) {
@@ -880,7 +950,49 @@ const loadSettings = () => {
     }
 
   } catch (error) {
-    console.error('Failed to load personnel settings:', error)
+
+    console.error(
+      'Failed to load personnel settings:',
+      error
+    )
+
+  }
+}
+
+
+// ============================================================
+// CREATE UPDATED USER
+// ============================================================
+
+const createUpdatedUser = () => {
+
+  const firstName =
+    form.value.firstName.trim()
+
+  const lastName =
+    form.value.lastName.trim()
+
+  const name =
+    `${firstName} ${lastName}`.trim()
+
+  return {
+    ...props.currentUser,
+
+    firstName,
+    lastName,
+
+    // Important:
+    // Dashboard uses this property.
+    name,
+
+    rank:
+      form.value.rank.trim(),
+
+    position:
+      form.value.position.trim(),
+
+    station:
+      form.value.station.trim()
   }
 }
 
@@ -890,19 +1002,32 @@ const loadSettings = () => {
 // ============================================================
 
 const saveSettings = () => {
+
   const settings = {
-    form: form.value,
-    notificationPreferences: notificationPreferences.value,
-    preferences: preferences.value,
-    display: display.value
+
+    form: {
+      firstName: form.value.firstName.trim(),
+      lastName: form.value.lastName.trim(),
+      rank: form.value.rank.trim(),
+      position: form.value.position.trim(),
+      station: form.value.station.trim()
+    },
+
+    notificationPreferences:
+      notificationPreferences.value,
+
+    preferences:
+      preferences.value,
+
+    display:
+      display.value
+
   }
 
   localStorage.setItem(
-    SETTINGS_KEY,
+    getUserStorageKey(),
     JSON.stringify(settings)
   )
-
-  hasUnsavedChanges.value = false
 }
 
 
@@ -912,19 +1037,81 @@ const saveSettings = () => {
 
 const saveProfile = () => {
 
-  if (!form.value.firstName.trim()) {
-    showToast('First name is required.')
+  const firstName =
+    form.value.firstName.trim()
+
+  const lastName =
+    form.value.lastName.trim()
+
+  if (!firstName || !lastName) {
+
+    showToast(
+      'Please enter your first and last name.'
+    )
+
     return
   }
 
-  if (!form.value.lastName.trim()) {
-    showToast('Last name is required.')
-    return
-  }
+
+  /*
+   * Save personnel settings
+   */
 
   saveSettings()
 
-  showToast('Profile information saved successfully.')
+
+  /*
+   * Create updated user
+   */
+
+  const updatedUser = {
+
+    ...props.currentUser,
+
+    firstName,
+
+    lastName,
+
+    name:
+      `${firstName} ${lastName}`.trim(),
+
+    rank:
+      form.value.rank.trim(),
+
+    position:
+      form.value.position.trim(),
+
+    station:
+      form.value.station.trim()
+
+  }
+
+
+  /*
+   * Send updated user to PersonnelDashboard
+   * then App.vue
+   */
+
+  emit(
+    'update-user',
+    updatedUser
+  )
+
+
+  /*
+   * Clear unsaved status
+   */
+
+  hasUnsavedChanges.value = false
+
+
+  /*
+   * Show confirmation
+   */
+
+  showToast(
+    'Profile updated successfully!'
+  )
 }
 
 
@@ -934,14 +1121,38 @@ const saveProfile = () => {
 
 const saveAllChanges = () => {
 
-  if (!form.value.firstName.trim() || !form.value.lastName.trim()) {
-    showToast('Please complete your profile information.')
+  if (
+    !form.value.firstName.trim() ||
+    !form.value.lastName.trim()
+  ) {
+
+    showToast(
+      'Please complete your profile information.'
+    )
+
     return
   }
 
+
   saveSettings()
 
-  showToast('All settings saved successfully.')
+
+  const updatedUser =
+    createUpdatedUser()
+
+
+  emit(
+    'update-user',
+    updatedUser
+  )
+
+
+  hasUnsavedChanges.value = false
+
+
+  showToast(
+    'All settings saved successfully.'
+  )
 }
 
 
@@ -980,20 +1191,26 @@ const resetChanges = () => {
     }
   ]
 
+
   preferences.value = {
     language: 'English',
     timezone: 'Asia/Manila (UTC+8)',
     landingPage: 'Dashboard'
   }
 
+
   display.value = {
     compactSidebar: false,
     reducedMotion: false
   }
 
+
   hasUnsavedChanges.value = false
 
-  showToast('Settings have been reset.')
+
+  showToast(
+    'Settings have been reset.'
+  )
 }
 
 
@@ -1005,42 +1222,59 @@ const changePassword = () => {
 
   passwordError.value = ''
 
+
   if (!passwordForm.value.current) {
-    passwordError.value = 'Enter your current password.'
+
+    passwordError.value =
+      'Enter your current password.'
+
     return
   }
+
 
   if (!passwordForm.value.newPassword) {
-    passwordError.value = 'Enter a new password.'
+
+    passwordError.value =
+      'Enter a new password.'
+
     return
   }
 
-  if (passwordForm.value.newPassword.length < 8) {
+
+  if (
+    passwordForm.value.newPassword.length < 8
+  ) {
+
     passwordError.value =
       'New password must contain at least 8 characters.'
+
     return
   }
+
 
   if (
     passwordForm.value.newPassword !==
     passwordForm.value.confirmPassword
   ) {
+
     passwordError.value =
       'New passwords do not match.'
+
     return
   }
 
-  /*
-   * Frontend demo only.
-   * Real password changes should be handled by Django
-   * using authenticated backend endpoints.
-   */
 
   closePasswordModal()
 
-  showToast('Password updated successfully.')
+  showToast(
+    'Password updated successfully.'
+  )
 }
 
+
+// ============================================================
+// CLOSE PASSWORD MODAL
+// ============================================================
 
 const closePasswordModal = () => {
 
@@ -1053,6 +1287,7 @@ const closePasswordModal = () => {
   }
 
   passwordError.value = ''
+
   showCurrentPassword.value = false
   showNewPassword.value = false
 }
@@ -1104,10 +1339,12 @@ const markUnsaved = () => {
 // ============================================================
 
 onMounted(() => {
+
   initializeUser()
+
   loadSettings()
 
-  // Reset initial state after loading.
   hasUnsavedChanges.value = false
+
 })
 </script>
