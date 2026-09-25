@@ -1,5 +1,5 @@
 <template>
-  <div class="flex h-screen w-full bg-slate-100 text-slate-800 font-sans overflow-hidden">
+  <div class="personnel-portal flex h-screen w-full bg-slate-100 text-slate-800 font-sans overflow-hidden">
 
     <!-- ========================================================= -->
     <!-- SIDEBAR -->
@@ -126,7 +126,7 @@
 
                 <!-- BADGE -->
                 <span
-                  v-if="item.badge"
+                  v-if="item.badge > 0"
                   class="ml-2 px-2 py-1 rounded-full text-xs font-bold"
                   :class="
                     activeTab === item.name
@@ -339,10 +339,14 @@
             ></span>
 
             <span
-              class="absolute top-2 right-2 h-3 w-3
-                     rounded-full bg-[#8B1E23]
+              v-if="sidebarCounts.notifications > 0"
+              class="absolute top-1 right-1 min-w-5 h-5 px-1
+                     rounded-full bg-[#8B1E23] text-white text-[10px]
+                     font-bold flex items-center justify-center
                      border-2 border-white"
-            ></span>
+            >
+              {{ sidebarCounts.notifications }}
+            </span>
 
           </button>
 
@@ -362,8 +366,10 @@
        <component
   :is="pageComponents[activeTab]"
   :current-user="currentUser"
+  :registered-users="registeredUsers"
   :ICONS="ICONS"
   @update-user="handleUserUpdate"
+  @open-support="activeTab = 'Support'"
 />
 
       </main>
@@ -432,18 +438,25 @@
 
 <script setup>
 
-import { ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 
 import Dashboard from './Dashboard.vue'
 import Tasks from './Tasks.vue'
 import Activities from './Activities.vue'
 import Reports from './Reports.vue'
 import Notifications from './Notifications.vue'
-import PersonnelRoster from './PersonnelRoster.vue'
-import StationDutyLog from './StationDutyLog.vue'
-import EquipmentAudit from './EquipmentAudit.vue'
 import Support from './Support.vue'
 import Settings from './Settings.vue'
+import {
+  applyPersonnelSettings,
+  getPersonnelSettings,
+  initializePersonnelSettings,
+  SETTINGS_UPDATED_EVENT
+} from '../../utils/personnelSettings.js'
+import {
+  getUnreadPersonnelCount,
+  mergeDerivedPersonnelNotifications
+} from '../../utils/notificationService.js'
 
 
 /* =========================================================
@@ -456,6 +469,11 @@ const props = defineProps({
     type: Object,
     required: false,
     default: null
+  },
+
+  registeredUsers: {
+    type: Array,
+    default: () => []
   }
 })
 
@@ -476,6 +494,131 @@ watch(activeTab, (newTab) => {
 })
 
 const showLogoutConfirm = ref(false)
+
+const STORAGE_KEYS = {
+  tasks: 'firenotify_tasks',
+  reports: 'firenotify_reports'
+}
+
+const UPDATE_EVENTS = [
+  'fireNotifyUsersUpdated',
+  'fireNotifySupportTicketsUpdated',
+  'fireNotifyRegisteredUsersUpdated',
+  'fireNotifyActivitiesUpdated',
+  'fireNotifyTasksUpdated',
+  'fireNotifyReportsUpdated',
+  'fireNotifyNotificationsUpdated'
+]
+
+const sidebarCounts = reactive({
+  tasks: 0,
+  reports: 0,
+  notifications: 0
+})
+
+let sidebarRefreshTimer = null
+const applySettingsEvent = event => {
+  applyPersonnelSettings(event.detail || getPersonnelSettings())
+}
+
+const readArray = key => {
+  try {
+    const value = JSON.parse(localStorage.getItem(key) || '[]')
+    return Array.isArray(value) ? value : []
+  } catch {
+    return []
+  }
+}
+
+const normalize = value => String(value || '').trim().toLowerCase()
+
+const getCurrentUser = () => {
+  if (props.currentUser) return props.currentUser
+
+  try {
+    return JSON.parse(localStorage.getItem('fireNotifyCurrentUser') || 'null') || null
+  } catch {
+    return null
+  }
+}
+
+const identityValues = user => [
+  user?.id,
+  user?.userId,
+  user?.identifier,
+  user?.email,
+  user?.username,
+  user?.name,
+  `${user?.firstName || ''} ${user?.lastName || ''}`.trim()
+].map(normalize).filter(Boolean)
+
+const recordBelongsToCurrentUser = record => {
+  const identities = identityValues(getCurrentUser())
+  if (!identities.length) return false
+
+  const values = [
+    record?.assignedToId,
+    record?.assignedTo,
+    record?.assignedToUsername,
+    record?.assignedToEmail,
+    record?.assignedToName,
+    record?.personnelId,
+    record?.userId,
+    record?.username,
+    record?.email,
+    record?.identifier,
+    record?.ownerId,
+    record?.assigneeId,
+    record?.submittedBy,
+    record?.name
+  ]
+
+  for (const person of record?.assignedPersonnel || []) {
+    values.push(person?.id, person?.userId, person?.username, person?.identifier, person?.email, person?.name)
+  }
+
+  return values.map(normalize).some(value => value && identities.includes(value))
+}
+
+const isPending = status => [
+  'pending',
+  'pending submission',
+  'not submitted',
+  'scheduled',
+  'in progress',
+  'assigned',
+  'for review',
+  'returned'
+].includes(normalize(status))
+
+const isCompleted = status => [
+  'completed',
+  'complete',
+  'done',
+  'finished',
+  'approved',
+  'reviewed',
+  'submitted',
+  'closed',
+  'resolved'
+].includes(normalize(status))
+
+const refreshSidebarCounts = () => {
+  const currentUser = getCurrentUser()
+  mergeDerivedPersonnelNotifications(currentUser)
+  const tasks = readArray(STORAGE_KEYS.tasks)
+  const reports = readArray(STORAGE_KEYS.reports)
+
+  sidebarCounts.tasks = tasks.filter(task => {
+    return recordBelongsToCurrentUser(task) && isPending(task?.status)
+  }).length
+
+  sidebarCounts.reports = reports.filter(report => {
+    return recordBelongsToCurrentUser(report) && !isCompleted(report?.status || report?.submissionStatus)
+  }).length
+
+  sidebarCounts.notifications = getUnreadPersonnelCount(currentUser)
+}
 
 
 /* =========================================================
@@ -498,7 +641,7 @@ const pageComponents = {
    SIDEBAR ITEMS
    ========================================================= */
 
-const fieldItems = [
+const fieldItems = computed(() => [
   {
     name: 'Dashboard',
     icon: 'dashboard',
@@ -508,7 +651,7 @@ const fieldItems = [
     name: 'Tasks',
     icon: 'tasks',
     context: 'Assigned activities',
-    badge: '4'
+    badge: sidebarCounts.tasks
   },
   {
     name: 'Activities',
@@ -519,15 +662,15 @@ const fieldItems = [
     name: 'Reports',
     icon: 'reports',
     context: 'Submit accomplishment reports',
-    badge: '3'
+    badge: sidebarCounts.reports
   },
   {
     name: 'Notifications',
     icon: 'notifications',
     context: 'Deadlines & station alerts',
-    badge: '3'
+    badge: sidebarCounts.notifications
   }
-]
+])
 
 
 const managementItems = [
@@ -549,6 +692,33 @@ const toolItems = [
     context: 'Account & preferences'
   }
 ]
+
+onMounted(() => {
+  initializePersonnelSettings()
+  refreshSidebarCounts()
+
+  window.addEventListener('storage', refreshSidebarCounts)
+  window.addEventListener('focus', refreshSidebarCounts)
+  window.addEventListener(SETTINGS_UPDATED_EVENT, applySettingsEvent)
+  UPDATE_EVENTS.forEach(eventName => {
+    window.addEventListener(eventName, refreshSidebarCounts)
+  })
+
+  sidebarRefreshTimer = setInterval(refreshSidebarCounts, 800)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('storage', refreshSidebarCounts)
+  window.removeEventListener('focus', refreshSidebarCounts)
+  window.removeEventListener(SETTINGS_UPDATED_EVENT, applySettingsEvent)
+  UPDATE_EVENTS.forEach(eventName => {
+    window.removeEventListener(eventName, refreshSidebarCounts)
+  })
+
+  if (sidebarRefreshTimer) {
+    clearInterval(sidebarRefreshTimer)
+  }
+})
 
 
 /* =========================================================

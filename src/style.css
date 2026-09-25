@@ -1,1 +1,125 @@
 @import "tailwindcss";
+
+@layer components {
+	.fn-form-label {
+		@apply block text-sm font-semibold text-slate-700;
+	}
+
+	.fn-form-control {
+		@apply w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition;
+	}
+
+	.fn-form-control:focus {
+		@apply border-[#8B1E23] ring-2 ring-[#8B1E23]/10;
+	}
+
+	.fn-form-help {
+		@apply mt-1 text-xs text-slate-500;
+	}
+
+	.fn-modal-panel {
+		@apply max-h-[90vh] overflow-y-auto;
+	}
+}
+
+:root[data-personnel-theme='dark'] .personnel-portal {
+	background: #111827 !important;
+	color: #e5e7eb;
+}
+
+:root[data-personnel-theme='dark'] .personnel-portal .bg-white {
+	background-color: #1f2937 !important;
+	border-color: #374151 !important;
+}
+
+:root[data-personnel-theme='dark'] .personnel-portal .bg-slate-50,
+:root[data-personnel-theme='dark'] .personnel-portal .bg-slate-100 {
+	background-color: #111827 !important;
+}
+
+:root[data-personnel-theme='dark'] .personnel-portal .text-slate-900,
+:root[data-personnel-theme='dark'] .personnel-portal .text-slate-800,
+:root[data-personnel-theme='dark'] .personnel-portal .text-slate-700 {
+	color: #f3f4f6 !important;
+}
+
+:root[data-personnel-theme='dark'] .personnel-portal .text-slate-600,
+:root[data-personnel-theme='dark'] .personnel-portal .text-slate-500 {
+	color: #cbd5e1 !important;
+}
+
+:root[data-personnel-theme='dark'] .personnel-portal input,
+:root[data-personnel-theme='dark'] .personnel-portal textarea,
+:root[data-personnel-theme='dark'] .personnel-portal select {
+	background-color: #111827 !important;
+	color: #f3f4f6 !important;
+	border-color: #4b5563 !important;
+}
+
+:root[data-personnel-font-size='small'] .personnel-portal { --fn-font-scale: 0.9; }
+:root[data-personnel-font-size='medium'] .personnel-portal { --fn-font-scale: 1; }
+:root[data-personnel-font-size='large'] .personnel-portal { --fn-font-scale: 1.12; }
+:root[data-personnel-font-size='xlarge'] .personnel-portal { --fn-font-scale: 1.25; }
+:root.fn-large-text .personnel-portal { --fn-font-scale: 1.12; }
+
+/* Tailwind text utilities use explicit rem sizes, so scale them at the shared portal root. */
+:root .personnel-portal .text-xs { font-size: calc(0.75rem * var(--fn-font-scale, 1)) !important; }
+:root .personnel-portal .text-sm { font-size: calc(0.875rem * var(--fn-font-scale, 1)) !important; }
+:root .personnel-portal .text-base { font-size: calc(1rem * var(--fn-font-scale, 1)) !important; }
+:root .personnel-portal .text-lg { font-size: calc(1.125rem * var(--fn-font-scale, 1)) !important; }
+:root .personnel-portal .text-xl { font-size: calc(1.25rem * var(--fn-font-scale, 1)) !important; }
+:root .personnel-portal .text-2xl { font-size: calc(1.5rem * var(--fn-font-scale, 1)) !important; }
+:root .personnel-portal .text-3xl { font-size: calc(1.875rem * var(--fn-font-scale, 1)) !important; }
+:root .personnel-portal .text-4xl { font-size: calc(2.25rem * var(--fn-font-scale, 1)) !important; }
+:root[data-personnel-density='compact'] .personnel-portal .p-6 { padding: 1rem !important; }
+:root[data-personnel-density='compact'] .personnel-portal .space-y-6 > :not([hidden]) ~ :not([hidden]) { margin-top: 1rem; }
+:root.fn-larger-targets .personnel-portal button,
+:root.fn-larger-targets .personnel-portal select,
+:root.fn-larger-targets .personnel-portal input { min-height: 2.75rem; }
+:root.fn-reduce-motion *,
+:root.fn-reduce-motion *::before,
+:root.fn-reduce-motion *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+:root.fn-high-contrast .personnel-portal { filter: contrast(1.08); }
+
+@media (max-width: 767px) {
+	.personnel-portal > aside {
+		width: 4.5rem !important;
+	}
+	.personnel-portal > aside .min-w-0,
+	.personnel-portal > aside > div:first-child > div:nth-child(2) > div:last-child,
+	.personnel-portal > aside > div:last-child > div > div:last-child,
+	.personnel-portal > aside nav > p {
+		display: none !important;
+	}
+	.personnel-portal > aside > div:first-child > div:nth-child(2) {
+		padding: 0.75rem !important;
+		justify-content: center;
+	}
+	.personnel-portal > aside nav button {
+		justify-content: center !important;
+		padding-left: 0.75rem !important;
+		padding-right: 0.75rem !important;
+	}
+	.personnel-portal > aside nav button > span:not(.h-5) {
+		display: none !important;
+	}
+	.personnel-portal > aside > div:last-child {
+		padding: 0.5rem !important;
+	}
+	.personnel-portal > aside > div:last-child > div {
+		justify-content: center;
+		padding: 0.5rem !important;
+	}
+	.personnel-portal > aside > div:last-child button {
+		justify-content: center;
+		padding-left: 0.5rem !important;
+		padding-right: 0.5rem !important;
+	}
+	.personnel-portal > div > header {
+		padding-left: 1rem !important;
+		padding-right: 1rem !important;
+	}
+	.personnel-portal > div > main {
+		padding: 1rem !important;
+	}
+}

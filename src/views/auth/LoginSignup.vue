@@ -4,14 +4,15 @@
     <!-- =====================================================
          MAIN AUTH CONTAINER
     ====================================================== -->
+
     <div class="auth-container">
 
       <!-- ===================================================
            LEFT BRAND / INFORMATION PANEL
       ==================================================== -->
+
       <section class="auth-brand">
 
-        <!-- Decorative background -->
         <div class="brand-glow brand-glow-top"></div>
         <div class="brand-glow brand-glow-bottom"></div>
 
@@ -47,22 +48,18 @@
         </div>
 
 
-        <!-- Main brand content -->
+        <!-- Brand Content -->
         <div class="auth-brand-content">
 
-          <!-- Secure badge -->
           <div class="auth-badge">
-
             <span class="auth-badge-dot"></span>
 
             <span>
               Secure Personnel Portal
             </span>
-
           </div>
 
 
-          <!-- Heading -->
           <h2 class="auth-brand-title">
             Operations Compliance
             <br />
@@ -70,7 +67,6 @@
           </h2>
 
 
-          <!-- Description -->
           <p class="auth-brand-description">
             FireNotify helps BFP personnel manage assigned
             activities, reports, deadlines, and operational
@@ -78,9 +74,8 @@
           </p>
 
 
-          <!-- =================================================
-               FEATURES
-          ================================================== -->
+          <!-- FEATURES -->
+
           <div class="auth-features">
 
             <!-- Feature 1 -->
@@ -231,9 +226,8 @@
         </div>
 
 
-        <!-- =================================================
-             SYSTEM STATUS
-        ================================================== -->
+        <!-- SYSTEM STATUS -->
+
         <div class="auth-status">
 
           <div class="status-header">
@@ -304,7 +298,6 @@
         </div>
 
 
-        <!-- Decorative bottom -->
         <div class="brand-stripe brand-stripe-one"></div>
         <div class="brand-stripe brand-stripe-two"></div>
         <div class="brand-stripe brand-stripe-three"></div>
@@ -315,13 +308,14 @@
       <!-- ===================================================
            RIGHT AUTH PANEL
       ==================================================== -->
+
       <section class="auth-form-panel">
 
-        <!-- Small decorative line -->
         <div class="form-top-line"></div>
 
 
         <!-- Header -->
+
         <div class="form-header">
 
           <p class="form-eyebrow">
@@ -346,6 +340,7 @@
         <!-- =================================================
              AUTH TABS
         ================================================== -->
+
         <div class="auth-tabs">
 
           <button
@@ -442,9 +437,8 @@
         </div>
 
 
-        <!-- =================================================
-             ERROR MESSAGE
-        ================================================== -->
+        <!-- ERROR -->
+
         <div
           v-if="errorMessage"
           class="message-box message-error"
@@ -479,9 +473,8 @@
         </div>
 
 
-        <!-- =================================================
-             SUCCESS MESSAGE
-        ================================================== -->
+        <!-- SUCCESS -->
+
         <div
           v-if="successMessage"
           class="message-box message-success"
@@ -518,6 +511,7 @@
         <!-- =================================================
              LOGIN FORM
         ================================================== -->
+
         <form
           v-if="isLogin"
           @submit.prevent="handleLogin"
@@ -525,6 +519,7 @@
         >
 
           <!-- Email -->
+
           <div class="form-field">
 
             <label>
@@ -565,6 +560,7 @@
 
 
           <!-- Password -->
+
           <div class="form-field">
 
             <div class="field-label-row">
@@ -576,6 +572,7 @@
               <button
                 type="button"
                 class="forgot-button"
+                @click="handleForgotPassword"
               >
                 Forgot Password?
               </button>
@@ -608,7 +605,11 @@
 
               <input
                 v-model="loginForm.password"
-                :type="showLoginPassword ? 'text' : 'password'"
+                :type="
+                  showLoginPassword
+                    ? 'text'
+                    : 'password'
+                "
                 required
                 autocomplete="current-password"
                 placeholder="Enter your password"
@@ -618,7 +619,10 @@
               <button
                 type="button"
                 class="password-button"
-                @click="showLoginPassword = !showLoginPassword"
+                @click="
+                  showLoginPassword =
+                    !showLoginPassword
+                "
               >
 
                 <svg
@@ -646,9 +650,7 @@
                   stroke="currentColor"
                   stroke-width="2"
                 >
-                  <path
-                    d="M3 3l18 18"
-                  />
+                  <path d="M3 3l18 18" />
 
                   <path
                     d="M10.6 10.6a2 2 0 002.8 2.8"
@@ -671,6 +673,7 @@
 
 
           <!-- Remember -->
+
           <label class="remember-row">
 
             <input
@@ -686,6 +689,7 @@
 
 
           <!-- Sign In -->
+
           <button
             type="submit"
             class="primary-button"
@@ -716,6 +720,7 @@
 
 
           <!-- Divider -->
+
           <div class="divider">
 
             <span></span>
@@ -728,9 +733,11 @@
 
 
           <!-- BFP Account -->
+
           <button
             type="button"
             class="secondary-button"
+            @click="handleBfpLogin"
           >
 
             <svg
@@ -758,6 +765,7 @@
         <!-- =================================================
              REGISTER FORM
         ================================================== -->
+
         <form
           v-else
           @submit.prevent="handleSignup"
@@ -765,6 +773,7 @@
         >
 
           <!-- Names -->
+
           <div class="two-column">
 
             <div class="form-field">
@@ -848,6 +857,7 @@
 
 
           <!-- Email -->
+
           <div class="form-field">
 
             <label>
@@ -890,9 +900,11 @@
 
 
           <!-- Passwords -->
+
           <div class="two-column">
 
             <!-- Password -->
+
             <div class="form-field">
 
               <label>
@@ -923,7 +935,11 @@
 
                 <input
                   v-model="signupForm.password"
-                  :type="showSignupPassword ? 'text' : 'password'"
+                  :type="
+                    showSignupPassword
+                      ? 'text'
+                      : 'password'
+                  "
                   required
                   autocomplete="new-password"
                   placeholder="Enter password"
@@ -932,7 +948,10 @@
                 <button
                   type="button"
                   class="password-button"
-                  @click="showSignupPassword = !showSignupPassword"
+                  @click="
+                    showSignupPassword =
+                      !showSignupPassword
+                  "
                 >
 
                   <svg
@@ -981,6 +1000,7 @@
 
 
             <!-- Confirm -->
+
             <div class="form-field">
 
               <label>
@@ -1011,7 +1031,11 @@
 
                 <input
                   v-model="signupForm.confirmPassword"
-                  :type="showSignupPassword ? 'text' : 'password'"
+                  :type="
+                    showSignupPassword
+                      ? 'text'
+                      : 'password'
+                  "
                   required
                   autocomplete="new-password"
                   placeholder="Re-enter password"
@@ -1025,6 +1049,7 @@
 
 
           <!-- Create Account -->
+
           <button
             type="submit"
             class="primary-button"
@@ -1036,13 +1061,9 @@
               stroke="currentColor"
               stroke-width="2"
             >
-              <path
-                d="M12 5v14"
-              />
+              <path d="M12 5v14" />
 
-              <path
-                d="M5 12h14"
-              />
+              <path d="M5 12h14" />
             </svg>
 
             Create Account
@@ -1051,6 +1072,7 @@
 
 
           <!-- Divider -->
+
           <div class="divider">
 
             <span></span>
@@ -1063,9 +1085,11 @@
 
 
           <!-- BFP Register -->
+
           <button
             type="button"
             class="secondary-button"
+            @click="handleBfpRegister"
           >
 
             <svg
@@ -1093,6 +1117,7 @@
         <!-- =================================================
              FOOTER
         ================================================== -->
+
         <div class="auth-footer">
 
           <div class="footer-emblem">
@@ -1109,21 +1134,10 @@
                 r="8"
               />
 
-              <path
-                d="M12 6v12"
-              />
-
-              <path
-                d="M6 12h12"
-              />
-
-              <path
-                d="M8 8l8 8"
-              />
-
-              <path
-                d="M16 8l-8 8"
-              />
+              <path d="M12 6v12" />
+              <path d="M6 12h12" />
+              <path d="M8 8l8 8" />
+              <path d="M16 8l-8 8" />
             </svg>
 
           </div>
@@ -1154,12 +1168,22 @@
 <script setup>
 import { ref, reactive } from 'vue'
 
+
+/* =========================================================
+   PROPS
+========================================================= */
+
 const props = defineProps({
   registeredUsers: {
     type: Array,
-    required: true
+    default: () => []
   }
 })
+
+
+/* =========================================================
+   EVENTS
+========================================================= */
 
 const emit = defineEmits([
   'login-success',
@@ -1167,9 +1191,9 @@ const emit = defineEmits([
 ])
 
 
-// =====================================================
-// STATE
-// =====================================================
+/* =========================================================
+   AUTH STATE
+========================================================= */
 
 const isLogin = ref(true)
 
@@ -1180,9 +1204,9 @@ const showLoginPassword = ref(false)
 const showSignupPassword = ref(false)
 
 
-// =====================================================
-// LOGIN FORM
-// =====================================================
+/* =========================================================
+   LOGIN FORM
+========================================================= */
 
 const loginForm = reactive({
   identifier: '',
@@ -1191,9 +1215,9 @@ const loginForm = reactive({
 })
 
 
-// =====================================================
-// SIGNUP FORM
-// =====================================================
+/* =========================================================
+   SIGNUP FORM
+========================================================= */
 
 const signupForm = reactive({
   firstName: '',
@@ -1204,9 +1228,9 @@ const signupForm = reactive({
 })
 
 
-// =====================================================
-// SWITCH TO LOGIN
-// =====================================================
+/* =========================================================
+   SWITCH TO LOGIN
+========================================================= */
 
 const switchToLogin = () => {
   isLogin.value = true
@@ -1218,9 +1242,9 @@ const switchToLogin = () => {
 }
 
 
-// =====================================================
-// SWITCH TO REGISTER
-// =====================================================
+/* =========================================================
+   SWITCH TO REGISTER
+========================================================= */
 
 const switchToRegister = () => {
   isLogin.value = false
@@ -1232,17 +1256,32 @@ const switchToRegister = () => {
 }
 
 
-// =====================================================
-// LOGIN
-// =====================================================
+/* =========================================================
+   LOGIN
+========================================================= */
 
 const handleLogin = () => {
 
   errorMessage.value = ''
   successMessage.value = ''
 
-  const identifier = loginForm.identifier.trim().toLowerCase()
-  const password = loginForm.password
+
+  /* ---------------------------------------------
+     Get entered credentials
+  --------------------------------------------- */
+
+  const identifier =
+    loginForm.identifier
+      .trim()
+      .toLowerCase()
+
+  const password =
+    loginForm.password
+
+
+  /* ---------------------------------------------
+     Validate input
+  --------------------------------------------- */
 
   if (!identifier || !password) {
 
@@ -1253,49 +1292,107 @@ const handleLogin = () => {
   }
 
 
-  const userFound = props.registeredUsers.find(
-    (user) =>
-      user.identifier &&
-      user.identifier.toLowerCase() === identifier &&
-      user.password === password
-  )
+  /* ---------------------------------------------
+     Find matching account
+  --------------------------------------------- */
 
+  const userFound =
+    props.registeredUsers.find(user => {
+
+      const savedIdentifier =
+        user.identifier
+          ?.trim()
+          .toLowerCase()
+
+      const savedPassword =
+        String(user.password ?? '')
+
+      return (
+        savedIdentifier === identifier &&
+        savedPassword === String(password)
+      )
+    })
+
+
+  /* ---------------------------------------------
+     Login successful
+  --------------------------------------------- */
 
   if (userFound) {
 
-    emit('login-success', userFound)
+    console.log(
+      'FireNotify login successful:',
+      userFound.identifier
+    )
 
-  } else {
+    emit(
+      'login-success',
+      userFound
+    )
 
-    errorMessage.value =
-      'Invalid email or password. Please try again.'
-
+    return
   }
+
+
+  /* ---------------------------------------------
+     Login failed
+  --------------------------------------------- */
+
+  console.warn(
+    'FireNotify login failed:',
+    identifier
+  )
+
+  errorMessage.value =
+    'Invalid email or password. Please try again.'
 }
 
 
-// =====================================================
-// SIGN UP
-// =====================================================
+/* =========================================================
+   SIGN UP
+========================================================= */
 
 const handleSignup = () => {
 
   errorMessage.value = ''
   successMessage.value = ''
 
-  const email = signupForm.email.trim().toLowerCase()
+
+  /* ---------------------------------------------
+     Normalize form values
+  --------------------------------------------- */
+
+  const firstName =
+    signupForm.firstName.trim()
+
+  const lastName =
+    signupForm.lastName.trim()
+
+  const email =
+    signupForm.email
+      .trim()
+      .toLowerCase()
+
+  const password =
+    signupForm.password
+
+  const confirmPassword =
+    signupForm.confirmPassword
 
 
-  // Email validation
+  /* ---------------------------------------------
+     Email validation
+  --------------------------------------------- */
+
   const emailPattern =
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 
-  // Names
-  if (
-    !signupForm.firstName.trim() ||
-    !signupForm.lastName.trim()
-  ) {
+  /* ---------------------------------------------
+     Validate names
+  --------------------------------------------- */
+
+  if (!firstName || !lastName) {
 
     errorMessage.value =
       'Please complete your first and last name.'
@@ -1304,7 +1401,10 @@ const handleSignup = () => {
   }
 
 
-  // Email
+  /* ---------------------------------------------
+     Validate email
+  --------------------------------------------- */
+
   if (
     !email ||
     !emailPattern.test(email)
@@ -1317,10 +1417,13 @@ const handleSignup = () => {
   }
 
 
-  // Password
+  /* ---------------------------------------------
+     Validate password
+  --------------------------------------------- */
+
   if (
-    !signupForm.password ||
-    signupForm.password.length < 8
+    !password ||
+    password.length < 8
   ) {
 
     errorMessage.value =
@@ -1330,10 +1433,12 @@ const handleSignup = () => {
   }
 
 
-  // Confirm password
+  /* ---------------------------------------------
+     Confirm password
+  --------------------------------------------- */
+
   if (
-    signupForm.password !==
-    signupForm.confirmPassword
+    password !== confirmPassword
   ) {
 
     errorMessage.value =
@@ -1343,13 +1448,20 @@ const handleSignup = () => {
   }
 
 
-  // Check duplicate
+  /* ---------------------------------------------
+     Check duplicate email
+  --------------------------------------------- */
+
   const emailExists =
-    props.registeredUsers.some(
-      (user) =>
-        user.identifier &&
-        user.identifier.toLowerCase() === email
-    )
+    props.registeredUsers.some(user => {
+
+      const existingEmail =
+        user.identifier
+          ?.trim()
+          .toLowerCase()
+
+      return existingEmail === email
+    })
 
 
   if (emailExists) {
@@ -1361,43 +1473,63 @@ const handleSignup = () => {
   }
 
 
-  // ===================================================
-  // NEW USER
-  // ===================================================
+  /* ---------------------------------------------
+     Create Personnel account
+  --------------------------------------------- */
 
   const newUser = {
 
-    identifier: email,
+    id:
+      crypto.randomUUID(),
 
-    password: signupForm.password,
+    identifier:
+      email,
+
+    password:
+      password,
 
     firstName:
-      signupForm.firstName.trim(),
+      firstName,
 
     lastName:
-      signupForm.lastName.trim(),
+      lastName,
 
     name:
-      `${signupForm.firstName.trim()} ${signupForm.lastName.trim()}`,
+      `${firstName} ${lastName}`,
 
-    role: 'personnel'
+    role:
+      'personnel',
 
+    status:
+      'Active',
+
+    createdAt:
+      new Date().toISOString()
   }
 
 
-  // Send to parent
+  /* ---------------------------------------------
+     Send account to App.vue
+  --------------------------------------------- */
+
   emit(
     'register-user',
     newUser
   )
 
 
-  // Success
+  /* ---------------------------------------------
+     Show success
+  --------------------------------------------- */
+
   successMessage.value =
     'Registration successful. You may now sign in with your account.'
 
 
-  // Clear form
+  /* ---------------------------------------------
+     Clear signup form
+  --------------------------------------------- */
+
   Object.assign(
     signupForm,
     {
@@ -1410,14 +1542,48 @@ const handleSignup = () => {
   )
 
 
-  // Go to login
+  /* ---------------------------------------------
+     Return to Login
+  --------------------------------------------- */
+
   isLogin.value = true
 
   showSignupPassword.value = false
 }
+
+
+/* =========================================================
+   FORGOT PASSWORD
+========================================================= */
+
+const handleForgotPassword = () => {
+
+  errorMessage.value =
+    'Password recovery is not available yet. Please contact the system administrator.'
+}
+
+
+/* =========================================================
+   BFP LOGIN BUTTON
+========================================================= */
+
+const handleBfpLogin = () => {
+
+  errorMessage.value =
+    'BFP account authentication is not connected yet.'
+}
+
+
+/* =========================================================
+   BFP REGISTER BUTTON
+========================================================= */
+
+const handleBfpRegister = () => {
+
+  errorMessage.value =
+    'BFP account registration is not connected yet.'
+}
 </script>
-
-
 <style scoped>
 
 /* =========================================================

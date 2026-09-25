@@ -9,10 +9,10 @@
     <aside
       class="w-72 flex-shrink-0 bg-white border-r border-slate-200 flex flex-col justify-between shadow-sm z-20"
     >
-      <!-- Top Red Line -->
+      <!-- TOP RED LINE -->
       <div class="h-2 bg-[#8B1E23]"></div>
 
-      <!-- Sidebar Scroll Area -->
+      <!-- SIDEBAR SCROLL AREA -->
       <div class="overflow-y-auto flex-1">
 
         <!-- ================================================= -->
@@ -61,11 +61,16 @@
           </div>
         </div>
 
+
         <!-- ================================================= -->
         <!-- NAVIGATION -->
         <!-- ================================================= -->
 
         <div class="px-4 py-6 space-y-7">
+
+          <!-- ================================================= -->
+          <!-- MAIN NAVIGATION -->
+          <!-- ================================================= -->
 
           <div>
             <p
@@ -90,16 +95,16 @@
 
                 <div class="flex items-center gap-4 min-w-0">
 
-                  <svg
-                    class="w-6 h-6 fill-current shrink-0"
-                    viewBox="0 0 24 24"
+                  <!-- MODERN OUTLINE ICON -->
+                  <span
+                    v-html="ICONS[item.icon]"
+                    class="w-6 h-6 shrink-0 flex items-center justify-center"
                     :class="
                       activeMenu === item.name
                         ? 'text-[#F4C542]'
                         : 'text-slate-500'
                     "
-                    v-html="getSvgPath(item.icon)"
-                  ></svg>
+                  ></span>
 
                   <span class="text-base font-semibold truncate">
                     {{ item.name }}
@@ -107,9 +112,10 @@
 
                 </div>
 
-                <!-- Notification Badge -->
+
+                <!-- BADGE -->
                 <span
-                  v-if="item.badge"
+                  v-if="item.badge > 0"
                   class="ml-2 px-2.5 py-1 rounded-full text-xs font-bold"
                   :class="
                     activeMenu === item.name
@@ -124,6 +130,7 @@
 
             </nav>
           </div>
+
 
           <!-- ================================================= -->
           <!-- SYSTEM MANAGEMENT -->
@@ -151,16 +158,16 @@
                 ]"
               >
 
-                <svg
-                  class="w-6 h-6 fill-current shrink-0"
-                  viewBox="0 0 24 24"
+                <!-- MODERN OUTLINE ICON -->
+                <span
+                  v-html="ICONS[item.icon]"
+                  class="w-6 h-6 shrink-0 flex items-center justify-center"
                   :class="
                     activeMenu === item.name
                       ? 'text-[#F4C542]'
                       : 'text-slate-500'
                   "
-                  v-html="getSvgPath(item.icon)"
-                ></svg>
+                ></span>
 
                 <span class="text-base font-semibold truncate">
                   {{ item.name }}
@@ -174,6 +181,7 @@
 
         </div>
       </div>
+
 
       <!-- ===================================================== -->
       <!-- USER PROFILE + LOGOUT -->
@@ -206,29 +214,34 @@
             </p>
 
           </div>
+
         </div>
 
-        <!-- Logout -->
+
+        <!-- ================================================= -->
+        <!-- LOGOUT -->
+        <!-- ================================================= -->
+
         <button
           @click="showLogoutConfirm = true"
           class="w-full mt-3 flex items-center gap-3 px-4 py-3 rounded-xl text-base font-semibold text-slate-600 hover:bg-red-50 hover:text-[#8B1E23] transition"
         >
 
-          <svg
-            class="w-5 h-5 fill-current"
-            viewBox="0 0 24 24"
-          >
-            <path
-              d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"
-            />
-          </svg>
+          <!-- MODERN LOGOUT ICON -->
+          <span
+            v-html="ICONS.logout"
+            class="w-5 h-5 shrink-0 flex items-center justify-center"
+          ></span>
 
-          <span>Sign Out</span>
+          <span>
+            Sign Out
+          </span>
 
         </button>
 
       </div>
     </aside>
+
 
     <!-- ===================================================== -->
     <!-- MAIN CONTENT -->
@@ -246,18 +259,18 @@
 
         <div class="flex items-center gap-4">
 
-          <!-- Active Icon -->
+          <!-- ACTIVE ICON -->
           <div
             class="h-11 w-11 rounded-xl bg-red-50 flex items-center justify-center"
           >
 
-            <svg
-              class="w-6 h-6 fill-current text-[#8B1E23]"
-              viewBox="0 0 24 24"
-              v-html="getSvgPath(getActiveIcon())"
-            ></svg>
+            <span
+              v-html="ICONS[getActiveIcon()]"
+              class="w-6 h-6 flex items-center justify-center text-[#8B1E23]"
+            ></span>
 
           </div>
+
 
           <div>
 
@@ -273,39 +286,48 @@
 
         </div>
 
-        <!-- Header Right -->
+
+        <!-- ================================================= -->
+        <!-- HEADER RIGHT -->
+        <!-- ================================================= -->
+
         <div class="flex items-center gap-4">
 
-          <!-- System Online -->
+          <!-- SYSTEM ONLINE -->
           <div
             class="hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-green-50 border border-green-200"
           >
+
             <span class="h-3 w-3 rounded-full bg-green-500"></span>
 
             <span class="text-sm font-semibold text-green-700">
               System Online
             </span>
+
           </div>
 
-          <!-- Notification Button -->
+
+          <!-- ================================================= -->
+          <!-- NOTIFICATION BUTTON -->
+          <!-- ================================================= -->
+
           <button
             @click="activeMenu = 'Notifications'"
             class="relative h-12 w-12 flex items-center justify-center rounded-xl border border-slate-200 hover:bg-slate-100 transition"
             title="Notifications"
           >
 
-            <svg
-              class="w-6 h-6 fill-current text-slate-600"
-              viewBox="0 0 24 24"
-            >
-              <path
-                d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5S10.5 3.17 10.5 4v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"
-              />
-            </svg>
+            <span
+              v-html="ICONS.notifications"
+              class="w-6 h-6 flex items-center justify-center text-slate-600"
+            ></span>
 
             <span
-              class="absolute top-2 right-2 h-3 w-3 rounded-full bg-[#8B1E23] border-2 border-white"
-            ></span>
+              v-if="sidebarCounts.notifications > 0"
+              class="absolute top-1 right-1 min-w-5 h-5 px-1 rounded-full bg-[#8B1E23] text-white text-[10px] font-bold flex items-center justify-center border-2 border-white"
+            >
+              {{ sidebarCounts.notifications }}
+            </span>
 
           </button>
 
@@ -313,50 +335,64 @@
 
       </header>
 
+
       <!-- ================================================= -->
       <!-- PAGE CONTENT -->
       <!-- ================================================= -->
 
-     <main class="p-6 lg:p-8 space-y-7">
+      <main class="p-6 lg:p-8 space-y-7">
 
-  <Dashboard
-    v-if="activeMenu === 'Dashboard'"
-    :current-user="currentUser"
-  />
+        <!-- DASHBOARD -->
+        <Dashboard
+          v-if="activeMenu === 'Dashboard'"
+          :current-user="currentUser"
+        />
 
-  <ActivityManagement
-    v-else-if="activeMenu === 'Activity Mgmt.'"
-    :current-user="currentUser"
-  />
 
-  <PersonnelManagement
-    v-else-if="activeMenu === 'Personnel Mgmt.'"
-    :current-user="currentUser"
-  />
+        <!-- PERSONNEL ACTIVITY MANAGEMENT -->
+        <PersonnelActivityManagement
+          v-else-if="activeMenu === 'Personnel Activity Mgmt.'"
+          :current-user="currentUser"
+          :registered-users="registeredUsers"
+        />
 
-  <ComplianceHealth
-    v-else-if="activeMenu === 'Compliance Monitoring'"
-    :current-user="currentUser"
-  />
 
-  <ReportManagement
-    v-else-if="activeMenu === 'Report Mgmt.'"
-    :current-user="currentUser"
-  />
+        <!-- PERSONNEL TASK MANAGEMENT -->
+        <PersonnelTaskManagement
+          v-else-if="activeMenu === 'Personnel Task Mgmt.'"
+          :current-user="currentUser"
+          :registered-users="registeredUsers"
+          @delete-user="handleDeleteUser"
+        />
 
-  <Notifications
-    v-else-if="activeMenu === 'Notifications'"
-    :current-user="currentUser"
-  />
 
-  <AuditEscalations
-    v-else-if="activeMenu === 'Audit & Escalations'"
-    :current-user="currentUser"
-  />
+        <!-- REPORT MANAGEMENT -->
+        <ReportManagement
+          v-else-if="activeMenu === 'Report Mgmt.'"
+          :current-user="currentUser"
+          :registered-users="registeredUsers"
+          :ICONS="ICONS"
+        />
 
-</main>
+
+        <!-- NOTIFICATIONS -->
+        <Notifications
+          v-else-if="activeMenu === 'Notifications'"
+          :current-user="currentUser"
+        />
+
+
+        <!-- AUDIT & ESCALATIONS -->
+        <AuditEscalations
+          v-else-if="activeMenu === 'Audit & Escalations'"
+          :current-user="currentUser"
+          :registered-users="registeredUsers"
+        />
+
+      </main>
 
     </div>
+
 
     <!-- ===================================================== -->
     <!-- LOGOUT MODAL -->
@@ -380,7 +416,9 @@
             <div
               class="h-14 w-14 rounded-full bg-red-50 flex items-center justify-center shrink-0"
             >
-              <span class="text-xl">🚨</span>
+              <span class="text-xl">
+                🚨
+              </span>
             </div>
 
             <div>
@@ -397,6 +435,7 @@
 
           </div>
 
+
           <div
             class="mt-5 p-4 rounded-xl bg-yellow-50 border border-yellow-200"
           >
@@ -410,6 +449,7 @@
 
           </div>
 
+
           <div
             class="flex flex-col-reverse sm:flex-row justify-end gap-3 mt-7"
           >
@@ -420,6 +460,7 @@
             >
               Cancel
             </button>
+
 
             <button
               @click="confirmLogout"
@@ -441,15 +482,19 @@
 
 
 <script setup>
-import { ref, watch } from 'vue'
+
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 
 import Dashboard from './Dashboard.vue'
-import ActivityManagement from './ActivityManagement.vue'
-import PersonnelManagement from './PersonnelManagement.vue'
-import ComplianceHealth from './ComplianceHealth.vue'
+import PersonnelActivityManagement from './PersonnelActivityManagement.vue'
+import PersonnelTaskManagement from './PersonnelTaskManagement.vue'
 import ReportManagement from './ReportManagement.vue'
 import Notifications from './Notifications.vue'
 import AuditEscalations from './AuditEscalations.vue'
+import {
+  getUnreadCountForUser,
+  mergeDerivedPersonnelNotifications
+} from '../../utils/notificationService.js'
 
 
 // =====================================================
@@ -457,11 +502,17 @@ import AuditEscalations from './AuditEscalations.vue'
 // =====================================================
 
 const props = defineProps({
+
   currentUser: {
     type: Object,
-    required: false,
     default: null
+  },
+
+  registeredUsers: {
+    type: Array,
+    default: () => []
   }
+
 })
 
 
@@ -469,7 +520,10 @@ const props = defineProps({
 // EMITS
 // =====================================================
 
-const emit = defineEmits(['logout'])
+const emit = defineEmits([
+  'logout',
+  'delete-user'
+])
 
 
 // =====================================================
@@ -482,53 +536,237 @@ const activeMenu = ref(
   localStorage.getItem(ACTIVE_MENU_KEY) || 'Dashboard'
 )
 
+const REFRESH_EVENTS = [
+  'fireNotifyNotificationsUpdated',
+  'fireNotifySupportTicketsUpdated',
+  'fireNotifyUsersUpdated',
+  'fireNotifyRegisteredUsersUpdated',
+  'fireNotifyActivitiesUpdated',
+  'fireNotifyTasksUpdated',
+  'fireNotifyReportsUpdated'
+]
 
-// Save current menu
+const sidebarCounts = reactive({
+  activities: 0,
+  tasks: 0,
+  reports: 0,
+  notifications: 0
+})
+
+let sidebarRefreshTimer = null
+
+const readArray = key => {
+  try {
+    const value = JSON.parse(localStorage.getItem(key) || '[]')
+    return Array.isArray(value) ? value : []
+  } catch {
+    return []
+  }
+}
+
+const statusKey = status => String(status || '').trim().toLowerCase()
+
+const isPendingStatus = status => [
+  'pending',
+  'pending submission',
+  'not submitted',
+  'scheduled',
+  'in progress',
+  'assigned',
+  'for review',
+  'returned'
+].includes(statusKey(status))
+
+const refreshSidebarCounts = () => {
+  mergeDerivedPersonnelNotifications(props.currentUser)
+  const activities = readArray('fireNotifyActivities')
+  const tasks = readArray('firenotify_tasks')
+  const reports = readArray('firenotify_reports')
+
+  sidebarCounts.activities = activities.filter(item => isPendingStatus(item?.status)).length
+  sidebarCounts.tasks = tasks.filter(item => isPendingStatus(item?.status)).length
+  sidebarCounts.reports = reports.filter(item => {
+    const status = statusKey(item?.status || item?.submissionStatus)
+    return status === 'submitted' || status === 'for review'
+  }).length
+  sidebarCounts.notifications = getUnreadCountForUser(props.currentUser)
+}
+
+// Keep the badge source centralized at the shell level so navigation does not reset it.
+const refreshNotificationBadge = () => {
+  refreshSidebarCounts()
+}
+
+// Save active menu
 watch(activeMenu, (newMenu) => {
   localStorage.setItem(ACTIVE_MENU_KEY, newMenu)
 })
 
 
 // =====================================================
-// LOGOUT
+// LOGOUT STATE
 // =====================================================
 
 const showLogoutConfirm = ref(false)
 
 
 // =====================================================
-// ICONS
+// MODERN SVG ICONS
+// SAME STYLE AS PERSONNEL SIDEBAR
 // =====================================================
 
 const ICONS = {
 
-  // Dashboard
-  dashboard:
-    'M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z',
+  // ===================================================
+  // DASHBOARD
+  // ===================================================
 
-  // Activity
-  activity:
-    'M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z',
+  dashboard: `
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <rect x="3" y="3" width="7" height="7" rx="1"/>
+      <rect x="14" y="3" width="7" height="7" rx="1"/>
+      <rect x="3" y="14" width="7" height="7" rx="1"/>
+      <rect x="14" y="14" width="7" height="7" rx="1"/>
+    </svg>
+  `,
 
-  // Personnel
-  personnel:
-    'M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z',
 
-  // Reports
-  report:
-    'M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z',
+  // ===================================================
+  // ACTIVITY
+  // ===================================================
 
-  // Notifications
-  notifications:
-    'M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5S10.5 3.17 10.5 4v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z',
+  activity: `
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <circle cx="12" cy="12" r="9"/>
+      <path d="M12 7v5l3 2"/>
+    </svg>
+  `,
 
-  // Audit
-  shield:
-    'M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-5.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8s0 0 0 0z',
 
-  // Default
-  default:
-    'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z'
+  // ===================================================
+  // TASKS / PERSONNEL
+  // SAME ICON STYLE AS PERSONNEL
+  // ===================================================
+
+  personnel: `
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <rect x="3" y="4" width="18" height="17" rx="2"/>
+      <path d="M8 2v4M16 2v4M3 9h18"/>
+      <path d="M8 13h2M13 13h3M8 17h6"/>
+    </svg>
+  `,
+
+
+  // ===================================================
+  // REPORTS
+  // ===================================================
+
+  report: `
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="M6 3h9l5 5v13H6z"/>
+      <path d="M14 3v6h6"/>
+      <path d="M9 13h6M9 17h6"/>
+    </svg>
+  `,
+
+
+  // ===================================================
+  // NOTIFICATIONS
+  // ===================================================
+
+  notifications: `
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path
+        d="M18 8a6 6 0 0 0-12 0
+           c0 7-3 7-3 9h18
+           c0-2-3-2-3-9"
+      />
+      <path d="M10 21h4"/>
+    </svg>
+  `,
+
+
+  // ===================================================
+  // AUDIT & ESCALATIONS
+  // ===================================================
+
+  shield: `
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path
+        d="M12 3
+           L20 6
+           V11
+           C20 16.5 16.5 20 12 21
+           C7.5 20 4 16.5 4 11
+           V6
+           Z"
+      />
+      <path d="M9 12l2 2 4-4"/>
+    </svg>
+  `,
+
+
+  // ===================================================
+  // LOGOUT
+  // ===================================================
+
+  logout: `
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+      <path d="m16 17 5-5-5-5"/>
+      <path d="M21 12H9"/>
+    </svg>
+  `
+
 }
 
 
@@ -536,14 +774,38 @@ const ICONS = {
 // MAIN NAVIGATION
 // =====================================================
 
-const menuBarItems = [
-  { name: 'Dashboard', icon: 'dashboard' },
-  { name: 'Activity Mgmt.', icon: 'activity' },
-  { name: 'Personnel Mgmt.', icon: 'personnel' },
-  { name: 'Compliance Monitoring', icon: 'shield' },
-  { name: 'Report Mgmt.', icon: 'report' },
-  { name: 'Notifications', icon: 'notifications', badge: '3' },
-]
+const menuBarItems = computed(() => [
+
+  {
+    name: 'Dashboard',
+    icon: 'dashboard'
+  },
+
+  {
+    name: 'Personnel Activity Mgmt.',
+    icon: 'activity',
+    badge: sidebarCounts.activities
+  },
+
+  {
+    name: 'Personnel Task Mgmt.',
+    icon: 'personnel',
+    badge: sidebarCounts.tasks
+  },
+
+  {
+    name: 'Report Mgmt.',
+    icon: 'report',
+    badge: sidebarCounts.reports
+  },
+
+  {
+    name: 'Notifications',
+    icon: 'notifications',
+    badge: sidebarCounts.notifications
+  },
+
+])
 
 
 // =====================================================
@@ -572,16 +834,6 @@ const confirmLogout = () => {
   localStorage.removeItem(ACTIVE_MENU_KEY)
 
   emit('logout')
-}
-
-
-// =====================================================
-// SVG HELPER
-// =====================================================
-
-const getSvgPath = (key) => {
-
-  return `<path d="${ICONS[key] || ICONS.default}"/>`
 
 }
 
@@ -590,10 +842,34 @@ const getSvgPath = (key) => {
 // ACTIVE ICON
 // =====================================================
 
+onMounted(() => {
+  refreshNotificationBadge()
+
+  window.addEventListener('storage', refreshNotificationBadge)
+  window.addEventListener('focus', refreshNotificationBadge)
+  REFRESH_EVENTS.forEach(eventName => {
+    window.addEventListener(eventName, refreshNotificationBadge)
+  })
+
+  sidebarRefreshTimer = setInterval(refreshSidebarCounts, 800)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('storage', refreshNotificationBadge)
+  window.removeEventListener('focus', refreshNotificationBadge)
+  REFRESH_EVENTS.forEach(eventName => {
+    window.removeEventListener(eventName, refreshNotificationBadge)
+  })
+
+  if (sidebarRefreshTimer) {
+    clearInterval(sidebarRefreshTimer)
+  }
+})
+
 const getActiveIcon = () => {
 
   const allItems = [
-    ...menuBarItems,
+    ...menuBarItems.value,
     ...capstoneItems
   ]
 
@@ -603,7 +879,23 @@ const getActiveIcon = () => {
 
   return found
     ? found.icon
-    : 'default'
+    : 'dashboard'
+
+}
+
+
+// =====================================================
+// DELETE USER
+// =====================================================
+
+const handleDeleteUser = (userId) => {
+
+  if (!userId) {
+    return
+  }
+
+  emit('delete-user', userId)
+
 }
 
 </script>

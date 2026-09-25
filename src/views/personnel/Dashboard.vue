@@ -642,12 +642,7 @@
 
 
 <script setup>
-import { computed, ref } from 'vue'
-
-
-/* =========================================================
-   PROPS
-========================================================= */
+import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
 
 const props = defineProps({
   currentUser: {
@@ -662,170 +657,407 @@ const props = defineProps({
   }
 })
 
+const USERS_KEY = 'fireNotifyRegisteredUsers'
+const CURRENT_USER_KEY = 'fireNotifyCurrentUser'
+const ACTIVITIES_KEY = 'fireNotifyActivities'
+const TASKS_KEY = 'firenotify_tasks'
+const REPORTS_KEY = 'firenotify_reports'
+const NOTIFICATION_KEYS = [
+  'firenotify_notifications',
+  'fireNotifyNotifications',
+  'fireNotifyNotificationsData',
+  'notifications'
+]
+const UPDATE_EVENTS = [
+  'fireNotifyUsersUpdated',
+  'fireNotifyRegisteredUsersUpdated',
+  'fireNotifyActivitiesUpdated',
+  'fireNotifyTasksUpdated',
+  'fireNotifyReportsUpdated',
+  'fireNotifyNotificationsUpdated'
+]
 
-/* =========================================================
-   SHARED DATA
-========================================================= */
-
-const dutyStatus = ref('On Duty')
-
-const reportCount = ref(3)
-const urgentCount = ref(2)
-
+const users = ref([])
+const activities = ref([])
+const tasks = ref([])
+const reports = ref([])
+const notifications = ref([])
 const selectedTask = ref(null)
+let refreshTimer = null
 
-
-/* =========================================================
-   TODAY'S ASSIGNMENT
-========================================================= */
-
-const todayAssignment = {
-  type: 'FIRE SAFETY INSPECTION',
-  location: 'Public Market Complex',
-  time: '09:00 AM',
-  description:
-    'Scheduled inspection and fire safety compliance checking.'
+const readArray = (key) => {
+  try {
+    const value = JSON.parse(localStorage.getItem(key) || '[]')
+    return Array.isArray(value) ? value : []
+  } catch {
+    return []
+  }
 }
 
+const normalizeText = (value) => String(value ?? '').trim()
+const toLower = (value) => normalizeText(value).toLowerCase()
 
-/* =========================================================
-   TASK STATISTICS
-========================================================= */
+const getCurrentUser = () => {
+  if (props.currentUser) {
+    return props.currentUser
+  }
 
-const taskStats = ref({
-  total: 4,
-  pending: 2,
-  completed: 6,
-  weeklyTotal: 8
+  try {
+    return JSON.parse(localStorage.getItem(CURRENT_USER_KEY) || 'null') || null
+  } catch {
+    return null
+  }
+}
+
+const getUserIdentityValues = (user) => {
+  if (!user) return []
+
+  const values = [
+    user.id,
+    user.userId,
+    user.identifier,
+    user.email,
+    user.username,
+    user.name,
+    `${user.firstName || ''} ${user.lastName || ''}`.trim()
+  ]
+
+  return values.map(value => toLower(value)).filter(Boolean)
+}
+
+const matchesAnyValue = (value, candidates) => {
+  if (!value || !candidates.length) return false
+
+  const target = toLower(value)
+  return candidates.includes(target)
+}
+
+const recordMatchesCurrentUser = (record) => {
+  const user = getCurrentUser()
+  if (!user) return false
+
+  const candidates = getUserIdentityValues(user)
+  if (!candidates.length) return false
+
+  const values = [
+    record?.assignedToId,
+    record?.assignedTo,
+    record?.assignedToUsername,
+    record?.assignedToEmail,
+    record?.assignedToName,
+    record?.personnelId,
+    record?.userId,
+    record?.username,
+    record?.email,
+    record?.identifier,
+    record?.ownerId,
+    record?.assigneeId,
+    record?.submittedBy,
+    record?.name
+  ]
+
+  if (Array.isArray(record?.assignedPersonnel)) {
+    record.assignedPersonnel.forEach(person => {
+      values.push(person?.id)
+      values.push(person?.userId)
+      values.push(person?.username)
+      values.push(person?.identifier)
+      values.push(person?.email)
+      values.push(person?.name)
+      values.push(person?.firstName && person?.lastName ? `${person.firstName} ${person.lastName}` : '')
+    })
+  }
+
+  if (Array.isArray(record?.assignedUsers)) {
+    record.assignedUsers.forEach(person => {
+      values.push(person?.id)
+      values.push(person?.userId)
+      values.push(person?.username)
+      values.push(person?.identifier)
+      values.push(person?.email)
+      values.push(person?.name)
+    })
+  }
+
+  return values.some(value => matchesAnyValue(value, candidates))
+}
+
+const notificationMatchesCurrentUser = (notification) => {
+  const user = getCurrentUser()
+  if (!user) return true
+
+  const candidates = getUserIdentityValues(user)
+  if (!candidates.length) return true
+
+  const values = [
+    notification?.assignedToId,
+    notification?.assignedTo,
+    notification?.assignedToUsername,
+    notification?.assignedToEmail,
+    notification?.userId,
+    notification?.username,
+    notification?.identifier,
+    notification?.email,
+    notification?.personnelId,
+    notification?.recipientId,
+    notification?.recipientUsername,
+    notification?.recipientEmail
+  ]
+
+  return values.some(value => matchesAnyValue(value, candidates)) || !values.some(Boolean)
+}
+
+const parseDateValue = (value) => {
+  if (!value) return null
+
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value
+  }
+
+  const parsed = new Date(String(value).replace(/•/g, ' ').trim())
+  return Number.isNaN(parsed.getTime()) ? null : parsed
+}
+
+const statusKey = (status) => toLower(status)
+
+const isCompletedStatus = (status) => {
+  const value = statusKey(status)
+  return [
+    'completed',
+    'complete',
+    'done',
+    'finished',
+    'approved',
+    'reviewed',
+    'submitted',
+    'closed',
+    'resolved'
+  ].includes(value)
+}
+
+const isPendingStatus = (status) => {
+  const value = statusKey(status)
+  return [
+    'pending',
+    'scheduled',
+    'in progress',
+    'not started',
+    'waiting',
+    'assigned',
+    'for review',
+    'submitted'
+  ].includes(value)
+}
+
+const isOverdueStatus = (record) => {
+  const status = statusKey(record?.status)
+  if (status === 'overdue') return true
+
+  const dueDate = parseDateValue(record?.deadline || record?.dueDate || record?.date || record?.scheduleDate || record?.scheduledDate)
+  if (!dueDate) return false
+
+  return dueDate < new Date() && !isCompletedStatus(record?.status)
+}
+
+const badgeClassForStatus = (status) => {
+  const value = statusKey(status)
+
+  if (['completed', 'complete', 'approved', 'reviewed', 'submitted'].includes(value)) {
+    return 'bg-green-50 text-green-700'
+  }
+
+  if (['overdue'].includes(value)) {
+    return 'bg-red-50 text-red-700'
+  }
+
+  if (['in progress', 'pending', 'scheduled'].includes(value)) {
+    return 'bg-yellow-50 text-yellow-700'
+  }
+
+  return 'bg-blue-50 text-blue-700'
+}
+
+const iconForActivity = (status) => {
+  const value = statusKey(status)
+
+  if (['completed', 'complete', 'approved', 'reviewed'].includes(value)) {
+    return { icon: 'check', iconBg: 'bg-green-50', iconColor: 'text-green-600' }
+  }
+
+  if (value === 'overdue') {
+    return { icon: 'clock', iconBg: 'bg-red-50', iconColor: 'text-[#8B1E23]' }
+  }
+
+  if (value === 'in progress') {
+    return { icon: 'clock', iconBg: 'bg-blue-50', iconColor: 'text-blue-600' }
+  }
+
+  return { icon: 'clock', iconBg: 'bg-yellow-50', iconColor: 'text-yellow-600' }
+}
+
+const normalizeTaskForModal = (task = {}) => ({
+  ...task,
+  id: task.id || task.taskId || task._id || `TASK-${Date.now()}`,
+  type: task.title || task.type || task.taskTitle || 'Assigned Task',
+  location: task.location || task.station || task.assignmentLocation || 'Station',
+  time: task.deadline || task.dueDate || task.date || task.schedule || task.time || 'Not set',
+  description: task.description || task.instructions || task.note || 'No task details available.'
 })
 
+const normalizeActivityForCard = (activity, index) => {
+  const status = activity.status || 'Scheduled'
+  const base = iconForActivity(status)
+
+  return {
+    id: activity.id || `${activity.title || 'activity'}-${index}`,
+    title: activity.title || activity.name || activity.type || 'Station Activity',
+    schedule: activity.schedule || activity.date || activity.time || 'No schedule',
+    status: status,
+    icon: base.icon,
+    iconBg: base.iconBg,
+    iconColor: base.iconColor,
+    statusClass: badgeClassForStatus(status)
+  }
+}
+
+const normalizeRecentActivity = (activity, index) => {
+  const status = activity.status || 'Scheduled'
+  const base = iconForActivity(status)
+
+  return {
+    id: activity.id || `${activity.title || 'activity'}-${index}`,
+    title: activity.title || activity.name || activity.type || 'Activity update',
+    time: activity.updatedAt || activity.createdAt || activity.date || 'Recently',
+    icon: base.icon === 'check' ? '✓' : '↻',
+    iconBg: base.iconBg,
+    iconColor: base.iconColor
+  }
+}
+
+const readNotifications = () => {
+  for (const key of NOTIFICATION_KEYS) {
+    const value = readArray(key)
+    if (value.length) return value
+  }
+
+  for (let index = 0; index < localStorage.length; index++) {
+    const key = localStorage.key(index) || ''
+    if (!key.toLowerCase().includes('notification')) continue
+
+    const value = readArray(key)
+    if (value.length) return value
+  }
+
+  return []
+}
+
+const persistNotifications = (items) => {
+  for (const key of NOTIFICATION_KEYS) {
+    try {
+      localStorage.setItem(key, JSON.stringify(items))
+      return
+    } catch {
+      // continue to next preferred key
+    }
+  }
+
+  try {
+    localStorage.setItem('firenotify_notifications', JSON.stringify(items))
+  } catch {
+    // no-op
+  }
+}
+
+const refreshDashboard = () => {
+  users.value = readArray(USERS_KEY)
+  activities.value = readArray(ACTIVITIES_KEY)
+  tasks.value = readArray(TASKS_KEY)
+  reports.value = readArray(REPORTS_KEY)
+  notifications.value = readNotifications().filter(item => notificationMatchesCurrentUser(item) || !Object.keys(item || {}).some(key => ['assignedToId', 'assignedToUsername', 'assignedToEmail', 'userId', 'recipientId', 'personnelId'].includes(key)))
+}
+
+const assignedActivities = computed(() => {
+  return activities.value.filter(activity => recordMatchesCurrentUser(activity))
+})
+
+const assignedTasks = computed(() => {
+  return tasks.value.filter(task => recordMatchesCurrentUser(task))
+})
+
+const assignedReports = computed(() => {
+  return reports.value.filter(report => recordMatchesCurrentUser(report))
+})
+
+const pendingActivities = computed(() => {
+  return assignedActivities.value.filter(item => {
+    const status = item?.status || 'Scheduled'
+    return isPendingStatus(status) || (!status && item?.date)
+  }).length
+})
+
+const completedActivities = computed(() => {
+  return assignedActivities.value.filter(item => isCompletedStatus(item?.status)).length
+})
+
+const overdueActivities = computed(() => {
+  return assignedActivities.value.filter(item => isOverdueStatus(item)).length
+})
+
+const activityCompliance = computed(() => {
+  if (!assignedActivities.value.length) return 0
+  return Math.round((completedActivities.value / assignedActivities.value.length) * 100)
+})
+
+const pendingTasks = computed(() => {
+  return assignedTasks.value.filter(item => isPendingStatus(item?.status) || item?.status === 'In Progress').length
+})
+
+const completedTasks = computed(() => {
+  return assignedTasks.value.filter(item => isCompletedStatus(item?.status)).length
+})
+
+const overdueTasks = computed(() => {
+  return assignedTasks.value.filter(item => isOverdueStatus(item)).length
+})
+
+const taskStats = computed(() => ({
+  total: assignedTasks.value.length,
+  pending: pendingTasks.value,
+  completed: completedTasks.value,
+  weeklyTotal: Math.max(assignedTasks.value.length, 1)
+}))
 
 const completionPercentage = computed(() => {
-  if (!taskStats.value.weeklyTotal) return 0
-
-  return Math.round(
-    (taskStats.value.completed /
-      taskStats.value.weeklyTotal) *
-      100
-  )
+  const total = taskStats.value.weeklyTotal
+  if (!total) return 0
+  return Math.round((taskStats.value.completed / total) * 100)
 })
 
+const pendingReports = computed(() => {
+  return assignedReports.value.filter(item => {
+    const status = statusKey(item?.status)
+    return ['pending', 'submitted', 'for review', 'in progress', 'draft'].includes(status)
+  }).length
+})
 
-/* =========================================================
-   UPCOMING ACTIVITIES
-========================================================= */
+const reviewedReports = computed(() => {
+  return assignedReports.value.filter(item => {
+    const status = statusKey(item?.status)
+    return ['approved', 'reviewed', 'completed', 'complete', 'resolved'].includes(status)
+  }).length
+})
 
-const upcomingActivities = ref([
-  {
-    id: 1,
-    title: 'Fire Drill Evaluation',
-    schedule: 'Tomorrow · 08:30 AM',
-    status: 'Upcoming',
-    icon: 'clock',
-    iconBg: 'bg-red-50',
-    iconColor: 'text-[#8B1E23]',
-    statusClass: 'bg-yellow-50 text-yellow-700'
-  },
+const reportCompliance = computed(() => {
+  if (!assignedReports.value.length) return 0
+  return Math.round((reviewedReports.value / assignedReports.value.length) * 100)
+})
 
-  {
-    id: 2,
-    title: 'Monthly Station Report',
-    schedule: 'September 15 · 04:00 PM',
-    status: 'Scheduled',
-    icon: 'reports',
-    iconBg: 'bg-green-50',
-    iconColor: 'text-green-600',
-    statusClass: 'bg-blue-50 text-blue-700'
-  },
-
-  {
-    id: 3,
-    title: 'Personnel Training',
-    schedule: 'September 18 · 09:00 AM',
-    status: 'Training',
-    icon: 'roster',
-    iconBg: 'bg-purple-50',
-    iconColor: 'text-purple-600',
-    statusClass: 'bg-purple-50 text-purple-700'
-  }
-])
-
-
-/* =========================================================
-   RECENT ACTIVITIES
-========================================================= */
-
-const recentActivities = ref([
-  {
-    id: 1,
-    title: 'Fire Safety Inspection completed',
-    time: 'Today · 10:42 AM',
-    icon: '✓',
-    iconBg: 'bg-green-100',
-    iconColor: 'text-green-600'
-  },
-
-  {
-    id: 2,
-    title: 'Emergency Response Drill updated',
-    time: 'Yesterday · 03:20 PM',
-    icon: '↻',
-    iconBg: 'bg-blue-100',
-    iconColor: 'text-blue-600'
-  },
-
-  {
-    id: 3,
-    title: 'Monthly report requires submission',
-    time: 'Yesterday · 01:15 PM',
-    icon: '!',
-    iconBg: 'bg-yellow-100',
-    iconColor: 'text-yellow-600'
-  }
-])
-
-
-/* =========================================================
-   NOTIFICATIONS
-========================================================= */
-
-const notifications = ref([
-  {
-    id: 1,
-    title: 'Task deadline approaching',
-    message: 'Monthly report is due tomorrow.',
-    bg: 'bg-red-50',
-    read: false
-  },
-
-  {
-    id: 2,
-    title: 'New task assigned',
-    message: 'Fire drill evaluation has been assigned.',
-    bg: 'bg-blue-50',
-    read: false
-  },
-
-  {
-    id: 3,
-    title: 'Reminder',
-    message: 'Personnel training is scheduled this week.',
-    bg: 'bg-yellow-50',
-    read: false
-  }
-])
-
-
-/* =========================================================
-   COMPUTED VALUES
-========================================================= */
+const reportCount = computed(() => pendingReports.value)
+const urgentCount = computed(() => overdueTasks.value + overdueActivities.value + pendingReports.value)
 
 const unreadNotifications = computed(() => {
-  return notifications.value.filter(
-    notification => !notification.read
-  ).length
+  return notifications.value.filter(notification => !notification.read).length
 })
-
 
 const currentDate = computed(() => {
   return new Intl.DateTimeFormat('en-US', {
@@ -836,65 +1068,130 @@ const currentDate = computed(() => {
   }).format(new Date())
 })
 
+const dutyStatus = computed(() => {
+  const user = getCurrentUser()
+  if (!user) return 'On Duty'
+  return user.status === 'Inactive' || user.status === 'Off Duty' ? 'Off Duty' : 'On Duty'
+})
 
-/* =========================================================
-   TASK FUNCTIONS
-========================================================= */
+const todayAssignment = computed(() => {
+  const scheduledTask = assignedTasks.value.find(task => !isCompletedStatus(task?.status)) || assignedTasks.value[0]
+
+  if (scheduledTask) {
+    return {
+      type: scheduledTask.title || scheduledTask.type || 'Assigned Task',
+      location: scheduledTask.location || scheduledTask.station || 'Assigned Station',
+      time: scheduledTask.deadline || scheduledTask.dueDate || scheduledTask.date || scheduledTask.schedule || scheduledTask.time || 'No due date',
+      description: scheduledTask.description || scheduledTask.instructions || 'No task details available.'
+    }
+  }
+
+  const scheduledActivity = assignedActivities.value.find(item => !isCompletedStatus(item?.status)) || assignedActivities.value[0]
+
+  if (scheduledActivity) {
+    return {
+      type: scheduledActivity.type || 'Station Activity',
+      location: scheduledActivity.location || 'Assigned Station',
+      time: scheduledActivity.date || scheduledActivity.schedule || scheduledActivity.time || 'No schedule',
+      description: scheduledActivity.description || 'No activity details available.'
+    }
+  }
+
+  return {
+    type: 'No active assignment',
+    location: 'Awaiting assignment',
+    time: 'No due date',
+    description: 'There are no current personnel assignments for this user.'
+  }
+})
+
+const upcomingActivities = computed(() => {
+  return assignedActivities.value.slice(0, 3).map((activity, index) => normalizeActivityForCard(activity, index))
+})
+
+const recentActivities = computed(() => {
+  return [...assignedActivities.value]
+    .sort((a, b) => {
+      const aTime = parseDateValue(a.updatedAt || a.createdAt || a.date)?.getTime() || 0
+      const bTime = parseDateValue(b.updatedAt || b.createdAt || b.date)?.getTime() || 0
+      return bTime - aTime
+    })
+    .slice(0, 3)
+    .map((activity, index) => normalizeRecentActivity(activity, index))
+})
 
 const viewTask = (task) => {
-  selectedTask.value = task
+  selectedTask.value = normalizeTaskForModal(task)
 }
-
 
 const closeTask = () => {
   selectedTask.value = null
 }
 
-
 const acknowledgeTask = () => {
   if (!selectedTask.value) return
 
-  taskStats.value.pending = Math.max(
-    0,
-    taskStats.value.pending - 1
-  )
+  const recordId = String(selectedTask.value.id || '')
+  const updatedTasks = tasks.value.map(task => {
+    const taskId = String(task.id || task.taskId || task._id || '')
+    if (!recordId || taskId !== recordId) return task
 
+    return {
+      ...task,
+      status: 'Completed',
+      completedAt: new Date().toISOString()
+    }
+  })
+
+  tasks.value = updatedTasks
+  localStorage.setItem(TASKS_KEY, JSON.stringify(updatedTasks))
+  window.dispatchEvent(new CustomEvent('fireNotifyTasksUpdated'))
   selectedTask.value = null
 }
 
-
-/* =========================================================
-   NOTIFICATION FUNCTIONS
-========================================================= */
-
 const markNotificationRead = (id) => {
-  const notification = notifications.value.find(
-    item => item.id === id
-  )
+  notifications.value = notifications.value.map(item => {
+    if (String(item.id) !== String(id)) return item
+    return { ...item, read: true }
+  })
 
-  if (notification) {
-    notification.read = true
-  }
+  persistNotifications(notifications.value)
+  window.dispatchEvent(new CustomEvent('fireNotifyNotificationsUpdated'))
 }
-
 
 const markAllNotificationsRead = () => {
-  notifications.value.forEach(
-    notification => {
-      notification.read = true
-    }
-  )
+  notifications.value = notifications.value.map(item => ({ ...item, read: true }))
+  persistNotifications(notifications.value)
+  window.dispatchEvent(new CustomEvent('fireNotifyNotificationsUpdated'))
 }
-
-
-/* =========================================================
-   FUTURE STATUS FUNCTION
-========================================================= */
 
 const toggleDutyStatus = () => {
-  dutyStatus.value =
-    dutyStatus.value === 'On Duty'
-      ? 'Off Duty'
-      : 'On Duty'
+  dutyStatus.value = dutyStatus.value === 'On Duty' ? 'Off Duty' : 'On Duty'
 }
+
+onMounted(() => {
+  refreshDashboard()
+
+  window.addEventListener('storage', refreshDashboard)
+  window.addEventListener('focus', refreshDashboard)
+
+  UPDATE_EVENTS.forEach(eventName => {
+    window.addEventListener(eventName, refreshDashboard)
+  })
+
+  refreshTimer = setInterval(refreshDashboard, 800)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('storage', refreshDashboard)
+  window.removeEventListener('focus', refreshDashboard)
+
+  UPDATE_EVENTS.forEach(eventName => {
+    window.removeEventListener(eventName, refreshDashboard)
+  })
+
+  if (refreshTimer) {
+    clearInterval(refreshTimer)
+  }
+})
 </script>

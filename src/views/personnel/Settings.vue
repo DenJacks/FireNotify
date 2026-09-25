@@ -84,6 +84,7 @@
             <div>
               <label class="text-sm font-semibold text-slate-700">
                 First Name
+                <span class="text-[#8B1E23]">*</span>
               </label>
 
               <input
@@ -100,6 +101,7 @@
             <div>
               <label class="text-sm font-semibold text-slate-700">
                 Last Name
+                <span class="text-[#8B1E23]">*</span>
               </label>
 
               <input
@@ -512,6 +514,47 @@
 
 
     <!-- ===================================================== -->
+    <!-- SETTINGS CENTER -->
+    <!-- ===================================================== -->
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+        <h3 class="text-lg font-bold text-slate-900">Appearance</h3>
+        <p class="text-sm text-slate-500 mt-1">Personalize the entire Personnel Portal.</p>
+        <div class="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <label class="text-sm font-semibold text-slate-700">Theme<select :value="portalSettings.theme" @change="persistPortalSetting('theme', $event.target.value)" class="w-full mt-2 px-3 py-2.5 rounded-xl border border-slate-300 bg-white"><option value="light">Light</option><option value="dark">Dark</option><option value="system">System Default</option></select></label>
+          <label class="text-sm font-semibold text-slate-700">Density<select :value="portalSettings.density" @change="persistPortalSetting('density', $event.target.value)" class="w-full mt-2 px-3 py-2.5 rounded-xl border border-slate-300 bg-white"><option value="comfortable">Comfortable</option><option value="compact">Compact</option></select></label>
+          <label class="text-sm font-semibold text-slate-700">Font Size<select :value="portalSettings.fontSize" @change="persistPortalSetting('fontSize', $event.target.value)" class="w-full mt-2 px-3 py-2.5 rounded-xl border border-slate-300 bg-white"><option value="small">Small · Compact text</option><option value="medium">Medium · Default text</option><option value="large">Large · Larger text</option><option value="xlarge">Extra Large · Maximum readable text</option></select></label>
+        </div>
+      </section>
+
+      <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+        <h3 class="text-lg font-bold text-slate-900">Accessibility</h3>
+        <p class="text-sm text-slate-500 mt-1">Improve readability and interaction comfort.</p>
+        <div class="mt-4 space-y-3">
+          <label v-for="item in [['largeText', 'Large Text'], ['highContrast', 'High Contrast'], ['reduceMotion', 'Reduce Motion'], ['largerTargets', 'Larger Click Targets']]" :key="item[0]" class="flex items-center justify-between gap-4 p-3 rounded-xl bg-slate-50 border border-slate-200"><span class="text-sm font-semibold text-slate-700">{{ item[1] }}</span><input type="checkbox" :checked="portalSettings[item[0]]" @change="persistPortalSetting(item[0], $event.target.checked)" class="h-5 w-5 accent-[#8B1E23]" /></label>
+        </div>
+      </section>
+
+      <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+        <h3 class="text-lg font-bold text-slate-900">Notification Preferences</h3>
+        <p class="text-sm text-slate-500 mt-1">Choose which live alerts appear for your account.</p>
+        <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3"><label v-for="item in settingOptions" :key="item[0]" class="flex items-center justify-between gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200"><span class="text-sm font-semibold text-slate-700">{{ item[1] }}</span><input type="checkbox" :checked="portalSettings[item[0]]" @change="persistPortalSetting(item[0], $event.target.checked)" class="h-5 w-5 accent-[#8B1E23]" /></label></div>
+      </section>
+
+      <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+        <h3 class="text-lg font-bold text-slate-900">Data & Storage</h3>
+        <p class="text-sm text-slate-500 mt-1">Manage preferences without deleting operational records.</p>
+        <div class="mt-5 flex flex-wrap gap-3"><button @click="resetPreferenceGroup(['theme', 'density', 'fontSize'])" class="px-4 py-2.5 rounded-xl border border-slate-300 text-sm font-bold">Reset Appearance</button><button @click="resetPreferenceGroup(['largeText', 'highContrast', 'reduceMotion', 'largerTargets'])" class="px-4 py-2.5 rounded-xl border border-slate-300 text-sm font-bold">Reset Accessibility</button><button @click="resetPreferenceGroup(settingOptions.map(item => item[0]))" class="px-4 py-2.5 rounded-xl border border-slate-300 text-sm font-bold">Reset Notifications</button><button @click="resetAllPreferences" class="px-4 py-2.5 rounded-xl border border-red-200 text-[#8B1E23] text-sm font-bold">Reset All Preferences</button><button @click="exportMyData" class="px-4 py-2.5 rounded-xl bg-[#8B1E23] text-white text-sm font-bold">Export My Data</button></div>
+      </section>
+
+      <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 lg:col-span-2">
+        <h3 class="text-lg font-bold text-slate-900">Help & Support</h3><p class="text-sm text-slate-500 mt-1">Use the existing Personnel Support Center for help and problem reports.</p><div class="mt-4 flex flex-wrap gap-3"><button @click="emit('open-support')" class="px-4 py-2.5 rounded-xl bg-[#8B1E23] text-white text-sm font-bold">Support Center</button><button @click="emit('open-support')" class="px-4 py-2.5 rounded-xl border border-slate-300 text-sm font-bold">Report a Problem</button></div>
+      </section>
+
+      <section class="bg-[#8B1E23] rounded-2xl shadow-sm p-6 text-white lg:col-span-2"><p class="text-xs uppercase tracking-wide text-red-100">About FireNotify</p><h3 class="text-2xl font-bold mt-1">FIRENOTIFY</h3><p class="text-sm text-red-100 mt-1">Personnel Portal</p><div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-5 pt-4 border-t border-white/20 text-sm"><div><p class="text-red-100">Version</p><p class="font-bold mt-1">{{ appVersion }}</p></div><div><p class="text-red-100">Environment</p><p class="font-bold mt-1">Frontend</p></div><div><p class="text-red-100">Technology</p><p class="font-bold mt-1">Vue + Vite</p></div></div></section>
+    </section>
+
+    <!-- ===================================================== -->
     <!-- SAVE CHANGES -->
     <!-- ===================================================== -->
 
@@ -563,7 +606,7 @@
       @click.self="showPasswordModal = false"
     >
 
-      <div class="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden">
+      <div class="fn-modal-panel w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden">
 
         <div class="px-6 py-5 border-b border-slate-200">
 
@@ -599,6 +642,7 @@
 
             <label class="text-sm font-semibold text-slate-700">
               Current Password
+              <span class="text-[#8B1E23]">*</span>
             </label>
 
             <div class="relative mt-2">
@@ -625,6 +669,7 @@
 
             <label class="text-sm font-semibold text-slate-700">
               New Password
+              <span class="text-[#8B1E23]">*</span>
             </label>
 
             <div class="relative mt-2">
@@ -651,6 +696,7 @@
 
             <label class="text-sm font-semibold text-slate-700">
               Confirm New Password
+              <span class="text-[#8B1E23]">*</span>
             </label>
 
             <input
@@ -723,6 +769,14 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import packageInfo from '../../../package.json'
+import {
+  DEFAULT_PERSONNEL_SETTINGS,
+  getPersonnelSettings,
+  resetPersonnelSettings,
+  savePersonnelSettings,
+  SETTINGS_UPDATED_EVENT
+} from '../../utils/personnelSettings.js'
 
 
 // ============================================================
@@ -747,7 +801,7 @@ const props = defineProps({
 // EMITS
 // ============================================================
 
-const emit = defineEmits(['update-user'])
+const emit = defineEmits(['update-user', 'open-support'])
 
 
 // ============================================================
@@ -846,8 +900,52 @@ const passwordForm = ref({
 
 const toastMessage = ref('')
 const hasUnsavedChanges = ref(false)
+const portalSettings = ref(getPersonnelSettings())
+const appVersion = packageInfo.version || 'Not available'
 
 let toastTimer = null
+
+const settingOptions = [
+  ['taskNotifications', 'Task Notifications'],
+  ['activityNotifications', 'Activity Notifications'],
+  ['reportNotifications', 'Report Notifications'],
+  ['deadlineReminders', 'Deadline Reminders'],
+  ['supportNotifications', 'Support Notifications'],
+  ['systemNotifications', 'System Notifications'],
+  ['notificationSound', 'Notification Sound'],
+  ['showNotificationBadge', 'Show Notification Badge']
+]
+
+const persistPortalSetting = (key, value) => {
+  portalSettings.value = savePersonnelSettings({ [key]: value })
+  showToast('Settings saved.')
+}
+
+const resetPreferenceGroup = keys => {
+  portalSettings.value = resetPersonnelSettings(keys)
+  showToast('Preferences reset.')
+}
+
+const resetAllPreferences = () => {
+  portalSettings.value = resetPersonnelSettings()
+  showToast('All preferences reset.')
+}
+
+const exportMyData = () => {
+  const userId = props.currentUser?.id || props.currentUser?.identifier || props.currentUser?.email
+  const tickets = JSON.parse(localStorage.getItem('firenotify_support_tickets') || '[]')
+    .filter(ticket => String(ticket.userId) === String(userId))
+  const notifications = JSON.parse(localStorage.getItem('firenotify_notifications') || '[]')
+    .filter(item => String(item.recipientId || item.assignedToId) === String(userId))
+  const blob = new Blob([JSON.stringify({ profile: props.currentUser, settings: portalSettings.value, tickets, notifications }, null, 2)], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = 'firenotify-my-data.json'
+  link.click()
+  URL.revokeObjectURL(url)
+  showToast('Your data export is ready.')
+}
 
 
 // ============================================================
@@ -1222,11 +1320,26 @@ const changePassword = () => {
 
   passwordError.value = ''
 
-
   if (!passwordForm.value.current) {
 
     passwordError.value =
       'Enter your current password.'
+
+    return
+  }
+
+  const storedPassword = String(props.currentUser?.password || '')
+
+  if (!storedPassword) {
+    passwordError.value =
+      'Password changes are not available for this account.'
+
+    return
+  }
+
+  if (passwordForm.value.current !== storedPassword) {
+    passwordError.value =
+      'Current password is incorrect.'
 
     return
   }
@@ -1262,6 +1375,11 @@ const changePassword = () => {
 
     return
   }
+
+  emit('update-user', {
+    ...props.currentUser,
+    password: passwordForm.value.newPassword
+  })
 
 
   closePasswordModal()

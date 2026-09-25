@@ -1,5 +1,16 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+
+import {
+  deleteAllNotificationsForUser,
+  deleteNotificationForUser,
+  getNotificationsForUser,
+  isNotificationRead,
+  markAllNotificationsReadForUser,
+  markNotificationReadForUser,
+  mergeDerivedPersonnelNotifications,
+  NOTIFICATION_EVENTS
+} from '../../utils/notificationService.js'
 
 const props = defineProps({
   currentUser: {
@@ -15,175 +26,173 @@ const props = defineProps({
 const searchQuery = ref('')
 const selectedFilter = ref('All Notifications')
 const selectedStatus = ref('All')
-
 const selectedNotification = ref(null)
 const showDetailsModal = ref(false)
-
 const toastMessage = ref('')
+const notifications = ref([])
+const showDeleteAllModal = ref(false)
+let notificationRefreshTimer = null
 
-const notifications = ref([
-  {
-    id: 1,
-    icon: '🚨',
-    title: 'Overdue Report Deadline',
-    detail:
-      'The After-Operation Fire Incident Report has passed its submission deadline.',
-    time: '10 minutes ago',
-    tone: 'red',
-    type: 'Deadline Alerts',
-    read: false
-  },
-  {
-    id: 2,
-    icon: '⚠️',
-    title: 'Upcoming Report Deadline',
-    detail:
-      'Weekly Accomplishment Report is due tomorrow at 5:00 PM.',
-    time: '30 minutes ago',
-    tone: 'yellow',
-    type: 'Deadline Alerts',
-    read: false
-  },
-  {
-    id: 3,
-    icon: '📋',
-    title: 'New Activity Assigned',
-    detail:
-      'Community Fire Drill has been scheduled for September 10, 2026.',
-    time: '1 hour ago',
-    tone: 'blue',
-    type: 'Personnel Updates',
-    read: false
-  },
-  {
-    id: 4,
-    icon: '✓',
-    title: 'Report Approved',
-    detail:
-      'Weekly Accomplishment Report submitted by SFO1 Maria Santos has been approved.',
-    time: '2 hours ago',
-    tone: 'green',
-    type: 'Reports & Compliance',
-    read: true
-  },
-  {
-    id: 5,
-    icon: '📢',
-    title: 'Operations Announcement',
-    detail:
-      'All station units are reminded to check radio signal stability before the next dispatch cycle.',
-    time: '3 hours ago',
-    tone: 'purple',
-    type: 'System Announcements',
-    read: true
-  },
-  {
-    id: 6,
-    icon: '📝',
-    title: 'Report Returned',
-    detail:
-      'Equipment Inspection Report requires additional information before approval.',
-    time: '4 hours ago',
-    tone: 'orange',
-    type: 'Reports & Compliance',
-    read: false
-  },
-  {
-    id: 7,
-    icon: '👤',
-    title: 'Personnel Assignment Updated',
-    detail:
-      'FO2 Mark Santos has been assigned to the September 15 emergency response drill.',
-    time: '5 hours ago',
-    tone: 'blue',
-    type: 'Personnel Updates',
-    read: true
-  },
-  {
-    id: 8,
-    icon: '🔔',
-    title: 'Compliance Reminder',
-    detail:
-      'Approved reports must be archived within 24 hours to maintain digital records compliance.',
-    time: 'Yesterday',
-    tone: 'yellow',
-    type: 'System Announcements',
-    read: true
-  }
-])
+const normalizeNotification = (item, index = 0) => {
+  const id = item?.id ?? item?.notificationId ?? item?._id ??
+    `${item?.sourceType || item?.type || 'notification'}-${item?.sourceId || item?.recordId || index}`
+  const status = String(item?.status || '').trim()
+  const read = isNotificationRead(item)
 
-const announcements = ref([
-  {
-    id: 1,
-    title: 'Operations Update',
-    detail:
-      'All station units are reminded to check radio signal stability before the next dispatch cycle.',
-    tone: 'green',
-    date: 'Today'
-  },
-  {
-    id: 2,
-    title: 'Training Notice',
-    detail:
-      'Community fire drill briefing will be held tomorrow at 7:30 AM at the barangay hall.',
-    tone: 'blue',
-    date: 'Today'
-  },
-  {
-    id: 3,
-    title: 'Compliance Advisory',
-    detail:
-      'All approved reports must be archived within 24 hours to maintain digital records compliance.',
-    tone: 'yellow',
-    date: 'Yesterday'
+  const title =
+    item?.title ||
+    item?.subject ||
+    item?.message ||
+    item?.name ||
+    'Notification'
+
+  const detail =
+    item?.detail ||
+    item?.message ||
+    item?.description ||
+    item?.body ||
+    'No additional details available.'
+
+  const tone =
+    item?.tone ||
+    item?.color ||
+    (
+      String(item?.type || '').includes('Deadline')
+        ? 'red'
+        : String(item?.type || '').includes('Personnel')
+          ? 'blue'
+          : String(item?.type || '').includes('Report')
+            ? 'green'
+            : String(item?.type || '').includes('System')
+              ? 'purple'
+              : 'slate'
+    )
+
+  const type =
+    item?.type ||
+    item?.category ||
+    item?.kind ||
+    'System Announcements'
+
+  const icon =
+    item?.icon ||
+    (
+      tone === 'red'
+        ? '🚨'
+        : tone === 'yellow'
+          ? '⚠️'
+          : tone === 'blue'
+            ? '📋'
+            : tone === 'green'
+              ? '✓'
+              : tone === 'purple'
+                ? '📢'
+                : '🔔'
+    )
+
+  const rawTime = item?.time || item?.createdAt || item?.timestamp || item?.date
+  const parsedTime = rawTime ? new Date(String(rawTime).replace(/•/g, ' ').trim()) : null
+  const time = parsedTime && !Number.isNaN(parsedTime.getTime()) && parsedTime.getFullYear() >= 1970
+    ? parsedTime.toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })
+    : 'Recently'
+
+  return {
+    ...item,
+    id,
+    title,
+    detail,
+    type,
+    tone,
+    icon,
+    time,
+    read,
+    status
   }
-])
+}
+
+const refreshNotifications = () => {
+  mergeDerivedPersonnelNotifications(props.currentUser)
+  notifications.value = getNotificationsForUser(props.currentUser)
+    .map((item, index) => normalizeNotification(item, index))
+}
+
+const markAllAsRead = () => {
+  markAllNotificationsReadForUser(props.currentUser)
+  refreshNotifications()
+  showToast('All notifications marked as read.')
+}
+
+const toggleRead = notification => {
+  markNotificationReadForUser(
+    notification.id,
+    props.currentUser,
+    !isNotificationRead(notification)
+  )
+  refreshNotifications()
+  showToast(
+    isNotificationRead(notification)
+      ? 'Notification marked as unread.'
+      : 'Notification marked as read.'
+  )
+}
+
+const deleteNotification = notification => {
+  deleteNotificationForUser(notification.id, props.currentUser)
+  refreshNotifications()
+  showToast('Notification deleted.')
+}
+
+const deleteAll = () => {
+  deleteAllNotificationsForUser(props.currentUser)
+  refreshNotifications()
+  showDeleteAllModal.value = false
+  showToast('All notifications deleted.')
+}
+
+const viewNotification = notification => {
+  selectedNotification.value = notification
+
+  if (!isNotificationRead(notification)) {
+    markNotificationReadForUser(notification.id, props.currentUser)
+    refreshNotifications()
+  }
+
+  showDetailsModal.value = true
+}
 
 const channelSummary = computed(() => [
   {
     label: 'System Alerts',
-    count: notifications.value.filter(
-      item => item.type === 'System Announcements'
-    ).length,
+    count: notifications.value.filter(item => item.type === 'System Announcements').length,
     color: 'text-[#8B1E23]'
   },
   {
     label: 'Personnel Updates',
-    count: notifications.value.filter(
-      item => item.type === 'Personnel Updates'
-    ).length,
+    count: notifications.value.filter(item => item.type === 'Personnel Updates').length,
     color: 'text-blue-600'
   },
   {
     label: 'Reports & Compliance',
-    count: notifications.value.filter(
-      item => item.type === 'Reports & Compliance'
-    ).length,
+    count: notifications.value.filter(item => item.type === 'Reports & Compliance').length,
     color: 'text-green-600'
   },
   {
     label: 'Deadline Alerts',
-    count: notifications.value.filter(
-      item => item.type === 'Deadline Alerts'
-    ).length,
+    count: notifications.value.filter(item => item.type === 'Deadline Alerts').length,
     color: 'text-yellow-600'
   }
 ])
 
 const unreadCount = computed(() =>
-  notifications.value.filter(item => !item.read).length
+  notifications.value.filter(item => !isNotificationRead(item)).length
 )
 
 const deadlineCount = computed(() =>
-  notifications.value.filter(
-    item => item.type === 'Deadline Alerts'
-  ).length
+  notifications.value.filter(item => item.type === 'Deadline Alerts').length
 )
 
 const activityCount = computed(() =>
-  notifications.value.filter(
-    item => item.type === 'Personnel Updates'
-  ).length
+  notifications.value.filter(item => item.type === 'Personnel Updates').length
 )
 
 const filteredNotifications = computed(() => {
@@ -202,8 +211,8 @@ const filteredNotifications = computed(() => {
 
     const matchesStatus =
       selectedStatus.value === 'All' ||
-      (selectedStatus.value === 'Unread' && !item.read) ||
-      (selectedStatus.value === 'Read' && item.read)
+      (selectedStatus.value === 'Unread' && !isNotificationRead(item)) ||
+      (selectedStatus.value === 'Read' && isNotificationRead(item))
 
     return matchesSearch && matchesFilter && matchesStatus
   })
@@ -223,46 +232,6 @@ const showToast = message => {
   }, 3000)
 }
 
-const markAllAsRead = () => {
-  notifications.value.forEach(item => {
-    item.read = true
-  })
-
-  showToast('All notifications marked as read.')
-}
-
-const toggleRead = notification => {
-  notification.read = !notification.read
-
-  showToast(
-    notification.read
-      ? 'Notification marked as read.'
-      : 'Notification marked as unread.'
-  )
-}
-
-const deleteNotification = notification => {
-  const index = notifications.value.findIndex(
-    item => item.id === notification.id
-  )
-
-  if (index !== -1) {
-    notifications.value.splice(index, 1)
-  }
-
-  showToast('Notification deleted.')
-}
-
-const viewNotification = notification => {
-  selectedNotification.value = notification
-
-  if (!notification.read) {
-    notification.read = true
-  }
-
-  showDetailsModal.value = true
-}
-
 const clearFilters = () => {
   searchQuery.value = ''
   selectedFilter.value = 'All Notifications'
@@ -280,7 +249,8 @@ const getToneClass = tone => {
     blue: 'border-blue-200 bg-blue-50',
     green: 'border-green-200 bg-green-50',
     purple: 'border-purple-200 bg-purple-50',
-    orange: 'border-orange-200 bg-orange-50'
+    orange: 'border-orange-200 bg-orange-50',
+    slate: 'border-slate-200 bg-slate-50'
   }
 
   return classes[tone] || 'border-slate-200 bg-slate-50'
@@ -293,14 +263,15 @@ const getIconClass = tone => {
     blue: 'bg-blue-100',
     green: 'bg-green-100',
     purple: 'bg-purple-100',
-    orange: 'bg-orange-100'
+    orange: 'bg-orange-100',
+    slate: 'bg-slate-100'
   }
 
   return classes[tone] || 'bg-slate-100'
 }
 
 const getBadgeClass = notification => {
-  if (notification.read) {
+  if (isNotificationRead(notification)) {
     return 'bg-green-100 text-green-700'
   }
 
@@ -310,11 +281,36 @@ const getBadgeClass = notification => {
     blue: 'bg-blue-100 text-blue-700',
     green: 'bg-green-100 text-green-700',
     purple: 'bg-purple-100 text-purple-700',
-    orange: 'bg-orange-100 text-orange-700'
+    orange: 'bg-orange-100 text-orange-700',
+    slate: 'bg-slate-100 text-slate-700'
   }
 
   return classes[notification.tone] || 'bg-slate-100 text-slate-700'
 }
+
+onMounted(() => {
+  refreshNotifications()
+
+  window.addEventListener('storage', refreshNotifications)
+  window.addEventListener('focus', refreshNotifications)
+  NOTIFICATION_EVENTS.forEach(eventName => {
+    window.addEventListener(eventName, refreshNotifications)
+  })
+
+  notificationRefreshTimer = setInterval(refreshNotifications, 30000)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('storage', refreshNotifications)
+  window.removeEventListener('focus', refreshNotifications)
+  NOTIFICATION_EVENTS.forEach(eventName => {
+    window.removeEventListener(eventName, refreshNotifications)
+  })
+
+  if (notificationRefreshTimer) {
+    clearInterval(notificationRefreshTimer)
+  }
+})
 </script>
 
 <template>
@@ -358,6 +354,14 @@ const getBadgeClass = notification => {
             class="px-5 py-3 rounded-xl bg-[#8B1E23] text-white font-bold hover:bg-[#72181D] transition"
           >
             Mark All as Read
+          </button>
+
+          <button
+            @click="showDeleteAllModal = true"
+            :disabled="notifications.length === 0"
+            class="px-5 py-3 rounded-xl border border-red-200 text-[#8B1E23] font-bold hover:bg-red-50 transition disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Delete All
           </button>
 
         </div>
@@ -429,7 +433,6 @@ const getBadgeClass = notification => {
           <option>Deadline Alerts</option>
           <option>Personnel Updates</option>
           <option>Reports & Compliance</option>
-          <option>System Announcements</option>
         </select>
 
         <select
@@ -600,14 +603,15 @@ const getBadgeClass = notification => {
           </div>
 
           <p class="font-bold text-slate-800">
-            No notifications found
+            {{ notifications.length ? 'No notifications found' : 'No notifications yet' }}
           </p>
 
           <p class="text-sm text-slate-500 mt-1">
-            Try changing your search or filters.
+            {{ notifications.length ? 'Try changing your search or filters.' : "You're all caught up." }}
           </p>
 
           <button
+            v-if="notifications.length"
             @click="clearFilters"
             class="mt-4 px-4 py-2 rounded-lg bg-[#8B1E23] text-white text-sm font-bold"
           >
@@ -738,87 +742,38 @@ const getBadgeClass = notification => {
             Reports & Compliance
           </button>
 
-          <button
-            @click="selectFilter('System Announcements')"
-            :class="[
-              'w-full text-left px-4 py-3 rounded-xl border text-sm font-semibold transition',
-              selectedFilter === 'System Announcements'
-                ? 'bg-[#8B1E23] text-white border-[#8B1E23]'
-                : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
-            ]"
-          >
-            System Announcements
-          </button>
-
         </div>
       </div>
 
     </section>
 
-    <!-- ANNOUNCEMENTS -->
-    <section
-      class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6"
+    <!-- DELETE ALL MODAL -->
+    <div
+      v-if="showDeleteAllModal"
+      class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+      @click.self="showDeleteAllModal = false"
     >
-
-      <div class="flex items-center justify-between border-b border-slate-200 pb-5">
-
-        <div>
-          <h2 class="text-xl font-bold text-slate-900">
-            Announcements
-          </h2>
-
-          <p class="text-sm text-slate-500 mt-1">
-            Administrative updates for all BFP units
-          </p>
+      <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+        <h3 class="text-xl font-bold text-slate-900">Delete all notifications?</h3>
+        <p class="text-sm text-slate-500 mt-2">
+          All notifications for your admin account will be permanently removed.
+        </p>
+        <div class="flex justify-end gap-3 mt-6">
+          <button
+            @click="showDeleteAllModal = false"
+            class="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-semibold"
+          >
+            Cancel
+          </button>
+          <button
+            @click="deleteAll"
+            class="px-4 py-2.5 rounded-xl bg-[#8B1E23] text-white font-semibold"
+          >
+            Delete All
+          </button>
         </div>
-
-        <span
-          class="px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold"
-        >
-          {{ announcements.length }} Active
-        </span>
-
       </div>
-
-      <div class="mt-5 grid grid-cols-1 lg:grid-cols-3 gap-4">
-
-        <div
-          v-for="announcement in announcements"
-          :key="announcement.id"
-          :class="[
-            'p-5 rounded-xl border',
-            announcement.tone === 'green'
-              ? 'border-emerald-200 bg-emerald-50'
-              : '',
-            announcement.tone === 'blue'
-              ? 'border-indigo-200 bg-indigo-50'
-              : '',
-            announcement.tone === 'yellow'
-              ? 'border-amber-200 bg-amber-50'
-              : ''
-          ]"
-        >
-
-          <div class="flex justify-between gap-3">
-
-            <p class="text-sm font-bold text-slate-900">
-              {{ announcement.title }}
-            </p>
-
-            <span class="text-xs text-slate-400">
-              {{ announcement.date }}
-            </span>
-
-          </div>
-
-          <p class="text-sm text-slate-600 mt-2">
-            {{ announcement.detail }}
-          </p>
-
-        </div>
-
-      </div>
-    </section>
+    </div>
 
     <!-- DETAILS MODAL -->
     <div

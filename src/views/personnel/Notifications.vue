@@ -664,9 +664,23 @@
 
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+
+import {
+  deletePersonnelNotification,
+  getPersonnelNotifications,
+  isNotificationRead,
+  markAllPersonnelNotificationsRead,
+  markPersonnelNotificationRead,
+  mergeDerivedPersonnelNotifications,
+  NOTIFICATION_EVENTS
+} from '../../utils/notificationService.js'
 
 const props = defineProps({
+  currentUser: {
+    type: Object,
+    default: null
+  },
   ICONS: {
     type: Object,
     required: true
@@ -686,64 +700,7 @@ const selectedNotification = ref(null)
 const toastMessage = ref('')
 
 
-/* =========================================================
-   SAMPLE NOTIFICATIONS
-   Frontend demo data.
-   Later this can come from Django REST API.
-========================================================= */
-
-const notifications = ref([
-  {
-    id: 1,
-    title: 'Report Deadline Reminder',
-    message:
-      'Your Fire Safety Inspection Report is due on September 12, 2026.',
-    type: 'Report Alerts',
-    priority: 'URGENT',
-    time: '10 minutes ago',
-    read: false
-  },
-  {
-    id: 2,
-    title: 'New Task Assigned',
-    message:
-      'You have been assigned to the Public Market Fire Safety Inspection.',
-    type: 'Task Alerts',
-    priority: 'HIGH',
-    time: '1 hour ago',
-    read: false
-  },
-  {
-    id: 3,
-    title: 'Report Accepted',
-    message:
-      'Your Routine Safety Patrol Report has been successfully recorded.',
-    type: 'Report Alerts',
-    priority: 'NORMAL',
-    time: 'Yesterday',
-    read: true
-  },
-  {
-    id: 4,
-    title: 'Activity Reminder',
-    message:
-      'Your scheduled Fire Safety Seminar will begin tomorrow at 9:00 AM.',
-    type: 'Activity Reminders',
-    priority: 'HIGH',
-    time: 'Yesterday',
-    read: false
-  },
-  {
-    id: 5,
-    title: 'System Update',
-    message:
-      'FireNotify notification services are operating normally.',
-    type: 'System Alerts',
-    priority: 'NORMAL',
-    time: '2 days ago',
-    read: true
-  }
-])
+const notifications = ref([])
 
 
 /* =========================================================
@@ -776,26 +733,79 @@ const notificationSettings = ref([
    DEADLINES
 ========================================================= */
 
-const deadlines = ref([
-  {
-    id: 1,
-    title: 'Fire Safety Inspection Report',
-    due: 'Due Today',
-    urgent: true
-  },
-  {
-    id: 2,
-    title: 'Monthly Operations Report',
-    due: 'Due in 5 days',
-    urgent: false
-  },
-  {
-    id: 3,
-    title: 'Activity Compliance Report',
-    due: 'Due in 8 days',
-    urgent: false
+const readRecords = key => {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(key) || '[]')
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
   }
-])
+}
+
+const identityValues = user => [
+  user?.id,
+  user?.userId,
+  user?.identifier,
+  user?.username,
+  user?.email
+].map(value => String(value || '').trim().toLowerCase()).filter(Boolean)
+
+const recordBelongsToUser = record => {
+  const identities = identityValues(props.currentUser)
+  const assignments = Array.isArray(record?.assignedPersonnel)
+    ? record.assignedPersonnel
+    : [record]
+  const values = assignments.flatMap(person => [
+    person?.id || person?.userId,
+    person?.username || person?.identifier,
+    person?.email,
+    person?.assignedToId,
+    person?.assignedToUsername,
+    person?.assignedToEmail
+  ]).map(value => String(value || '').trim().toLowerCase())
+
+  return identities.length > 0 && values.some(value => identities.includes(value))
+}
+
+const parseDate = value => {
+  if (!value) return null
+  const date = new Date(String(value).replace(/•/g, ' ').trim())
+  return Number.isNaN(date.getTime()) ? null : date
+}
+
+const formatDeadline = value => {
+  const date = parseDate(value)
+  if (!date) return 'No deadline'
+
+  const days = Math.ceil((date.getTime() - Date.now()) / 86400000)
+  if (days < 0) return 'Overdue'
+  if (days === 0) return 'Due today'
+  if (days === 1) return 'Due tomorrow'
+  return `Due in ${days} days`
+}
+
+const deadlines = computed(() => {
+  const records = [
+    ...readRecords('firenotify_tasks'),
+    ...readRecords('fireNotifyActivities'),
+    ...readRecords('firenotify_reports')
+  ]
+
+  return records
+    .filter(record => recordBelongsToUser(record))
+    .map(record => {
+      const deadline = record.deadline || record.dueDate || record.deadlineDate || record.date || record.schedule
+      return {
+        id: `${record.id}-deadline`,
+        title: record.title || record.name || record.activityName || 'Untitled record',
+        due: formatDeadline(deadline),
+        urgent: Boolean(parseDate(deadline) && parseDate(deadline).getTime() - Date.now() <= 86400000)
+      }
+    })
+    .filter(item => item.due !== 'No deadline')
+    .sort((left, right) => Number(right.urgent) - Number(left.urgent))
+    .slice(0, 5)
+})
 
 
 /* =========================================================
@@ -803,7 +813,7 @@ const deadlines = ref([
 ========================================================= */
 
 const unreadCount = computed(() => {
-  return notifications.value.filter(item => !item.read).length
+  return notifications.value.filter(item => !isNotificationRead(item)).length
 })
 
 const taskAlertCount = computed(() => {
@@ -836,9 +846,9 @@ const filteredNotifications = computed(() => {
 
     const matchesSearch =
       !query ||
-      notification.title.toLowerCase().includes(query) ||
-      notification.message.toLowerCase().includes(query) ||
-      notification.type.toLowerCase().includes(query)
+      String(notification.title || '').toLowerCase().includes(query) ||
+      String(notification.message || notification.detail || '').toLowerCase().includes(query) ||
+      String(notification.type || '').toLowerCase().includes(query)
 
     const matchesType =
       selectedType.value === 'All' ||
@@ -868,16 +878,20 @@ const showToast = (message) => {
 
 
 const markAllAsRead = () => {
-  notifications.value.forEach(notification => {
-    notification.read = true
-  })
+  markAllPersonnelNotificationsRead(props.currentUser)
+  refreshNotifications()
 
   showToast('All notifications marked as read.')
 }
 
 
 const toggleRead = (notification) => {
-  notification.read = !notification.read
+  markPersonnelNotificationRead(
+    notification.id,
+    props.currentUser,
+    !isNotificationRead(notification)
+  )
+  refreshNotifications()
 
   showToast(
     notification.read
@@ -888,9 +902,8 @@ const toggleRead = (notification) => {
 
 
 const deleteNotification = (id) => {
-  notifications.value = notifications.value.filter(
-    notification => notification.id !== id
-  )
+  deletePersonnelNotification(id, props.currentUser)
+  refreshNotifications()
 
   if (
     selectedNotification.value &&
@@ -906,10 +919,34 @@ const deleteNotification = (id) => {
 const viewNotification = (notification) => {
   selectedNotification.value = notification
 
-  if (!notification.read) {
-    notification.read = true
+  if (!isNotificationRead(notification)) {
+    markPersonnelNotificationRead(notification.id, props.currentUser)
+    refreshNotifications()
   }
 }
+
+const refreshNotifications = () => {
+  mergeDerivedPersonnelNotifications(props.currentUser)
+  notifications.value = getPersonnelNotifications(props.currentUser).map(item => ({
+    ...item,
+    read: isNotificationRead(item),
+    message: item.message || item.detail || 'No additional details available.',
+    time: item.createdAt || item.timestamp || 'Recently'
+  }))
+}
+
+onMounted(() => {
+  refreshNotifications()
+  window.addEventListener('storage', refreshNotifications)
+  window.addEventListener('focus', refreshNotifications)
+  NOTIFICATION_EVENTS.forEach(eventName => window.addEventListener(eventName, refreshNotifications))
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('storage', refreshNotifications)
+  window.removeEventListener('focus', refreshNotifications)
+  NOTIFICATION_EVENTS.forEach(eventName => window.removeEventListener(eventName, refreshNotifications))
+})
 
 
 /* =========================================================
