@@ -125,17 +125,60 @@
 
 
                 <!-- BADGE -->
-                <span
-                  v-if="item.badge > 0"
-                  class="ml-2 px-2 py-1 rounded-full text-xs font-bold"
-                  :class="
-                    activeTab === item.name
-                      ? 'bg-white/20 text-white'
-                      : 'bg-red-100 text-[#8B1E23]'
-                  "
-                >
-                  {{ item.badge }}
-                </span>
+               <!-- LIVE BADGE -->
+<!-- ADMIN-STYLE LIVE BADGE -->
+<span
+  v-if="
+    (
+      item.name === 'Tasks' &&
+      sidebarCounts.tasks > 0
+    ) ||
+    (
+      item.name === 'Activities' &&
+      activityCount > 0
+    ) ||
+    (
+      item.name === 'Reports' &&
+      sidebarCounts.reports > 0
+    ) ||
+    (
+      item.name === 'Notifications' &&
+      sidebarCounts.notifications > 0
+    )
+  "
+  class="ml-2 px-2.5 py-1 rounded-full text-xs font-bold"
+  :class="
+    activeTab === item.name
+      ? 'bg-white/20 text-white'
+      : 'bg-red-100 text-[#8B1E23]'
+  "
+>
+  {{
+    item.name === 'Tasks'
+      ? (
+          sidebarCounts.tasks > 99
+            ? '99+'
+            : sidebarCounts.tasks
+        )
+      : item.name === 'Activities'
+        ? (
+            activityCount > 99
+              ? '99+'
+              : activityCount
+          )
+        : item.name === 'Reports'
+          ? (
+              sidebarCounts.reports > 99
+                ? '99+'
+                : sidebarCounts.reports
+            )
+          : (
+              sidebarCounts.notifications > 99
+                ? '99+'
+                : sidebarCounts.notifications
+            )
+  }}
+</span>
 
               </button>
 
@@ -438,7 +481,10 @@
 
 <script setup>
 
+
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+
+
 
 import Dashboard from './Dashboard.vue'
 import Tasks from './Tasks.vue'
@@ -605,20 +651,144 @@ const isCompleted = status => [
 
 const refreshSidebarCounts = () => {
   const currentUser = getCurrentUser()
-  mergeDerivedPersonnelNotifications(currentUser)
-  const tasks = readArray(STORAGE_KEYS.tasks)
-  const reports = readArray(STORAGE_KEYS.reports)
 
-  sidebarCounts.tasks = tasks.filter(task => {
-    return recordBelongsToCurrentUser(task) && isPending(task?.status)
-  }).length
+  if (!currentUser) {
+    sidebarCounts.tasks = 0
+    sidebarCounts.reports = 0
+    sidebarCounts.notifications = 0
+    activityCount.value = 0
+    return
+  }
 
-  sidebarCounts.reports = reports.filter(report => {
-    return recordBelongsToCurrentUser(report) && !isCompleted(report?.status || report?.submissionStatus)
-  }).length
+  /* =====================================================
+     READ ALL LIVE DATA
+  ===================================================== */
 
-  sidebarCounts.notifications = getUnreadPersonnelCount(currentUser)
+  const activities = readArray('fireNotifyActivities')
+  const tasks = readArray('firenotify_tasks')
+  const reports = readArray('firenotify_reports')
+
+  /* =====================================================
+     ACTIVITIES ASSIGNED TO CURRENT PERSONNEL
+  ===================================================== */
+
+  const assignedActivities = activities.filter(activity => {
+    return recordBelongsToCurrentUser(activity)
+  })
+
+  /* =====================================================
+     ACTIVE / PENDING ACTIVITIES
+  ===================================================== */
+
+  const activeActivities = assignedActivities.filter(activity => {
+    const status = normalize(
+      activity?.status || 'Scheduled'
+    )
+
+    return ![
+      'completed',
+      'complete',
+      'done',
+      'finished',
+      'verified',
+      'approved',
+      'closed',
+      'cancelled'
+    ].includes(status)
+  })
+
+  /* =====================================================
+     TASKS
+     
+     If actual task records exist, use them.
+     Otherwise use assigned active Activities.
+  ===================================================== */
+
+ const realTasks = tasks.filter(task => {
+  return (
+    recordBelongsToCurrentUser(task) &&
+    !isCompleted(task?.status)
+  )
+})
+
+/*
+ * IMPORTANT:
+ * Activities are NOT Tasks.
+ *
+ * An Activity created by Admin must only appear
+ * under Activities and Notifications.
+ *
+ * Tasks will only have a badge when an actual
+ * record exists inside firenotify_tasks.
+ */
+sidebarCounts.tasks = realTasks.length
+
+  /* =====================================================
+     REPORTS
+
+     Count pending/uncompleted reports assigned
+     to the current personnel.
+  ===================================================== */
+
+  const pendingReports = reports.filter(report => {
+    if (!recordBelongsToCurrentUser(report)) {
+      return false
+    }
+
+    const status = normalize(
+      report?.status ||
+      report?.submissionStatus ||
+      'pending'
+    )
+
+    return ![
+      'completed',
+      'complete',
+      'done',
+      'finished',
+      'approved',
+      'reviewed',
+      'submitted',
+      'closed',
+      'resolved'
+    ].includes(status)
+  })
+
+  /*
+    If Admin has created Reports, use actual report count.
+    
+    If there are no report records yet, don't invent
+    a report count from activities.
+  */
+  sidebarCounts.reports = pendingReports.length
+
+  /* =====================================================
+     NOTIFICATIONS
+  ===================================================== */
+
+  try {
+    mergeDerivedPersonnelNotifications(currentUser)
+  } catch (error) {
+    console.warn(
+      'FireNotify: notification refresh failed',
+      error
+    )
+  }
+
+  sidebarCounts.notifications =
+    getUnreadPersonnelCount(currentUser)
+
+  /* =====================================================
+     ACTIVITIES BADGE
+
+     Same source as Activities page.
+  ===================================================== */
+
+  activityCount.value =
+    activeActivities.length
 }
+
+
 
 
 /* =========================================================
@@ -641,82 +811,160 @@ const pageComponents = {
    SIDEBAR ITEMS
    ========================================================= */
 
-const fieldItems = computed(() => [
+const fieldItems = [
   {
     name: 'Dashboard',
     icon: 'dashboard',
-    context: 'Operations overview'
+    context: 'Operations overview',
+    badge: null
   },
   {
     name: 'Tasks',
     icon: 'tasks',
     context: 'Assigned activities',
-    badge: sidebarCounts.tasks
+    badge: null
   },
   {
     name: 'Activities',
     icon: 'activities',
-    context: 'View station activities'
+    context: 'View station activities',
+    badge: null
   },
   {
     name: 'Reports',
     icon: 'reports',
     context: 'Submit accomplishment reports',
-    badge: sidebarCounts.reports
+    badge: null
   },
   {
     name: 'Notifications',
     icon: 'notifications',
     context: 'Deadlines & station alerts',
-    badge: sidebarCounts.notifications
+    badge: null
   }
-])
-
-
-const managementItems = [
- 
-  
- 
 ]
-
-
 const toolItems = [
   {
     name: 'Support',
-    icon: 'support',
-    context: 'Get system assistance'
+    icon: 'support'
   },
   {
     name: 'Settings',
-    icon: 'settings',
-    context: 'Account & preferences'
+    icon: 'settings'
   }
 ]
 
-onMounted(() => {
-  initializePersonnelSettings()
-  refreshSidebarCounts()
+// =====================================================
+// LIVE ACTIVITY COUNT
+// =====================================================
 
-  window.addEventListener('storage', refreshSidebarCounts)
-  window.addEventListener('focus', refreshSidebarCounts)
-  window.addEventListener(SETTINGS_UPDATED_EVENT, applySettingsEvent)
+const ACTIVITY_STORAGE_KEY = 'fireNotifyActivities'
+const ACTIVITY_SYNC_EVENT = 'fireNotifyActivitiesUpdated'
+
+const activityCount = ref(0)
+
+const loadActivityCount = () => {
+  try {
+    const currentUser = getCurrentUser()
+
+    if (!currentUser) {
+      activityCount.value = 0
+      return
+    }
+
+    const activities = readArray(
+      'fireNotifyActivities'
+    )
+
+    const assignedActivities = activities.filter(
+      activity => recordBelongsToCurrentUser(activity)
+    )
+
+    const activeActivities =
+      assignedActivities.filter(activity => {
+        const status = normalize(
+          activity?.status || 'Scheduled'
+        )
+
+        return ![
+          'completed',
+          'complete',
+          'done',
+          'finished',
+          'verified',
+          'approved',
+          'closed',
+          'cancelled'
+        ].includes(status)
+      })
+
+    activityCount.value =
+      activeActivities.length
+
+  } catch (error) {
+    console.error(
+      'FireNotify: unable to load live activity count',
+      error
+    )
+
+    activityCount.value = 0
+  }
+}
+
+const handleActivitiesUpdated = () => {
+  loadActivityCount()
+}
+
+let activityLiveInterval = null
+
+onMounted(() => {
+  /* Initial counts */
+  refreshSidebarCounts()
+  loadActivityCount()
+
+  /* Same-tab Admin → Personnel updates */
   UPDATE_EVENTS.forEach(eventName => {
-    window.addEventListener(eventName, refreshSidebarCounts)
+    window.addEventListener(
+      eventName,
+      refreshSidebarCounts
+    )
   })
 
-  sidebarRefreshTimer = setInterval(refreshSidebarCounts, 800)
+  window.addEventListener(
+    ACTIVITY_SYNC_EVENT,
+    () => {
+      refreshSidebarCounts()
+      loadActivityCount()
+    }
+  )
+
+  /* Other tab/window updates */
+  window.addEventListener(
+    'storage',
+    () => {
+      refreshSidebarCounts()
+      loadActivityCount()
+    }
+  )
+
+  /* Live polling */
+  activityLiveInterval = setInterval(() => {
+    refreshSidebarCounts()
+    loadActivityCount()
+  }, 1000)
 })
 
 onBeforeUnmount(() => {
-  window.removeEventListener('storage', refreshSidebarCounts)
-  window.removeEventListener('focus', refreshSidebarCounts)
-  window.removeEventListener(SETTINGS_UPDATED_EVENT, applySettingsEvent)
   UPDATE_EVENTS.forEach(eventName => {
-    window.removeEventListener(eventName, refreshSidebarCounts)
+    window.removeEventListener(
+      eventName,
+      refreshSidebarCounts
+    )
   })
 
-  if (sidebarRefreshTimer) {
-    clearInterval(sidebarRefreshTimer)
+  if (activityLiveInterval) {
+    clearInterval(activityLiveInterval)
+    activityLiveInterval = null
   }
 })
 

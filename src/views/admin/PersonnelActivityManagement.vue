@@ -347,7 +347,7 @@
                   :class="getPriorityClass(activity.priority)"
                   class="px-3 py-1.5 rounded-full text-xs font-bold"
                 >
-                  {{ activity.priority.toUpperCase() }}
+                 {{ (activity.priority || 'Medium').toUpperCase() }}
                 </span>
 
               </td>
@@ -1671,7 +1671,8 @@ import {
   computed,
   onMounted,
   onUnmounted,
-  ref
+  ref,
+  watch
 } from 'vue'
 
 import { getTaskActivityEvidence } from '../../utils/reportFileStorage.js'
@@ -2519,6 +2520,88 @@ const syncActivitiesFromStorage =
 
   }
 
+  const loadActivitiesFromBackend = async () => {
+  try {
+    const response = await fetch(
+      'http://127.0.0.1:8000/api/activities/'
+    )
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`)
+    }
+
+    const data = await response.json()
+
+    if (!Array.isArray(data)) {
+      throw new Error('Invalid activities response')
+    }
+
+    activities.value = data.map(activity => ({
+      ...activity,
+
+      name:
+        activity.title || '',
+
+      type:
+      activity.activity_type || 'Inspection',
+
+      
+
+      priority:
+  activity.priority
+    ? activity.priority.charAt(0) +
+      activity.priority.slice(1).toLowerCase()
+    : 'Medium',
+
+      schedule:
+        activity.activity_date || '',
+
+      time:
+        activity.activity_time || '',
+
+      assignedPersonnel:
+        activity.assigned_personnel
+          ? [
+              personnel.value.find(
+                person =>
+                  person.id ===
+                  activity.assigned_personnel
+              )
+            ].filter(Boolean)
+          : [],
+
+      personnel:
+        activity.assigned_personnel
+          ? 1
+          : 0,
+
+      status:
+        activity.status === 'PENDING'
+          ? 'Scheduled'
+          : activity.status,
+
+      createdAt:
+        activity.created_at,
+
+      updatedAt:
+        activity.updated_at
+    }))
+
+    console.log(
+      'Activities loaded from Django:',
+      activities.value
+    )
+
+  } catch (error) {
+
+    console.error(
+      'Failed to load activities from Django:',
+      error
+    )
+
+  }
+}
+
 
 /* =========================================================
    STORAGE EVENTS
@@ -2995,7 +3078,7 @@ const openDeleteModal =
 ========================================================= */
 
 const saveActivity =
-  () => {
+  async () => {
 
     const form =
       activityForm.value
@@ -3070,92 +3153,294 @@ const saveActivity =
     const now =
       new Date().toISOString()
 
+    const API_URL =
+  'http://127.0.0.1:8000/api'
+
 
     /* =====================================================
        UPDATE
     ====================================================== */
 
     if (
-      editingActivity.value
-    ) {
+  editingActivity.value
+) {
 
-      const index =
-        activities.value.findIndex(
-          activity =>
-            activity.id ===
-            editingActivity.value.id
-        )
+  try {
 
+    const activityId =
+      editingActivity.value.id
 
-      if (index !== -1) {
+    const response =
+      await fetch(
+        `${API_URL}/activities/${activityId}/`,
+        {
+          method: 'PATCH',
 
-        activities.value[index] =
-          normalizeActivity({
+          headers: {
+            'Content-Type': 'application/json'
+          },
 
-            ...activities.value[index],
+          body: JSON.stringify({
 
-            ...form,
+            activity_type:
+            form.type || '',
 
-            personnel:
-              assignedPersonnel.length,
+            priority:
+  (form.priority || 'Medium').toUpperCase(),
 
-            assignedPersonnel,
+            title:
+              form.name.trim(),
 
-            updatedAt:
-              now
+            description:
+              form.description || '',
+
+            activity_date:
+              form.schedule,
+
+            activity_time:
+              form.time,
+
+            location:
+              form.location.trim(),
+
+            assigned_personnel:
+              assignedPersonnel[0]?.id || null,
+
+            status:
+              'PENDING'
 
           })
+        }
+      )
 
-      }
 
+    const data =
+      await response.json()
+
+
+    if (!response.ok) {
+
+      console.error(
+        'Django activity update failed:',
+        data
+      )
 
       showToast(
-        'Activity updated successfully.'
+        data.detail ||
+        data.error ||
+        'Failed to update activity.',
+        'error'
       )
+
+      return
 
     }
 
 
-    /* =====================================================
-       CREATE
-    ====================================================== */
+    console.log(
+      'Activity successfully updated in Django:',
+      data
+    )
 
-    else {
 
-      const newActivity =
+    const index =
+      activities.value.findIndex(
+        activity =>
+          activity.id ===
+          activityId
+      )
+
+
+    if (index !== -1) {
+
+      activities.value[index] =
         normalizeActivity({
 
-          id:
-            createActivityId(),
+          ...activities.value[index],
 
           ...form,
+
+          id:
+            data.id,
 
           personnel:
             assignedPersonnel.length,
 
           assignedPersonnel,
 
-          status: 'Assigned',
-
-          createdAt:
-            now,
+          status:
+            form.status || 'Scheduled',
 
           updatedAt:
+            data.updated_at ||
             now
 
         })
 
+    }
 
-      activities.value.unshift(
-        newActivity
+
+    showToast(
+      'Activity updated successfully.'
+    )
+
+
+  } catch (error) {
+
+    console.error(
+      'Django activity update error:',
+      error
+    )
+
+    showToast(
+      'Unable to connect to Django server.',
+      'error'
+    )
+
+    return
+
+  }
+
+}
+
+
+    /* =====================================================
+       CREATE
+    ====================================================== */
+
+   else {
+
+  try {
+
+    const response = await fetch(
+      `${API_URL}/activities/`,
+      {
+        method: 'POST',
+
+        headers: {
+          'Content-Type': 'application/json'
+        },
+
+        body: JSON.stringify({
+          title: form.name.trim(),
+
+
+          activity_type:
+          form.type || '',
+
+            priority:
+    (form.priority || 'Medium').toUpperCase(),
+
+           title:
+           form.name.trim(),
+
+          description:
+            form.description || '',
+
+          activity_date:
+            form.schedule,
+
+          activity_time:
+            form.time,
+
+          location:
+            form.location.trim(),
+
+          assigned_personnel:
+            assignedPersonnel[0]?.id || null,
+
+          status: 'PENDING',
+
+          created_by:
+            props.currentUser?.id || null
+        })
+      }
+    )
+
+
+    const data =
+      await response.json()
+
+
+    if (!response.ok) {
+
+      console.error(
+        'Django activity creation failed:',
+        data
       )
-
 
       showToast(
-        'Activity created and assigned successfully.'
+        data.detail ||
+        data.error ||
+        'Failed to create activity.',
+        'error'
       )
 
+      return
+
     }
+
+
+    console.log(
+      'Activity successfully saved to Django:',
+      data
+    )
+
+
+    const newActivity =
+      normalizeActivity({
+
+        id:
+          data.id,
+
+        ...form,
+
+        personnel:
+          assignedPersonnel.length,
+
+        assignedPersonnel,
+
+        status:
+          form.status || 'Scheduled',
+
+        createdAt:
+          data.created_at ||
+          now,
+
+        updatedAt:
+          data.updated_at ||
+          now
+
+      })
+
+
+    activities.value.unshift(
+      newActivity
+    )
+
+
+    showToast(
+      'Activity created and saved successfully.'
+    )
+
+
+  } catch (error) {
+
+    console.error(
+      'Django activity creation error:',
+      error
+    )
+
+    showToast(
+      'Unable to connect to Django server.',
+      'error'
+    )
+
+    return
+
+  }
+
+}
 
 
     saveActivities()
@@ -3575,21 +3860,14 @@ const getTypeClass =
 
   }
 
+onMounted(async () => {
 
-/* =========================================================
-   LIFECYCLE
-========================================================= */
-
-onMounted(() => {
-
-  loadActivities()
-
+  await loadActivitiesFromBackend()
 
   window.addEventListener(
     'storage',
     handleStorageChange
   )
-
 
   window.addEventListener(
     ACTIVITY_SYNC_EVENT,

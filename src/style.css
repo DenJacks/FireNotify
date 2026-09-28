@@ -1,5 +1,90 @@
 @import "tailwindcss";
 
+/* =========================================================
+   FIRENOTIFY — GLOBAL PROFESSIONAL TYPOGRAPHY
+   ========================================================= */
+
+:root {
+  --fn-font: "Inter", system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+
+  --fn-text: #1e293b;
+  --fn-heading: #0f172a;
+  --fn-muted: #64748b;
+  --fn-subtle: #94a3b8;
+
+  --fn-primary: #8b1e23;
+  --fn-primary-dark: #70171c;
+  --fn-gold: #f4c542;
+
+  --fn-border: #e2e8f0;
+  --fn-background: #f8fafc;
+}
+
+/* Global font */
+html,
+body,
+#app {
+  font-family: var(--fn-font);
+  color: var(--fn-text);
+}
+
+/* Better text rendering */
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  margin: 0;
+  background: var(--fn-background);
+}
+
+/* Headings */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--fn-heading);
+  letter-spacing: -0.015em;
+}
+
+/* Normal text */
+p,
+span,
+label,
+td,
+th,
+button,
+input,
+textarea,
+select {
+  font-family: inherit;
+}
+
+/* Professional defaults */
+button {
+  font-weight: 500;
+}
+
+input,
+textarea,
+select {
+  font-size: 14px;
+}
+
+/* Small helper text */
+.text-muted {
+  color: var(--fn-muted);
+}
+
+.text-subtle {
+  color: var(--fn-subtle);
+}
+
 @layer components {
 	.fn-form-label {
 		@apply block text-sm font-semibold text-slate-700;

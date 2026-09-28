@@ -585,10 +585,23 @@ const refreshSidebarCounts = () => {
 
   sidebarCounts.activities = activities.filter(item => isPendingStatus(item?.status)).length
   sidebarCounts.tasks = tasks.filter(item => isPendingStatus(item?.status)).length
-  sidebarCounts.reports = reports.filter(item => {
-    const status = statusKey(item?.status || item?.submissionStatus)
-    return status === 'submitted' || status === 'for review'
-  }).length
+ sidebarCounts.reports = reports.filter(item => {
+  const status = statusKey(
+    item?.status || item?.submissionStatus
+  )
+
+  return [
+    'pending',
+    'assigned',
+    'not submitted',
+    'pending submission',
+    'for review',
+    'returned',
+    'in progress',
+    'scheduled'
+  ].includes(status)
+}).length
+
   sidebarCounts.notifications = getUnreadCountForUser(props.currentUser)
 }
 

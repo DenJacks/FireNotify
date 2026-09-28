@@ -140,48 +140,102 @@ const readNotifications = () => {
    LOAD ALL LIVE DATA
    ========================================================= */
 
-const refresh = () => {
+   const loadUsersFromBackend = async () => {
+  try {
+    const response = await fetch(
+      'http://127.0.0.1:8000/api/users/'
+    )
 
-  const storedUsers =
-    readArray(KEYS.users)
+    if (!response.ok) {
+      throw new Error(
+        `HTTP ${response.status}`
+      )
+    }
 
+    const data =
+      await response.json()
 
-  /*
-   * localStorage is the main source.
-   *
-   * registeredUsers prop is only fallback
-   * in case storage has not been written yet.
-   */
+    if (!Array.isArray(data)) {
+      throw new Error(
+        'Invalid users response'
+      )
+    }
 
-  users.value =
-    storedUsers.length
-      ? storedUsers
-      : (
-          Array.isArray(
-            props.registeredUsers
+    users.value = data.map(user => ({
+      ...user,
+
+      firstName:
+        user.firstName ||
+        user.first_name ||
+        '',
+
+      lastName:
+        user.lastName ||
+        user.last_name ||
+        '',
+
+      name:
+        user.name ||
+        `${user.first_name || ''} ${user.last_name || ''}`.trim(),
+
+      role:
+        String(
+          user.role || 'PERSONNEL'
+        ).toLowerCase(),
+
+      status:
+        user.status ||
+        (user.is_active
+          ? 'Active'
+          : 'Inactive')
+    }))
+
+  } catch (error) {
+
+    console.error(
+      'Failed to load personnel from Django:',
+      error
+    )
+
+    /*
+     * Fallback to existing localStorage
+     * if Django is temporarily unavailable.
+     */
+
+    const storedUsers =
+      readArray(KEYS.users)
+
+    users.value =
+      storedUsers.length
+        ? storedUsers
+        : (
+            Array.isArray(
+              props.registeredUsers
+            )
+              ? [...props.registeredUsers]
+              : []
           )
-            ? [...props.registeredUsers]
-            : []
-        )
+  }
+}
 
+const refresh = async () => {
+
+  await loadUsersFromBackend()
 
   activities.value =
     readArray(
       KEYS.activities
     )
 
-
   tasks.value =
     readArray(
       KEYS.tasks
     )
 
-
   reports.value =
     readArray(
       KEYS.reports
     )
-
 
   notifications.value =
     readNotifications()

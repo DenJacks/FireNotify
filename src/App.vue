@@ -493,16 +493,34 @@ const handleLoginSuccess = user => {
   )
 
 
-  const loggedInUser = {
+ const loggedInUser = {
 
-    ...user,
+  ...user,
 
-    name:
-      user.name ||
-      `${user.firstName || ''} ${user.lastName || ''}`
-        .trim()
+  // Django uses first_name / last_name
+  // while Vue uses firstName / lastName
 
-  }
+  firstName:
+    user.firstName ||
+    user.first_name ||
+    '',
+
+  lastName:
+    user.lastName ||
+    user.last_name ||
+    '',
+
+  name:
+    user.name ||
+    `${user.firstName || user.first_name || ''} ${
+      user.lastName || user.last_name || ''
+    }`.trim(),
+
+  // Normalize Django role to lowercase
+  role:
+    String(user.role || '').toLowerCase()
+
+}
 
 
   currentUser.value =
@@ -525,10 +543,24 @@ const handleLoginSuccess = user => {
 
 const loadCurrentUser = () => {
 
-  const savedUser =
+  let savedUser =
     localStorage.getItem(
       CURRENT_USER_KEY
     )
+
+  let storageType = 'localStorage'
+
+
+  if (!savedUser) {
+
+    savedUser =
+      sessionStorage.getItem(
+        'fireNotifyUser'
+      )
+
+    storageType = 'sessionStorage'
+
+  }
 
 
   if (!savedUser) {
@@ -546,7 +578,6 @@ const loadCurrentUser = () => {
 
     if (
       !user ||
-      !user.identifier ||
       !user.role
     ) {
 
@@ -554,31 +585,80 @@ const loadCurrentUser = () => {
         CURRENT_USER_KEY
       )
 
+      sessionStorage.removeItem(
+        'fireNotifyUser'
+      )
+
       return
 
     }
 
 
+    const userEmail =
+      (
+        user.email ||
+        user.identifier ||
+        ''
+      )
+        .trim()
+        .toLowerCase()
+
+
     const storedUser =
       registeredUsers.value.find(
-        item =>
-          item.identifier
-            ?.trim()
-            .toLowerCase() ===
-          user.identifier
-            .trim()
-            .toLowerCase()
+        item => {
+
+          const itemEmail =
+            (
+              item.email ||
+              item.identifier ||
+              ''
+            )
+              .trim()
+              .toLowerCase()
+
+          return (
+            itemEmail ===
+            userEmail
+          )
+
+        }
       )
 
+
+    /*
+      If the user came from Django,
+      use the saved Django user directly.
+    */
 
     if (!storedUser) {
 
-      localStorage.removeItem(
-        CURRENT_USER_KEY
-      )
+      currentUser.value = {
 
-      currentUser.value =
-        null
+        ...user,
+
+        firstName:
+          user.firstName ||
+          user.first_name ||
+          '',
+
+        lastName:
+          user.lastName ||
+          user.last_name ||
+          '',
+
+        name:
+          user.name ||
+          `${user.firstName || user.first_name || ''} ${
+            user.lastName || user.last_name || ''
+          }`.trim(),
+
+        role:
+          String(
+            user.role || ''
+          ).toLowerCase()
+
+      }
 
       return
 
@@ -589,10 +669,32 @@ const loadCurrentUser = () => {
 
       ...storedUser,
 
+      ...user,
+
+      firstName:
+        user.firstName ||
+        user.first_name ||
+        storedUser.firstName ||
+        '',
+
+      lastName:
+        user.lastName ||
+        user.last_name ||
+        storedUser.lastName ||
+        '',
+
       name:
-        storedUser.name ||
-        `${storedUser.firstName || ''} ${storedUser.lastName || ''}`
-          .trim()
+        user.name ||
+        `${user.firstName || user.first_name || storedUser.firstName || ''} ${
+          user.lastName || user.last_name || storedUser.lastName || ''
+        }`.trim(),
+
+      role:
+        String(
+          user.role ||
+          storedUser.role ||
+          ''
+        ).toLowerCase()
 
     }
 
@@ -606,6 +708,10 @@ const loadCurrentUser = () => {
 
     localStorage.removeItem(
       CURRENT_USER_KEY
+    )
+
+    sessionStorage.removeItem(
+      'fireNotifyUser'
     )
 
     currentUser.value =
@@ -794,14 +900,77 @@ const handleLogout = () => {
    INITIALIZE
 ========================================================= */
 
-onMounted(() => {
+onMounted(async () => {
 
   registeredUsers.value =
     loadRegisteredUsers()
 
+  try {
+
+    const response =
+      await fetch(
+        'http://127.0.0.1:8000/api/users/'
+      )
+
+    if (response.ok) {
+
+      const data =
+        await response.json()
+
+      if (Array.isArray(data)) {
+
+        registeredUsers.value =
+          data.map(user => ({
+
+            ...user,
+
+            identifier:
+              user.email ||
+              user.username ||
+              '',
+
+            firstName:
+              user.first_name ||
+              user.firstName ||
+              '',
+
+            lastName:
+              user.last_name ||
+              user.lastName ||
+              '',
+
+            name:
+              `${user.first_name || user.firstName || ''} ${
+                user.last_name || user.lastName || ''
+              }`.trim(),
+
+            role:
+              String(
+                user.role || ''
+              ).toLowerCase(),
+
+            status:
+              user.is_active
+                ? 'Active'
+                : 'Inactive'
+
+          }))
+
+      }
+
+    }
+
+  } catch (error) {
+
+    console.error(
+      'Failed to load users from Django:',
+      error
+    )
+
+  }
+
   loadCurrentUser()
 
 })
-
 </script>
 ```

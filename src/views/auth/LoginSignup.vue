@@ -1170,25 +1170,19 @@ import { ref, reactive } from 'vue'
 
 
 /* =========================================================
-   PROPS
-========================================================= */
-
-const props = defineProps({
-  registeredUsers: {
-    type: Array,
-    default: () => []
-  }
-})
-
-
-/* =========================================================
    EVENTS
 ========================================================= */
 
 const emit = defineEmits([
-  'login-success',
-  'register-user'
+  'login-success'
 ])
+
+
+/* =========================================================
+   API
+========================================================= */
+
+const API_URL = 'http://127.0.0.1:8000/api'
 
 
 /* =========================================================
@@ -1202,6 +1196,8 @@ const successMessage = ref('')
 
 const showLoginPassword = ref(false)
 const showSignupPassword = ref(false)
+
+const isLoading = ref(false)
 
 
 /* =========================================================
@@ -1233,6 +1229,7 @@ const signupForm = reactive({
 ========================================================= */
 
 const switchToLogin = () => {
+
   isLogin.value = true
 
   errorMessage.value = ''
@@ -1247,6 +1244,7 @@ const switchToLogin = () => {
 ========================================================= */
 
 const switchToRegister = () => {
+
   isLogin.value = false
 
   errorMessage.value = ''
@@ -1260,17 +1258,12 @@ const switchToRegister = () => {
    LOGIN
 ========================================================= */
 
-const handleLogin = () => {
+const handleLogin = async () => {
 
   errorMessage.value = ''
   successMessage.value = ''
 
-
-  /* ---------------------------------------------
-     Get entered credentials
-  --------------------------------------------- */
-
-  const identifier =
+  const email =
     loginForm.identifier
       .trim()
       .toLowerCase()
@@ -1283,7 +1276,7 @@ const handleLogin = () => {
      Validate input
   --------------------------------------------- */
 
-  if (!identifier || !password) {
+  if (!email || !password) {
 
     errorMessage.value =
       'Please enter both your email and password.'
@@ -1293,58 +1286,109 @@ const handleLogin = () => {
 
 
   /* ---------------------------------------------
-     Find matching account
+     Start loading
   --------------------------------------------- */
 
-  const userFound =
-    props.registeredUsers.find(user => {
-
-      const savedIdentifier =
-        user.identifier
-          ?.trim()
-          .toLowerCase()
-
-      const savedPassword =
-        String(user.password ?? '')
-
-      return (
-        savedIdentifier === identifier &&
-        savedPassword === String(password)
-      )
-    })
+  isLoading.value = true
 
 
-  /* ---------------------------------------------
-     Login successful
-  --------------------------------------------- */
+  try {
 
-  if (userFound) {
+    /* -------------------------------------------
+       Send login request to Django
+    ------------------------------------------- */
+
+    const response = await fetch(
+      `${API_URL}/auth/login/`,
+      {
+        method: 'POST',
+
+        headers: {
+          'Content-Type': 'application/json'
+        },
+
+        body: JSON.stringify({
+          email: email,
+          password: password
+        })
+      }
+    )
+
+
+    const data = await response.json()
+
+
+    /* -------------------------------------------
+       Handle Django error
+    ------------------------------------------- */
+
+    if (!response.ok) {
+
+      errorMessage.value =
+        data.error ||
+        'Invalid email or password. Please try again.'
+
+      return
+    }
+
+
+    /* -------------------------------------------
+       Login successful
+    ------------------------------------------- */
+
+    const user = data.user
+
 
     console.log(
       'FireNotify login successful:',
-      userFound.identifier
+      user
     )
+
+
+    /* -------------------------------------------
+       Save logged-in user
+    ------------------------------------------- */
+
+    if (loginForm.remember) {
+
+      localStorage.setItem(
+        'fireNotifyUser',
+        JSON.stringify(user)
+      )
+
+    } else {
+
+      sessionStorage.setItem(
+        'fireNotifyUser',
+        JSON.stringify(user)
+      )
+    }
+
+
+    /* -------------------------------------------
+       Send user to App.vue
+    ------------------------------------------- */
 
     emit(
       'login-success',
-      userFound
+      user
     )
 
-    return
+
+  } catch (error) {
+
+    console.error(
+      'FireNotify login error:',
+      error
+    )
+
+    errorMessage.value =
+      'Unable to connect to the FireNotify server. Please make sure Django is running.'
+
+  } finally {
+
+    isLoading.value = false
   }
-
-
-  /* ---------------------------------------------
-     Login failed
-  --------------------------------------------- */
-
-  console.warn(
-    'FireNotify login failed:',
-    identifier
-  )
-
-  errorMessage.value =
-    'Invalid email or password. Please try again.'
 }
 
 
@@ -1352,7 +1396,7 @@ const handleLogin = () => {
    SIGN UP
 ========================================================= */
 
-const handleSignup = () => {
+const handleSignup = async () => {
 
   errorMessage.value = ''
   successMessage.value = ''
@@ -1449,106 +1493,116 @@ const handleSignup = () => {
 
 
   /* ---------------------------------------------
-     Check duplicate email
+     Start loading
   --------------------------------------------- */
 
-  const emailExists =
-    props.registeredUsers.some(user => {
-
-      const existingEmail =
-        user.identifier
-          ?.trim()
-          .toLowerCase()
-
-      return existingEmail === email
-    })
+  isLoading.value = true
 
 
-  if (emailExists) {
+  try {
+
+    /* -------------------------------------------
+       Send registration request to Django
+    ------------------------------------------- */
+
+    const response = await fetch(
+      `${API_URL}/auth/register/`,
+      {
+        method: 'POST',
+
+        headers: {
+          'Content-Type': 'application/json'
+        },
+
+        body: JSON.stringify({
+
+          first_name:
+            firstName,
+
+          last_name:
+            lastName,
+
+          email:
+            email,
+
+          password:
+            password
+        })
+      }
+    )
+
+
+    const data =
+      await response.json()
+
+
+    /* -------------------------------------------
+       Handle Django registration error
+    ------------------------------------------- */
+
+    if (!response.ok) {
+
+      errorMessage.value =
+        data.error ||
+        'Registration failed. Please try again.'
+
+      return
+    }
+
+
+    /* -------------------------------------------
+       Registration successful
+    ------------------------------------------- */
+
+    console.log(
+      'FireNotify registration successful:',
+      data.user
+    )
+
+
+    successMessage.value =
+      'Registration successful. You may now sign in with your account.'
+
+
+    /* -------------------------------------------
+       Clear signup form
+    ------------------------------------------- */
+
+    Object.assign(
+      signupForm,
+      {
+        firstName: '',
+        lastName: '',
+        email: '',
+        password: '',
+        confirmPassword: ''
+      }
+    )
+
+
+    /* -------------------------------------------
+       Return to Login
+    ------------------------------------------- */
+
+    isLogin.value = true
+
+    showSignupPassword.value = false
+
+
+  } catch (error) {
+
+    console.error(
+      'FireNotify registration error:',
+      error
+    )
 
     errorMessage.value =
-      'This email is already registered.'
+      'Unable to connect to the FireNotify server. Please make sure Django is running.'
 
-    return
+  } finally {
+
+    isLoading.value = false
   }
-
-
-  /* ---------------------------------------------
-     Create Personnel account
-  --------------------------------------------- */
-
-  const newUser = {
-
-    id:
-      crypto.randomUUID(),
-
-    identifier:
-      email,
-
-    password:
-      password,
-
-    firstName:
-      firstName,
-
-    lastName:
-      lastName,
-
-    name:
-      `${firstName} ${lastName}`,
-
-    role:
-      'personnel',
-
-    status:
-      'Active',
-
-    createdAt:
-      new Date().toISOString()
-  }
-
-
-  /* ---------------------------------------------
-     Send account to App.vue
-  --------------------------------------------- */
-
-  emit(
-    'register-user',
-    newUser
-  )
-
-
-  /* ---------------------------------------------
-     Show success
-  --------------------------------------------- */
-
-  successMessage.value =
-    'Registration successful. You may now sign in with your account.'
-
-
-  /* ---------------------------------------------
-     Clear signup form
-  --------------------------------------------- */
-
-  Object.assign(
-    signupForm,
-    {
-      firstName: '',
-      lastName: '',
-      email: '',
-      password: '',
-      confirmPassword: ''
-    }
-  )
-
-
-  /* ---------------------------------------------
-     Return to Login
-  --------------------------------------------- */
-
-  isLogin.value = true
-
-  showSignupPassword.value = false
 }
 
 
