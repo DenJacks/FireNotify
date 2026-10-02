@@ -499,10 +499,8 @@ import {
   initializePersonnelSettings,
   SETTINGS_UPDATED_EVENT
 } from '../../utils/personnelSettings.js'
-import {
-  getUnreadPersonnelCount,
-  mergeDerivedPersonnelNotifications
-} from '../../utils/notificationService.js'
+import { getNotifications } from '../../utils/notificationApi.js'
+import { getPersonnelReportSubmissions } from '../../utils/reportApi.js'
 
 
 /* =========================================================
@@ -631,10 +629,16 @@ const isPending = status => [
   'pending submission',
   'not submitted',
   'scheduled',
+  'ongoing',
+  'in_progress',
   'in progress',
   'assigned',
   'for review',
-  'returned'
+  'returned',
+  'for verification',
+  'for_verification',
+  'delayed',
+  'overdue'
 ].includes(normalize(status))
 
 const isCompleted = status => [
@@ -644,12 +648,13 @@ const isCompleted = status => [
   'finished',
   'approved',
   'reviewed',
+  'verified',
   'submitted',
   'closed',
   'resolved'
 ].includes(normalize(status))
 
-const refreshSidebarCounts = () => {
+const refreshSidebarCounts = async () => {
   const currentUser = getCurrentUser()
 
   if (!currentUser) {
@@ -660,132 +665,30 @@ const refreshSidebarCounts = () => {
     return
   }
 
-  /* =====================================================
-     READ ALL LIVE DATA
-  ===================================================== */
-
-  const activities = readArray('fireNotifyActivities')
-  const tasks = readArray('firenotify_tasks')
-  const reports = readArray('firenotify_reports')
-
-  /* =====================================================
-     ACTIVITIES ASSIGNED TO CURRENT PERSONNEL
-  ===================================================== */
-
-  const assignedActivities = activities.filter(activity => {
-    return recordBelongsToCurrentUser(activity)
-  })
-
-  /* =====================================================
-     ACTIVE / PENDING ACTIVITIES
-  ===================================================== */
-
-  const activeActivities = assignedActivities.filter(activity => {
-    const status = normalize(
-      activity?.status || 'Scheduled'
-    )
-
-    return ![
-      'completed',
-      'complete',
-      'done',
-      'finished',
-      'verified',
-      'approved',
-      'closed',
-      'cancelled'
-    ].includes(status)
-  })
-
-  /* =====================================================
-     TASKS
-     
-     If actual task records exist, use them.
-     Otherwise use assigned active Activities.
-  ===================================================== */
-
- const realTasks = tasks.filter(task => {
-  return (
-    recordBelongsToCurrentUser(task) &&
-    !isCompleted(task?.status)
-  )
-})
-
-/*
- * IMPORTANT:
- * Activities are NOT Tasks.
- *
- * An Activity created by Admin must only appear
- * under Activities and Notifications.
- *
- * Tasks will only have a badge when an actual
- * record exists inside firenotify_tasks.
- */
-sidebarCounts.tasks = realTasks.length
-
-  /* =====================================================
-     REPORTS
-
-     Count pending/uncompleted reports assigned
-     to the current personnel.
-  ===================================================== */
-
-  const pendingReports = reports.filter(report => {
-    if (!recordBelongsToCurrentUser(report)) {
-      return false
-    }
-
-    const status = normalize(
-      report?.status ||
-      report?.submissionStatus ||
-      'pending'
-    )
-
-    return ![
-      'completed',
-      'complete',
-      'done',
-      'finished',
-      'approved',
-      'reviewed',
-      'submitted',
-      'closed',
-      'resolved'
-    ].includes(status)
-  })
-
-  /*
-    If Admin has created Reports, use actual report count.
-    
-    If there are no report records yet, don't invent
-    a report count from activities.
-  */
-  sidebarCounts.reports = pendingReports.length
-
-  /* =====================================================
-     NOTIFICATIONS
-  ===================================================== */
-
   try {
-    mergeDerivedPersonnelNotifications(currentUser)
+    const [activityResponse, taskResponse, reportSubmissions, notifications] = await Promise.all([
+      fetch('http://127.0.0.1:8000/api/activities/'),
+      fetch('http://127.0.0.1:8000/api/tasks/'),
+      getPersonnelReportSubmissions(currentUser.id || currentUser.userId),
+      getNotifications(currentUser)
+    ])
+    if (!activityResponse.ok || !taskResponse.ok) throw new Error('Sidebar count request failed.')
+    const [activities, tasks] = await Promise.all([
+      activityResponse.json(),
+      taskResponse.json()
+    ])
+    const userId = String(currentUser.id || currentUser.userId)
+    const assignedActivities = activities.filter(activity => String(activity.assigned_personnel) === userId)
+    const activeActivities = assignedActivities.filter(activity => isPending(activity.status))
+    const assignedTasks = tasks.filter(task => String(task.assigned_to) === userId && !isCompleted(task.status))
+    const returnedReports = reportSubmissions.filter(submission => submission.status === 'RETURNED')
+    sidebarCounts.tasks = assignedTasks.length
+    sidebarCounts.reports = returnedReports.length
+    sidebarCounts.notifications = notifications.filter(item => !item.is_read).length
+    activityCount.value = activeActivities.length
   } catch (error) {
-    console.warn(
-      'FireNotify: notification refresh failed',
-      error
-    )
+    console.warn('FireNotify: sidebar data refresh failed', error)
   }
-
-  sidebarCounts.notifications =
-    getUnreadPersonnelCount(currentUser)
-
-  /* =====================================================
-     ACTIVITIES BADGE
-
-     Same source as Activities page.
-  ===================================================== */
-
-  activityCount.value =
-    activeActivities.length
 }
 
 
@@ -858,69 +761,11 @@ const toolItems = [
 // LIVE ACTIVITY COUNT
 // =====================================================
 
-const ACTIVITY_STORAGE_KEY = 'fireNotifyActivities'
-const ACTIVITY_SYNC_EVENT = 'fireNotifyActivitiesUpdated'
-
 const activityCount = ref(0)
-
-const loadActivityCount = () => {
-  try {
-    const currentUser = getCurrentUser()
-
-    if (!currentUser) {
-      activityCount.value = 0
-      return
-    }
-
-    const activities = readArray(
-      'fireNotifyActivities'
-    )
-
-    const assignedActivities = activities.filter(
-      activity => recordBelongsToCurrentUser(activity)
-    )
-
-    const activeActivities =
-      assignedActivities.filter(activity => {
-        const status = normalize(
-          activity?.status || 'Scheduled'
-        )
-
-        return ![
-          'completed',
-          'complete',
-          'done',
-          'finished',
-          'verified',
-          'approved',
-          'closed',
-          'cancelled'
-        ].includes(status)
-      })
-
-    activityCount.value =
-      activeActivities.length
-
-  } catch (error) {
-    console.error(
-      'FireNotify: unable to load live activity count',
-      error
-    )
-
-    activityCount.value = 0
-  }
-}
-
-const handleActivitiesUpdated = () => {
-  loadActivityCount()
-}
-
-let activityLiveInterval = null
 
 onMounted(() => {
   /* Initial counts */
   refreshSidebarCounts()
-  loadActivityCount()
 
   /* Same-tab Admin → Personnel updates */
   UPDATE_EVENTS.forEach(eventName => {
@@ -930,28 +775,11 @@ onMounted(() => {
     )
   })
 
-  window.addEventListener(
-    ACTIVITY_SYNC_EVENT,
-    () => {
-      refreshSidebarCounts()
-      loadActivityCount()
-    }
-  )
-
   /* Other tab/window updates */
   window.addEventListener(
     'storage',
-    () => {
-      refreshSidebarCounts()
-      loadActivityCount()
-    }
+    refreshSidebarCounts
   )
-
-  /* Live polling */
-  activityLiveInterval = setInterval(() => {
-    refreshSidebarCounts()
-    loadActivityCount()
-  }, 1000)
 })
 
 onBeforeUnmount(() => {
@@ -962,10 +790,6 @@ onBeforeUnmount(() => {
     )
   })
 
-  if (activityLiveInterval) {
-    clearInterval(activityLiveInterval)
-    activityLiveInterval = null
-  }
 })
 
 

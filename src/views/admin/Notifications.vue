@@ -2,15 +2,14 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
 import {
-  deleteAllNotificationsForUser,
-  deleteNotificationForUser,
-  getNotificationsForUser,
-  isNotificationRead,
-  markAllNotificationsReadForUser,
-  markNotificationReadForUser,
-  mergeDerivedPersonnelNotifications,
-  NOTIFICATION_EVENTS
-} from '../../utils/notificationService.js'
+  deleteNotification as deleteNotificationInApi,
+  getNotifications,
+  markAllNotificationsRead,
+  setNotificationRead
+} from '../../utils/notificationApi.js'
+
+const NOTIFICATION_EVENTS = ['fireNotifyNotificationsUpdated']
+const isNotificationRead = notification => Boolean(notification?.is_read ?? notification?.read ?? String(notification?.status || '').toLowerCase() === 'read')
 
 const props = defineProps({
   currentUser: {
@@ -110,25 +109,25 @@ const normalizeNotification = (item, index = 0) => {
   }
 }
 
-const refreshNotifications = () => {
-  mergeDerivedPersonnelNotifications(props.currentUser)
-  notifications.value = getNotificationsForUser(props.currentUser)
-    .map((item, index) => normalizeNotification(item, index))
+const refreshNotifications = async () => {
+  try {
+    notifications.value = (await getNotifications(props.currentUser))
+      .map((item, index) => normalizeNotification(item, index))
+  } catch (error) {
+    console.error('FireNotify: unable to load notifications from Django', error)
+    notifications.value = []
+  }
 }
 
-const markAllAsRead = () => {
-  markAllNotificationsReadForUser(props.currentUser)
-  refreshNotifications()
+const markAllAsRead = async () => {
+  await markAllNotificationsRead(props.currentUser)
+  await refreshNotifications()
   showToast('All notifications marked as read.')
 }
 
-const toggleRead = notification => {
-  markNotificationReadForUser(
-    notification.id,
-    props.currentUser,
-    !isNotificationRead(notification)
-  )
-  refreshNotifications()
+const toggleRead = async notification => {
+  await setNotificationRead(notification, props.currentUser, !isNotificationRead(notification))
+  await refreshNotifications()
   showToast(
     isNotificationRead(notification)
       ? 'Notification marked as unread.'
@@ -136,25 +135,25 @@ const toggleRead = notification => {
   )
 }
 
-const deleteNotification = notification => {
-  deleteNotificationForUser(notification.id, props.currentUser)
-  refreshNotifications()
+const deleteNotification = async notification => {
+  await deleteNotificationInApi(notification, props.currentUser)
+  await refreshNotifications()
   showToast('Notification deleted.')
 }
 
-const deleteAll = () => {
-  deleteAllNotificationsForUser(props.currentUser)
-  refreshNotifications()
+const deleteAll = async () => {
+  await Promise.all(notifications.value.map(notification => deleteNotificationInApi(notification, props.currentUser)))
+  await refreshNotifications()
   showDeleteAllModal.value = false
   showToast('All notifications deleted.')
 }
 
-const viewNotification = notification => {
+const viewNotification = async notification => {
   selectedNotification.value = notification
 
   if (!isNotificationRead(notification)) {
-    markNotificationReadForUser(notification.id, props.currentUser)
-    refreshNotifications()
+    await setNotificationRead(notification, props.currentUser, true)
+    await refreshNotifications()
   }
 
   showDetailsModal.value = true

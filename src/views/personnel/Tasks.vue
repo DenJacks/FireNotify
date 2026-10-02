@@ -1,10 +1,10 @@
 <template>
-  <div class="w-full min-w-0 space-y-6">
+  <div class="w-full min-w-0 space-y-4">
 
     <!-- =========================================================
          PAGE HEADER
     ========================================================== -->
-    <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+    <section class="border-b border-slate-200 pb-3">
       <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
 
         <div>
@@ -36,7 +36,7 @@
     <!-- =========================================================
          STATISTICS
     ========================================================== -->
-    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+    <section class="fn-operations-summary">
 
       <!-- TOTAL -->
       <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
@@ -212,264 +212,69 @@
     <!-- =========================================================
          CURRENT ASSIGNMENTS
     ========================================================== -->
-    <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+        <section class="fn-operations-panel">
 
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between
-                  gap-3 border-b border-slate-200 pb-5">
+      <div class="fn-operations-heading">
 
         <div>
-          <h3 class="text-xl font-bold text-slate-900">
-            Current Assignments
+          <h3 class="text-base font-bold text-slate-900">
+            Assigned Tasks
           </h3>
 
-          <p class="text-sm text-slate-500 mt-1">
+          <p class="text-xs text-slate-500 mt-1">
             Tasks assigned by the administrator.
           </p>
         </div>
 
-        <span
-          class="px-4 py-2 rounded-full bg-blue-50 text-blue-700
-                 text-sm font-bold"
-        >
-          {{ filteredTasks.length }} Showing
-        </span>
+        <span class="text-xs font-semibold text-slate-600">{{ filteredTasks.length }} tasks</span>
 
       </div>
 
 
-      <!-- =======================================================
-           TASK CARDS
-      ======================================================== -->
-      <div
-        v-if="filteredTasks.length"
-        class="mt-5 space-y-4"
-      >
-
-        <div
-          v-for="task in filteredTasks"
-          :key="task.id"
-          class="p-5 rounded-xl border border-slate-200 bg-slate-50
-                 hover:border-[#8B1E23] hover:shadow-sm transition"
-        >
-
-          <div class="flex flex-col xl:flex-row xl:items-center
-                      xl:justify-between gap-5">
-
-            <!-- TASK INFORMATION -->
-            <div class="flex items-start gap-4">
-
-              <div
-                class="h-12 w-12 rounded-xl flex items-center
-                       justify-center shrink-0"
-                :class="priorityIconBg(task.priority)"
-              >
-
-                <span
-                  v-html="ICONS.tasks"
-                  class="h-6 w-6"
-                  :class="priorityIconColor(task.priority)"
-                ></span>
-
-              </div>
-
-
-              <div class="min-w-0">
-
-                <div class="flex flex-wrap items-center gap-2">
-
-                  <p class="text-base font-bold text-slate-900">
-                    {{ task.title }}
-                  </p>
-
-                  <span
-                    class="px-2.5 py-1 rounded-full text-xs font-bold"
-                    :class="statusClass(task.status)"
-                  >
-                    {{ task.status }}
-                  </span>
-
-                  <span
-                    class="px-2.5 py-1 rounded-full text-xs font-bold"
-                    :class="priorityClass(task.priority)"
-                  >
-                    {{ task.priority }}
-                  </span>
-
+      <div v-if="filteredTasks.length" class="fn-operations-table-wrap">
+        <table class="fn-operations-table">
+          <thead>
+            <tr><th>Task</th><th>Assigned To</th><th>Deadline</th><th>Priority</th><th>Status</th><th class="text-right">Actions</th></tr>
+          </thead>
+          <tbody>
+            <tr v-for="task in filteredTasks" :key="task.id">
+              <td data-label="Task">
+                <div class="flex min-w-0 flex-col gap-1">
+                  <p class="break-words text-sm font-semibold leading-5 text-slate-900">{{ task.title }}</p>
+                  <p v-if="task.subtopic" class="break-words text-xs leading-5 text-slate-600">{{ task.subtopic }}</p>
+                  <p v-if="task.description" class="break-words whitespace-pre-wrap text-xs leading-5 text-slate-500">{{ task.description }}</p>
+                  <p v-if="task.location" class="break-words text-xs leading-5 text-slate-500">{{ task.location }}</p>
                 </div>
-
-
-                <!-- SUBTOPIC -->
-                <p
-                  v-if="task.subtopic"
-                  class="text-sm font-semibold text-[#8B1E23] mt-1"
-                >
-                  Subtopic: {{ task.subtopic }}
-                </p>
-
-
-                <p class="text-sm text-slate-500 mt-1">
-                  {{ task.description }}
-                </p>
-
-
-                <div class="flex flex-wrap gap-x-5 gap-y-1 mt-2">
-
-                  <p class="text-sm text-slate-500">
-                    <span class="font-semibold">
-                      Due:
-                    </span>
-                    {{ task.due || task.dueDate || 'No due date' }}
-                  </p>
-
-                  <p
-                    v-if="task.location"
-                    class="text-sm text-slate-500"
-                  >
-                    <span class="font-semibold">
-                      Location:
-                    </span>
-                    {{ task.location }}
-                  </p>
-
+              </td>
+              <td data-label="Assigned To"><span class="block min-w-0 break-words leading-5">{{ task.assignedToName || props.currentUser?.name || [props.currentUser?.firstName, props.currentUser?.lastName].filter(Boolean).join(' ') || task.assignedToUsername || 'You' }}</span></td>
+              <td data-label="Schedule">
+                <div class="flex flex-col gap-0.5">
+                  <span class="leading-5">{{ formatOperationDate(task.due || task.dueDate) }}</span>
+                  <span class="text-xs leading-5 text-slate-500">{{ formatOperationTime(task.time) }}</span>
                 </div>
-
-              </div>
-
-            </div>
-
-
-            <!-- ACTIONS -->
-            <div class="flex flex-col sm:flex-row gap-3 shrink-0">
-
-              <button
-                @click="viewDetails(task)"
-                class="px-4 py-3 rounded-xl border border-slate-300
-                       bg-white text-slate-700 text-sm font-bold
-                       hover:bg-slate-100 transition"
-              >
-                View Details
-              </button>
-
-
-              <!-- START TASK -->
-              <button
-                v-if="task.status === 'Pending' || task.status === 'Assigned' || task.status === 'Overdue'"
-                @click="startTask(task)"
-                class="px-5 py-3 rounded-xl bg-[#8B1E23]
-                       text-white text-sm font-bold
-                       hover:bg-[#72181D] transition"
-              >
-                Start Task
-              </button>
-
-
-              <!-- SUBMIT TASK -->
-              <button
-                v-else-if="task.status === 'In Progress' || task.status === 'Returned'"
-                @click="openSubmitModal(task)"
-                class="px-5 py-3 rounded-xl bg-green-600
-                       text-white text-sm font-bold
-                       hover:bg-green-700 transition"
-              >
-                {{ task.status === 'Returned' ? 'Revise Submission' : 'Submit for Verification' }}
-              </button>
-
-
-              <!-- SUBMITTED -->
-              <span
-                v-else-if="task.status === 'For Verification'"
-                class="px-5 py-3 rounded-xl bg-blue-100
-                       text-blue-700 text-sm font-bold text-center"
-              >
-                For Verification
-              </span>
-
-
-              <!-- COMPLETED -->
-              <span
-                v-else-if="task.status === 'Verified' || task.status === 'Completed'"
-                class="px-5 py-3 rounded-xl bg-green-100
-                       text-green-700 text-sm font-bold text-center"
-              >
-                Verified
-              </span>
-
-
-              <!-- OVERDUE -->
-              <button
-                v-else-if="task.status === 'Overdue'"
-                @click="startTask(task)"
-                class="px-5 py-3 rounded-xl bg-[#8B1E23]
-                       text-white text-sm font-bold
-                       hover:bg-[#72181D] transition"
-              >
-                Start Task
-              </button>
-
-            </div>
-
-          </div>
-
-
-          <!-- PROGRESS -->
-          <div class="mt-5">
-
-            <div class="flex justify-between mb-2">
-
-              <span class="text-xs font-semibold text-slate-500">
-                Task Progress
-              </span>
-
-              <span class="text-xs font-bold text-slate-700">
-                {{ task.progress || 0 }}%
-              </span>
-
-            </div>
-
-            <div class="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">
-
-              <div
-                class="h-full rounded-full transition-all duration-500"
-                :class="progressClass(task.status)"
-                :style="{ width: `${task.progress || 0}%` }"
-              ></div>
-
-            </div>
-
-          </div>
-
-        </div>
-
+              </td>
+              <td data-label="Priority"><span class="fn-operations-badge" :class="priorityClass(task.priority)">{{ task.priority || 'Medium' }}</span></td>
+              <td data-label="Status">
+                <span class="fn-operations-badge" :class="statusClass(task.status)">{{ task.status }}</span>
+                <span class="mt-1 block text-xs text-slate-500">{{ task.progress || 0 }}% complete</span>
+                <span class="mt-1 block h-1.5 overflow-hidden rounded-full bg-slate-100"><span class="block h-full" :class="progressClass(task.status)" :style="{ width: `${task.progress || 0}%` }"></span></span>
+              </td>
+              <td data-label="Actions">
+                <div class="flex flex-wrap gap-1.5 sm:justify-end">
+                  <button @click="viewDetails(task)" class="fn-operations-action">View</button>
+                  <button v-if="['Pending', 'Assigned', 'Overdue', 'In Progress', 'Returned'].includes(task.status)" @click="openSubmitModal(task)" class="fn-operations-action fn-operations-action--primary">{{ task.status === 'Returned' ? 'Revise' : 'Submit Task' }}</button>
+                  <span v-else-if="task.status === 'For Verification'" class="fn-operations-badge">For Verification</span>
+                  <span v-else-if="task.status === 'Verified' || task.status === 'Completed'" class="fn-operations-badge">Verified</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-
-
-      <!-- EMPTY -->
-      <div
-        v-else
-        class="mt-6 py-14 text-center border-2 border-dashed
-               border-slate-200 rounded-xl"
-      >
-
-        <div class="text-4xl mb-3">
-          📋
-        </div>
-
-        <h4 class="font-bold text-slate-900">
-          No assigned tasks
-        </h4>
-
-        <p class="text-sm text-slate-500 mt-1">
-          Your administrator has not assigned any tasks to you yet.
-        </p>
-
-        <button
-          @click="clearFilters"
-          class="mt-4 px-4 py-2 rounded-lg bg-slate-100
-                 text-slate-700 text-sm font-bold hover:bg-slate-200"
-        >
-          Clear Filters
-        </button>
-
+      <div v-else class="px-4 py-6 text-center">
+        <h4 class="font-semibold text-slate-900">No assigned tasks</h4>
+        <p class="mt-1 text-sm text-slate-500">Your administrator has not assigned any tasks to you yet.</p>
+        <button @click="clearFilters" class="mt-3 fn-operations-action">Clear Filters</button>
       </div>
 
     </section>
@@ -537,7 +342,7 @@
                     ? 'text-red-600'
                     : 'text-amber-600'"
                 >
-                  {{ task.priority }} Priority • Due {{ task.due || task.dueDate }}
+                  {{ task.priority }} Priority · Due {{ formatOperationDate(task.due || task.dueDate) }}
                 </p>
 
               </div>
@@ -594,9 +399,11 @@
                 {{ task.title }}
               </p>
 
-              <p class="text-xs text-slate-500 mt-1">
-                {{ task.completedAt || task.submittedAt || 'Completed' }}
+              <p v-if="task.completedAt || task.submittedAt" class="mt-1 flex flex-col gap-0.5 text-xs leading-5 text-slate-500">
+                <span>{{ formatOperationDate(task.completedAt || task.submittedAt) }}</span>
+                <span v-if="hasTimeValue(task.completedAt || task.submittedAt)">{{ formatOperationTime(task.completedAt || task.submittedAt) }}</span>
               </p>
+              <p v-else class="mt-1 text-xs leading-5 text-slate-500">Completed</p>
 
             </div>
 
@@ -736,7 +543,7 @@
               </p>
 
               <p class="font-bold text-slate-900 mt-1">
-                {{ selectedTask.due || selectedTask.dueDate || 'No due date' }}
+                {{ formatOperationDate(selectedTask.due || selectedTask.dueDate) }}
               </p>
 
             </div>
@@ -772,11 +579,10 @@
               {{ selectedTask.accomplishment || selectedTask.submissionNote || 'Submitted successfully.' }}
             </p>
 
-            <p
-              v-if="selectedTask.submittedAt"
-              class="text-xs text-blue-600 mt-2"
-            >
-              Submitted: {{ selectedTask.submittedAt }}
+            <p v-if="selectedTask.submittedAt" class="mt-2 flex flex-col gap-0.5 text-xs leading-5 text-blue-600">
+              <span>Submitted</span>
+              <span>{{ formatOperationDate(selectedTask.submittedAt) }}</span>
+              <span v-if="hasTimeValue(selectedTask.submittedAt)">{{ formatOperationTime(selectedTask.submittedAt) }}</span>
             </p>
 
           </div>
@@ -829,24 +635,13 @@
 
 
           <button
-            v-if="selectedTask.status === 'Pending' || selectedTask.status === 'Assigned' || selectedTask.status === 'Overdue'"
-            @click="startTask(selectedTask)"
+            v-if="['Pending', 'Assigned', 'Overdue', 'In Progress', 'Returned'].includes(selectedTask.status)"
+            @click="openSubmitModal(selectedTask)"
             class="px-5 py-3 rounded-xl bg-[#8B1E23]
                    text-white text-sm font-bold
                    hover:bg-[#72181D]"
           >
-            Start Task
-          </button>
-
-
-          <button
-            v-if="selectedTask.status === 'In Progress' || selectedTask.status === 'Returned'"
-            @click="openSubmitModal(selectedTask)"
-            class="px-5 py-3 rounded-xl bg-green-600
-                   text-white text-sm font-bold
-                   hover:bg-green-700"
-          >
-            {{ selectedTask.status === 'Returned' ? 'Revise Submission' : 'Submit for Verification' }}
+            {{ selectedTask.status === 'Returned' ? 'Revise Submission' : 'Submit Task' }}
           </button>
 
         </div>
@@ -884,7 +679,6 @@
 
           <div class="mt-3 flex flex-wrap gap-3 text-xs text-white/80">
             <span>Status: {{ submitTask.status }}</span>
-            <span>Reference: {{ submitTask.id }}</span>
           </div>
 
         </div>
@@ -987,10 +781,14 @@ import {
   ref
 } from 'vue'
 
+import '../../styles/operations.css'
+import { formatOperationDate, formatOperationTime } from '../../utils/operationsFormat.js'
 import {
   deleteTaskActivityEvidence,
   saveTaskActivityEvidence
 } from '../../utils/reportFileStorage.js'
+import { getTasks, updateTask } from '../../utils/taskService.js'
+const hasTimeValue = value => /(?:T|\s)\d{1,2}:\d{2}/.test(String(value || ''))
 
 
 /* =========================================================
@@ -1091,119 +889,27 @@ const getCurrentUser = () => {
   return null
 }
 
-const notifyAdmin = task => {
-  try {
-    const key = 'firenotify_notifications'
-    const current = JSON.parse(localStorage.getItem(key) || '[]')
-    const notification = {
-      id: `notif-task-${task.id}-${Date.now()}`,
-      title: 'Task submitted for verification',
-      detail: `${task.title} was submitted for verification.`,
-      type: 'Task Alerts',
-      status: 'unread',
-      read: false,
-      createdAt: new Date().toISOString(),
-      assignedToId: 'admin-default',
-      taskId: task.id
-    }
-    localStorage.setItem(key, JSON.stringify([notification, ...current]))
-    window.dispatchEvent(new CustomEvent('fireNotifyNotificationsUpdated'))
-  } catch (error) {
-    console.warn('FireNotify: unable to notify admin about task submission', error)
-  }
-}
-
-
 /* =========================================================
    LOAD TASKS FROM ADMIN
 ========================================================= */
 
-const loadTasks = () => {
-
-  try {
-
-    const storedTasks =
-      JSON.parse(
-        localStorage.getItem(TASK_STORAGE_KEY) || '[]'
-      )
-
-    const user = getCurrentUser()
-
-    /*
-      Only show tasks assigned to THIS personnel.
-    */
-
-    if (!user) {
-
-      tasks.value = []
-
-      return
-    }
-
-
-    /*
-      Match by personnel ID first.
-      Username is used as fallback.
-    */
-
-    tasks.value = storedTasks.filter(task => {
-
-      const assignedId =
-        String(
-          task.assignedToId ??
-          task.assignedTo ??
-          ''
-        )
-
-      const userId =
-        String(
-          user.id ??
-          user.userId ??
-          ''
-        )
-
-
-      const assignedUsername =
-        String(
-          task.assignedToUsername ??
-          ''
-        ).toLowerCase()
-
-
-      const username =
-        String(
-          user.username ??
-          ''
-        ).toLowerCase()
-
-
-      const idMatch =
-        assignedId &&
-        userId &&
-        assignedId === userId
-
-
-      const usernameMatch =
-        assignedUsername &&
-        username &&
-        assignedUsername === username
-
-
-      return idMatch || usernameMatch
-
-    })
-
-  } catch (error) {
-
-    console.error(
-      'Failed to load FireNotify tasks:',
-      error
-    )
-
+const loadTasks = async () => {
+  const user = getCurrentUser()
+  if (!user) {
     tasks.value = []
-
+    return
   }
 
+  try {
+    const allTasks = await getTasks()
+    tasks.value = allTasks.filter(task =>
+      String(task.assignedToId) === String(user.id || user.userId) ||
+      String(task.assignedToUsername || '').toLowerCase() === String(user.username || '').toLowerCase()
+    )
+  } catch (error) {
+    console.error('Failed to load FireNotify tasks from Django:', error)
+    tasks.value = []
+  }
 }
 
 
@@ -1341,59 +1047,6 @@ const closeDetails = () => {
 
 
 /* =========================================================
-   START TASK
-========================================================= */
-
-const startTask = task => {
-
-  const allTasks =
-    JSON.parse(
-      localStorage.getItem(TASK_STORAGE_KEY) || '[]'
-    )
-
-
-  const index =
-    allTasks.findIndex(
-      item => String(item.id) === String(task.id)
-    )
-
-
-  if (index === -1) {
-    return
-  }
-
-
-  allTasks[index] = {
-    ...allTasks[index],
-
-    status: 'In Progress',
-
-    progress: Math.max(
-      Number(allTasks[index].progress || 0),
-      10
-    ),
-
-    startedAt:
-      allTasks[index].startedAt ||
-      new Date().toLocaleString()
-  }
-
-
-  localStorage.setItem(
-    TASK_STORAGE_KEY,
-    JSON.stringify(allTasks)
-  )
-
-
-  loadTasks()
-
-
-  selectedTask.value = null
-
-}
-
-
-/* =========================================================
    OPEN SUBMIT MODAL
 ========================================================= */
 
@@ -1467,79 +1120,34 @@ const submitTaskToAdmin = async () => {
   }
 
 
-  const allTasks =
-    JSON.parse(
-      localStorage.getItem(TASK_STORAGE_KEY) || '[]'
-    )
-
-
-  const index =
-    allTasks.findIndex(
-      item =>
-        String(item.id) ===
-        String(submitTask.value.id)
-    )
-
-
-  if (index === -1) {
-    return
-  }
-
-
   const user = getCurrentUser()
 
 
   await deleteTaskActivityEvidence({
-    recordId: allTasks[index].id,
+    recordId: submitTask.value.id,
     recordType: 'task'
   })
 
   const evidence = await saveTaskActivityEvidence({
-    recordId: allTasks[index].id,
+    recordId: submitTask.value.id,
     recordType: 'task',
     files: evidenceFiles.value
   })
 
-  allTasks[index] = {
-
-    ...allTasks[index],
-
-    status: 'For Verification',
-
-    progress: 90,
-
-    accomplishment:
-      accomplishment.value.trim(),
-
-    submissionRemarks:
-      submissionRemarks.value.trim(),
-
-    submittedAt:
-      new Date().toLocaleString(),
-
-    submittedBy:
-      user?.username ||
-      user?.name ||
-      'Personnel',
-
-    evidence,
-
-    submissionStatus: 'For Verification'
-
+  try {
+    await updateTask(submitTask.value.id, {
+      status: 'For Verification',
+      progress: 90,
+      accomplishment: accomplishment.value.trim()
+    })
+  } catch (error) {
+    showToast(error.message || 'Unable to submit this task.')
+    return
   }
-
-
-  localStorage.setItem(
-    TASK_STORAGE_KEY,
-    JSON.stringify(allTasks)
-  )
 
   window.dispatchEvent(new CustomEvent('fireNotifyTasksUpdated'))
 
-  notifyAdmin(allTasks[index])
-
-
-  loadTasks()
+  await loadTasks()
 
 
   closeSubmitModal()
@@ -1745,18 +1353,10 @@ onMounted(() => {
     loadTasks
   )
 
-
-  /*
-    Polling:
-    Also detects changes when both interfaces
-    are running in the same browser tab/app.
-  */
-
-  syncInterval =
-    setInterval(
-      loadTasks,
-      1000
-    )
+  window.addEventListener(
+    'fireNotifyTasksUpdated',
+    loadTasks
+  )
 
 })
 
@@ -1768,14 +1368,10 @@ onBeforeUnmount(() => {
     loadTasks
   )
 
-
-  if (syncInterval) {
-
-    clearInterval(
-      syncInterval
-    )
-
-  }
+  window.removeEventListener(
+    'fireNotifyTasksUpdated',
+    loadTasks
+  )
 
 })
 </script>

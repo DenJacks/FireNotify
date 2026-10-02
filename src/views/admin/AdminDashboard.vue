@@ -366,6 +366,14 @@
         />
 
 
+        <!-- ACCOUNT APPROVALS -->
+        <AccountApprovals
+          v-else-if="activeMenu === 'Account Approvals'"
+          :current-user="currentUser"
+          @approval-updated="refreshNotificationBadge"
+        />
+
+
         <!-- REPORT MANAGEMENT -->
         <ReportManagement
           v-else-if="activeMenu === 'Report Mgmt.'"
@@ -491,10 +499,9 @@ import PersonnelTaskManagement from './PersonnelTaskManagement.vue'
 import ReportManagement from './ReportManagement.vue'
 import Notifications from './Notifications.vue'
 import AuditEscalations from './AuditEscalations.vue'
-import {
-  getUnreadCountForUser,
-  mergeDerivedPersonnelNotifications
-} from '../../utils/notificationService.js'
+import AccountApprovals from './AccountApprovals.vue'
+import { getNotifications } from '../../utils/notificationApi.js'
+import { getReportSubmissions } from '../../utils/reportApi.js'
 
 
 // =====================================================
@@ -550,10 +557,9 @@ const sidebarCounts = reactive({
   activities: 0,
   tasks: 0,
   reports: 0,
-  notifications: 0
+  notifications: 0,
+  pendingApprovals: 0
 })
-
-let sidebarRefreshTimer = null
 
 const readArray = key => {
   try {
@@ -571,38 +577,42 @@ const isPendingStatus = status => [
   'pending submission',
   'not submitted',
   'scheduled',
+  'ongoing',
+  'in_progress',
   'in progress',
   'assigned',
   'for review',
-  'returned'
+  'returned',
+  'for_verification',
+  'delayed',
+  'overdue'
 ].includes(statusKey(status))
 
-const refreshSidebarCounts = () => {
-  mergeDerivedPersonnelNotifications(props.currentUser)
-  const activities = readArray('fireNotifyActivities')
-  const tasks = readArray('firenotify_tasks')
-  const reports = readArray('firenotify_reports')
-
-  sidebarCounts.activities = activities.filter(item => isPendingStatus(item?.status)).length
-  sidebarCounts.tasks = tasks.filter(item => isPendingStatus(item?.status)).length
- sidebarCounts.reports = reports.filter(item => {
-  const status = statusKey(
-    item?.status || item?.submissionStatus
-  )
-
-  return [
-    'pending',
-    'assigned',
-    'not submitted',
-    'pending submission',
-    'for review',
-    'returned',
-    'in progress',
-    'scheduled'
-  ].includes(status)
-}).length
-
-  sidebarCounts.notifications = getUnreadCountForUser(props.currentUser)
+const refreshSidebarCounts = async () => {
+  try {
+    const [activityResponse, taskResponse, reportSubmissions, notifications, usersResponse] = await Promise.all([
+      fetch('http://127.0.0.1:8000/api/activities/'),
+      fetch('http://127.0.0.1:8000/api/tasks/'),
+      getReportSubmissions(),
+      getNotifications(props.currentUser),
+      fetch('http://127.0.0.1:8000/api/users/')
+    ])
+    if (!activityResponse.ok || !taskResponse.ok || !usersResponse.ok) throw new Error('Dashboard count request failed.')
+    const [activities, tasks, users] = await Promise.all([
+      activityResponse.json(),
+      taskResponse.json(),
+      usersResponse.json()
+    ])
+    sidebarCounts.activities = activities.filter(item => isPendingStatus(item?.status)).length
+    sidebarCounts.tasks = tasks.filter(item => isPendingStatus(item?.status)).length
+    sidebarCounts.reports = reportSubmissions.filter(item => ['SUBMITTED', 'FOR_REVIEW'].includes(item.status)).length
+    sidebarCounts.notifications = notifications.filter(item => !item.is_read).length
+    sidebarCounts.pendingApprovals = Array.isArray(users)
+      ? users.filter(user => String(user.role || '').toUpperCase() === 'PERSONNEL' && String(user.status || '').toUpperCase() === 'PENDING').length
+      : 0
+  } catch (error) {
+    console.error('FireNotify: unable to refresh admin sidebar counts', error)
+  }
 }
 
 // Keep the badge source centralized at the shell level so navigation does not reset it.
@@ -807,6 +817,12 @@ const menuBarItems = computed(() => [
   },
 
   {
+    name: 'Account Approvals',
+    icon: 'personnel',
+    badge: sidebarCounts.pendingApprovals
+  },
+
+  {
     name: 'Report Mgmt.',
     icon: 'report',
     badge: sidebarCounts.reports
@@ -864,7 +880,6 @@ onMounted(() => {
     window.addEventListener(eventName, refreshNotificationBadge)
   })
 
-  sidebarRefreshTimer = setInterval(refreshSidebarCounts, 800)
 })
 
 onBeforeUnmount(() => {
@@ -873,10 +888,6 @@ onBeforeUnmount(() => {
   REFRESH_EVENTS.forEach(eventName => {
     window.removeEventListener(eventName, refreshNotificationBadge)
   })
-
-  if (sidebarRefreshTimer) {
-    clearInterval(sidebarRefreshTimer)
-  }
 })
 
 const getActiveIcon = () => {

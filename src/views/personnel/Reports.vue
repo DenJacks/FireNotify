@@ -1,10 +1,10 @@
 <template>
-  <div class="w-full min-w-0 space-y-6">
+  <div class="w-full min-w-0 space-y-4">
 
     <!-- ========================================================= -->
     <!-- HEADER -->
     <!-- ========================================================= -->
-    <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+    <section class="border-b border-slate-200 pb-3">
 
       <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
 
@@ -14,7 +14,7 @@
           </p>
 
           <h2 class="text-2xl font-bold text-slate-900 mt-1">
-            My Reports
+            Assigned Reports
           </h2>
 
           <p class="text-sm text-slate-500 mt-1">
@@ -34,7 +34,7 @@
     <!-- ========================================================= -->
     <!-- STATISTICS -->
     <!-- ========================================================= -->
-    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+    <section class="fn-operations-summary">
 
       <!-- TOTAL -->
       <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
@@ -273,18 +273,18 @@
     <!-- ========================================================= -->
     <!-- MAIN CONTENT -->
     <!-- ========================================================= -->
-    <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <section class="space-y-4">
 
       <!-- ======================================================= -->
       <!-- REPORT LIST -->
       <!-- ======================================================= -->
-      <div class="lg:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+      <div class="fn-operations-panel">
 
-        <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+        <div class="fn-operations-heading">
 
           <div>
 
-            <h3 class="text-lg font-bold text-slate-900">
+            <h3 class="text-base font-bold text-slate-900">
               Assigned Reports
             </h3>
 
@@ -294,9 +294,7 @@
 
           </div>
 
-          <span class="px-3 py-1.5 rounded-full bg-blue-50 text-blue-700 text-xs font-bold">
-            {{ filteredReports.length }} Reports
-          </span>
+          <span class="text-xs font-semibold text-slate-600">{{ filteredReports.length }} {{ filteredReports.length === 1 ? 'report' : 'reports' }}</span>
 
         </div>
 
@@ -304,7 +302,7 @@
         <!-- EMPTY -->
         <div
           v-if="filteredReports.length === 0"
-          class="py-14 text-center"
+          class="py-8 text-center"
         >
 
           <div class="h-14 w-14 mx-auto rounded-2xl bg-slate-100 flex items-center justify-center">
@@ -322,236 +320,42 @@
         </div>
 
 
-        <!-- LIST -->
-        <div
-          v-else
-          class="mt-5 space-y-4"
-        >
-
-          <article
-            v-for="report in filteredReports"
-            :key="report.id"
-            class="p-5 rounded-xl border transition hover:shadow-sm"
-            :class="reportCardClass(report.status)"
-          >
-
-            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-
-              <div class="flex gap-4">
-
-                <div
-                  class="h-11 w-11 rounded-xl flex items-center justify-center shrink-0"
-                  :class="reportIconClass(report.status)"
-                >
-
-                  <span
-                    v-html="reportIcon(report.status)"
-                    class="h-5 w-5"
-                  ></span>
-
-                </div>
-
-
-                <div class="min-w-0">
-
-                  <div class="flex flex-wrap items-center gap-2">
-
-                    <p class="text-base font-bold text-slate-900">
-                      {{ report.title }}
-                    </p>
-
-                    <span
-                      class="px-2.5 py-1 rounded-full text-xs font-bold"
-                      :class="statusClass(report.status)"
-                    >
-                      {{ report.status }}
-                    </span>
-
+        <div v-else class="fn-operations-table-wrap">
+          <table class="fn-operations-table">
+            <thead>
+              <tr><th>Report</th><th>Assigned To</th><th>Deadline</th><th>Status</th><th class="text-right">Actions</th></tr>
+            </thead>
+            <tbody>
+              <tr v-for="report in filteredReports" :key="report.rowId || report.id">
+                <td data-label="Report">
+                  <div class="flex min-w-0 flex-col gap-1.5">
+                    <p class="break-words text-sm font-semibold leading-5 text-slate-900">{{ report.title }}</p>
+                    <p class="break-words text-xs leading-5 text-slate-500">{{ report.type || report.activity || 'Report' }}</p>
+                    <p v-if="report.location" class="break-words text-xs leading-5 text-slate-500">Location: {{ report.location }}</p>
+                    <p v-if="report.description" class="break-words whitespace-pre-wrap text-xs leading-5 text-slate-500">{{ report.description }}</p>
+                    <p v-if="report.remarks" class="break-words whitespace-pre-wrap text-xs leading-5 text-amber-800">Remarks: {{ report.remarks }}</p>
                   </div>
-
-
-                  <p class="text-sm text-slate-500 mt-1">
-                    Activity:
-                    <span class="font-semibold text-slate-700">
-                      {{ report.activity || 'No activity specified' }}
-                    </span>
-                  </p>
-
-
-                  <p class="text-sm text-slate-500 mt-1">
-                    Location:
-                    <span class="font-semibold text-slate-700">
-                      {{ report.location || 'No location specified' }}
-                    </span>
-                  </p>
-
-
-                  <p
-                    v-if="report.assignedBy"
-                    class="text-xs text-slate-400 mt-2"
-                  >
-                    Assigned by:
-                    <span class="font-semibold text-slate-600">
-                      {{ assignedPersonnelName(report.assignedBy) }}
-                    </span>
-                  </p>
-
-
-                  <p
-                    v-if="report.deadline"
-                    class="text-xs text-slate-500 mt-2"
-                  >
-                    Deadline:
-                    <span class="font-semibold">
-                      {{ formatDate(report.deadline) }}
-                    </span>
-                  </p>
-
-
-                  <p
-                    v-if="
-                      report.status === 'Pending' ||
-                      report.status === 'Pending Submission' ||
-                      report.status === 'Not Submitted'
-                    "
-                    class="text-xs text-yellow-700 font-semibold mt-2"
-                  >
-                    Action required — attach the completed report and submit it.
-                  </p>
-
-
-                  <p
-                    v-if="report.status === 'In Progress'"
-                    class="text-xs text-blue-700 font-semibold mt-2"
-                  >
-                    Report is currently in progress.
-                  </p>
-
-
-                  <p
-                    v-if="report.status === 'Submitted'"
-                    class="text-xs text-green-700 font-semibold mt-2"
-                  >
-                    ✓ Successfully submitted — waiting for administrator review.
-                  </p>
-
-
-                  <p
-                    v-if="report.status === 'Returned'"
-                    class="text-xs text-[#8B1E23] font-semibold mt-2"
-                  >
-                    Correction required — please revise the report.
-                  </p>
-
-
-                  <p
-                    v-if="report.status === 'Approved'"
-                    class="text-xs text-green-700 font-semibold mt-2"
-                  >
-                    ✓ Report approved by administrator.
-                  </p>
-
-
-                  <p
-                    v-if="report.status === 'Rejected'"
-                    class="text-xs text-red-700 font-semibold mt-2"
-                  >
-                    Report was rejected. Please review the remarks.
-                  </p>
-
-                </div>
-
-              </div>
-
-            </div>
-
-
-            <!-- REMARKS -->
-            <div
-              v-if="report.remarks"
-              class="mt-4 p-4 rounded-xl bg-white border border-red-200"
-            >
-
-              <p class="text-xs font-semibold text-slate-500 uppercase">
-                Administrator Remarks
-              </p>
-
-              <p class="text-sm text-slate-700 mt-1">
-                {{ report.remarks }}
-              </p>
-
-            </div>
-
-
-            <!-- ACTIONS -->
-            <div class="mt-4 flex flex-wrap gap-2">
-
-              <!-- START LEGACY PERSONNEL REPORT -->
-              <button
-                v-if="
-                  (report.status === 'Pending' && !report.assignedById)
-                "
-                @click="startReport(report)"
-                class="px-4 py-2 rounded-lg bg-[#8B1E23] text-white text-sm font-semibold hover:bg-[#72181D]"
-              >
-                {{ report.status === 'Returned' ? 'Revise Report' : 'Start Report' }}
-              </button>
-
-
-              <!-- SUBMIT ASSIGNED REPORT -->
-              <button
-                v-if="
-                  report.status === 'Pending' ||
-                  report.status === 'Pending Submission' ||
-                  report.status === 'Not Submitted' ||
-                  report.status === 'In Progress' ||
-                  report.status === 'Returned'
-                "
-                @click="submitReport(report)"
-                class="px-4 py-2 rounded-lg bg-[#8B1E23] text-white text-sm font-semibold hover:bg-[#72181D]"
-              >
-                {{ report.status === 'Returned' ? 'Resubmit Report' : 'Submit Report' }}
-              </button>
-
-
-              <!-- DRAFT -->
-              <button
-                v-if="report.status === 'Draft'"
-                @click="editReport(report)"
-                class="px-4 py-2 rounded-lg bg-[#8B1E23] text-white text-sm font-semibold hover:bg-[#72181D]"
-              >
-                Continue Draft
-              </button>
-
-
-              <!-- VIEW -->
-              <button
-                v-if="
-                  report.status === 'Submitted' ||
-                  report.status === 'For Review' ||
-                  report.status === 'Approved' ||
-                  report.status === 'Rejected'
-                "
-                @click="viewReport(report)"
-                class="px-4 py-2 rounded-lg border border-slate-300 bg-white text-slate-700 text-sm font-semibold hover:bg-slate-100"
-              >
-                View Report
-              </button>
-
-
-              <!-- DELETE DRAFT -->
-              <button
-                v-if="report.status === 'Draft'"
-                @click="deleteDraft(report)"
-                class="px-4 py-2 rounded-lg border border-red-200 bg-red-50 text-[#8B1E23] text-sm font-semibold hover:bg-red-100"
-              >
-                Delete
-              </button>
-
-            </div>
-
-          </article>
-
+                </td>
+                <td data-label="Assigned To"><span class="block min-w-0 break-words leading-5">{{ report.assignedToName || currentUserName }}</span></td>
+                <td data-label="Deadline">
+                  <div class="flex flex-col gap-0.5">
+                    <span class="leading-5">{{ formatDate(report.deadline) }}</span>
+                    <span v-if="hasTimeValue(report.deadline)" class="text-xs leading-5 text-slate-500">{{ formatOperationTime(report.deadline) }}</span>
+                  </div>
+                </td>
+                <td data-label="Status"><span class="fn-operations-badge" :class="statusClass(report.status)">{{ report.status }}</span></td>
+                <td data-label="Actions">
+                  <div class="flex flex-wrap gap-1.5 sm:justify-end">
+                    <button v-if="!report.recordType && report.status === 'Pending' && !report.assignedById" @click="startReport(report)" class="fn-operations-action fn-operations-action--primary">Start</button>
+                    <button v-if="['Pending', 'Pending Submission', 'Not Submitted', 'In Progress', 'Returned'].includes(report.status)" @click="submitReport(report)" class="fn-operations-action fn-operations-action--primary">{{ report.status === 'Returned' ? 'Revise' : report.recordType === 'assignedReport' ? 'Open' : 'Submit' }}</button>
+                    <button v-if="report.status === 'Draft'" @click="editReport(report)" class="fn-operations-action fn-operations-action--primary">Edit Draft</button>
+                    <button v-if="['Submitted', 'For Review', 'Approved', 'Rejected'].includes(report.status)" @click="viewReport(report)" class="fn-operations-action">View</button>
+                    <button v-if="report.status === 'Draft'" @click="deleteDraft(report)" class="fn-operations-action fn-operations-action--danger">Delete</button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
       </div>
@@ -560,7 +364,7 @@
       <!-- ======================================================= -->
       <!-- RIGHT SIDE -->
       <!-- ======================================================= -->
-      <div class="space-y-6">
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
 
 
         <!-- COMPLETION -->
@@ -1078,8 +882,8 @@
       <div class="w-full max-w-lg bg-white rounded-2xl shadow-xl overflow-hidden">
         <div class="px-6 py-5 border-b border-slate-200 flex items-center justify-between">
           <div>
-            <p class="text-xs font-bold text-[#8B1E23] uppercase">Report Submission</p>
-            <h3 class="text-xl font-bold text-slate-900 mt-1">Submit Report</h3>
+            <p class="text-xs font-bold text-[#8B1E23] uppercase">Assigned Report</p>
+            <h3 class="text-xl font-bold text-slate-900 mt-1">{{ submissionReport.status === 'Returned' ? 'Revise Report' : 'Open Report' }}</h3>
             <p class="text-sm text-slate-500 mt-1">{{ submissionReport.title }}</p>
           </div>
           <button
@@ -1091,12 +895,31 @@
         </div>
 
         <div class="p-6 space-y-5">
-          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
-            <p class="text-sm text-slate-600">This action updates the existing assigned report and attaches the final file.</p>
+          <div class="grid grid-cols-2 gap-3 p-4 rounded-xl bg-slate-50 border border-slate-200 text-sm">
+            <div><p class="text-xs text-slate-500">Report Type</p><p class="font-semibold text-slate-800 mt-1">{{ submissionReport.type || 'Report' }}</p></div>
+            <div><p class="text-xs text-slate-500">Status</p><p class="font-semibold text-slate-800 mt-1">{{ submissionReport.status }}</p></div>
+            <div><p class="text-xs text-slate-500">Assigned By</p><p class="font-semibold text-slate-800 mt-1">{{ submissionReport.assignedBy || 'Admin' }}</p></div>
+            <div><p class="text-xs text-slate-500">Deadline</p><p class="font-semibold text-slate-800 mt-1">{{ formatDate(submissionReport.deadline) }}</p></div>
+            <p v-if="submissionReport.description" class="col-span-2 text-slate-600 whitespace-pre-line">{{ submissionReport.description }}</p>
+          </div>
+
+          <div v-if="submissionReport.reviewComment" class="p-4 rounded-xl border border-amber-200 bg-amber-50">
+            <p class="text-xs font-bold uppercase text-amber-800">Administrator Review</p>
+            <p class="text-sm text-slate-700 mt-1 whitespace-pre-line">{{ submissionReport.reviewComment }}</p>
           </div>
 
           <div>
-            <label class="block text-sm font-semibold text-slate-700 mb-2">Supporting Document</label>
+            <label class="block text-sm font-semibold text-slate-700 mb-2">Report Accomplishment / Content <span class="text-[#8B1E23]">*</span></label>
+            <textarea
+              v-model="submissionContent"
+              rows="6"
+              placeholder="Enter the completed report, findings, and actions taken..."
+              class="w-full px-4 py-3 rounded-xl border border-slate-300 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-[#8B1E23]/20 focus:border-[#8B1E23]"
+            ></textarea>
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-2">Supporting Document <span class="font-normal text-slate-400">(Optional)</span></label>
             <input
               type="file"
               accept=".pdf,.doc,.docx,.ppt,.pptx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation"
@@ -1122,10 +945,10 @@
             <button
               type="button"
               @click="submitAssignedReport"
-              :disabled="!selectedSubmissionFile"
+              :disabled="!submissionContent.trim()"
               class="px-5 py-2.5 rounded-xl bg-[#8B1E23] text-white text-sm font-bold hover:bg-[#72181D] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Submit Report
+              {{ submissionReport.status === 'Returned' ? 'Resubmit for Review' : 'Submit for Review' }}
             </button>
           </div>
         </div>
@@ -1173,12 +996,15 @@ import {
   onMounted,
   onUnmounted
 } from 'vue'
+import '../../styles/operations.css'
+import { formatOperationDate, formatOperationTime } from '../../utils/operationsFormat.js'
 import {
   saveReportFile,
   getReportFile,
   deleteReportFile
 } from '../../utils/reportFileStorage.js'
 import { resolvePersonnelName } from '../../utils/personnelName.js'
+import { getPersonnelReportSubmissions, updateReportSubmission } from '../../utils/reportApi.js'
 
 
 /* =========================================================
@@ -1204,6 +1030,29 @@ const props = defineProps({
 
 
 const ICONS = props.ICONS
+
+const getUserDisplayName = user => {
+  if (!user) return 'Admin'
+  const fullName = `${user.first_name || user.firstName || ''} ${user.last_name || user.lastName || ''}`.trim()
+  return fullName || user.name || user.username || user.email || 'Admin'
+}
+
+const getAssignedByName = assignment => {
+  if (assignment.assigned_by_name || assignment.assignedByName) {
+    return assignment.assigned_by_name || assignment.assignedByName
+  }
+
+  const assignedBy = assignment.assigned_by ?? assignment.assignedBy
+  const assignedById = assignedBy && typeof assignedBy === 'object'
+    ? assignedBy.id ?? assignedBy.userId
+    : assignedBy
+  const matchedUser = props.registeredUsers.find(user => String(user.id) === String(assignedById))
+  if (matchedUser) return getUserDisplayName(matchedUser)
+  if (assignedBy && typeof assignedBy === 'object') return getUserDisplayName(assignedBy)
+
+  return assignment.assigned_by_username || assignment.assignedByUsername ||
+    assignment.assigned_by_email || assignment.assignedByEmail || 'Admin'
+}
 
 const assignedPersonnelName = value => resolvePersonnelName(
   value,
@@ -1294,7 +1143,7 @@ const reports = ref([])
    LOAD REPORTS
 ========================================================= */
 
-const loadReports = () => {
+const loadReports = async () => {
 
   const user = getCurrentUser()
 
@@ -1327,57 +1176,49 @@ const loadReports = () => {
   )
 
 
-  const currentUsername =
-    user.username ||
-    user.identifier ||
-    ''
-
-
-  const currentEmail =
-    user.email ||
-    user.identifier ||
-    ''
-
-
-  reports.value = storedReports.filter(report => {
-
-    const assignedId =
-      String(report.assignedToId || '')
-
-    const assignedUsername =
-      report.assignedToUsername || ''
-
-    const assignedEmail =
-      report.assignedToEmail || ''
-
-
-    return (
-
-      (
-        currentUserId &&
-        assignedId &&
-        assignedId === currentUserId
-      )
-
-      ||
-
-      (
-        currentUsername &&
-        assignedUsername &&
-        assignedUsername === currentUsername
-      )
-
-      ||
-
-      (
-        currentEmail &&
-        assignedEmail &&
-        assignedEmail === currentEmail
-      )
-
-    )
-
+  const legacyReports = storedReports.filter(report => {
+    return currentUserId && String(report.assignedToId || '') === currentUserId
   })
+
+  try {
+    const assignments = await getPersonnelReportSubmissions(user.id)
+    const statusLabels = {
+      PENDING: 'Pending',
+      IN_PROGRESS: 'In Progress',
+      SUBMITTED: 'Submitted',
+      FOR_REVIEW: 'For Review',
+      APPROVED: 'Approved',
+      RETURNED: 'Returned',
+      REJECTED: 'Rejected'
+    }
+    const assignedReports = assignments.map(assignment => ({
+      id: assignment.id,
+      submissionId: assignment.id,
+      reportId: assignment.report,
+      recordType: 'assignedReport',
+      title: assignment.report_title,
+      type: assignment.report_type,
+      activity: assignment.report_type,
+      description: assignment.report_description || '',
+      content: assignment.content || '',
+      remarks: assignment.review_comment || '',
+      reviewComment: assignment.review_comment || '',
+      deadline: assignment.report_deadline || '',
+      status: statusLabels[assignment.status] || 'Pending',
+      submittedAt: assignment.submitted_at || '',
+      attachment: assignment.attachment || '',
+      assignedToId: assignment.personnel,
+      assignedBy: getAssignedByName(assignment),
+      assignedByName: getAssignedByName(assignment),
+      assignedById: assignment.assigned_by ?? '',
+      location: ''
+    }))
+
+    reports.value = [...assignedReports, ...legacyReports]
+  } catch (error) {
+    console.error('FireNotify: Unable to load assigned reports from Django', error)
+    reports.value = legacyReports
+  }
 
 }
 
@@ -1455,6 +1296,7 @@ const selectedReport = ref(null)
 const submissionReport = ref(null)
 const selectedSubmissionFile = ref(null)
 const submissionFileName = ref('')
+const submissionContent = ref('')
 
 const editingReport = ref(null)
 
@@ -1548,6 +1390,7 @@ const submittedReports = computed(() => {
   return reports.value.filter(
     report =>
       report.status === 'Submitted' ||
+      report.status === 'For Review' ||
       report.status === 'Approved'
   ).length
 
@@ -1946,10 +1789,24 @@ const validateForm = () => {
   return true
 }
 
-const openSubmitReport = report => {
+const openSubmitReport = async report => {
   selectedSubmissionFile.value = null
   submissionFileName.value = ''
+  submissionContent.value = report.content || ''
   submissionReport.value = report
+
+  if (report.recordType === 'assignedReport' && report.status === 'Pending') {
+    const user = getCurrentUser()
+    try {
+      await updateReportSubmission(report.submissionId, { status: 'IN_PROGRESS' }, user?.id)
+      await loadReports()
+      submissionReport.value = reports.value.find(item => item.id === report.id) || report
+    } catch (error) {
+      showToast(error.message || 'Unable to open the assigned report.', 'error')
+      return
+    }
+  }
+
   showSubmissionModal.value = true
 }
 
@@ -1958,6 +1815,7 @@ const closeSubmitReportModal = () => {
   submissionReport.value = null
   selectedSubmissionFile.value = null
   submissionFileName.value = ''
+  submissionContent.value = ''
 }
 
 const handleSubmissionFileSelection = event => {
@@ -2005,6 +1863,39 @@ const finalizeReportSubmission = async () => {
   const user = getCurrentUser()
   if (!user) {
     showToast('No active personnel account was found.', 'error')
+    return
+  }
+
+  if (submissionReport.value.recordType === 'assignedReport') {
+    if (!submissionContent.value.trim()) {
+      showToast('Report content is required before submitting.')
+      return
+    }
+    if (selectedSubmissionFile.value) {
+      const validation = isSupportedAttachment(selectedSubmissionFile.value)
+      if (!validation.valid) {
+        showToast(validation.message)
+        return
+      }
+    }
+    if (!user.id) {
+      showToast('Your account ID is unavailable. Please sign in again.', 'error')
+      return
+    }
+
+    try {
+      await updateReportSubmission(submissionReport.value.submissionId, {
+        status: 'FOR_REVIEW',
+        content: submissionContent.value.trim(),
+        attachment: selectedSubmissionFile.value || undefined
+      }, user.id)
+      await loadReports()
+      closeSubmitReportModal()
+      showToast('Report submitted for admin review.')
+    } catch (error) {
+      console.error('FireNotify: report submission failed', error)
+      showToast(error.message || 'Unable to submit report.', 'error')
+    }
     return
   }
 
@@ -2459,31 +2350,9 @@ const deleteDraft = (report) => {
 ========================================================= */
 
 const formatDate = (date) => {
-
-  if (!date) {
-    return 'No deadline'
-  }
-
-
-  const parsed =
-    new Date(date)
-
-
-  if (Number.isNaN(parsed.getTime())) {
-    return date
-  }
-
-
-  return parsed.toLocaleDateString(
-    'en-US',
-    {
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric'
-    }
-  )
-
+  return date ? formatOperationDate(date) : 'No deadline'
 }
+const hasTimeValue = value => /(?:T|\s)\d{1,2}:\d{2}/.test(String(value || ''))
 
 
 /* =========================================================

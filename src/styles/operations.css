@@ -1,0 +1,214 @@
+.fn-operations-panel {
+  overflow: hidden;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.fn-operations-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.fn-operations-summary > div {
+  border-radius: 6px;
+  padding: 0.75rem;
+  box-shadow: none;
+}
+
+.fn-operations-summary .text-3xl {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+}
+
+@media (min-width: 1024px) {
+  .fn-operations-summary {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .fn-operations-summary--five {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+.fn-operations-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.fn-operations-table-wrap {
+  overflow-x: auto;
+}
+
+.fn-operations-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.fn-operations-table th {
+  padding: 0.625rem 0.875rem;
+  border-bottom: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.fn-operations-table td {
+  padding: 0.75rem 0.875rem;
+  border-bottom: 1px solid #e2e8f0;
+  color: #334155;
+  font-size: 0.8125rem;
+  vertical-align: top;
+}
+
+.fn-operations-table td::before {
+  display: none;
+}
+
+.fn-operations-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.fn-operations-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.fn-operations-label {
+  display: none;
+}
+
+.fn-operations-badge {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #cbd5e1;
+  border-radius: 9999px;
+  padding: 0.2rem 0.5rem;
+  color: #475569;
+  background: #f8fafc;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.fn-operations-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 1.875rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 5px;
+  padding: 0.3rem 0.55rem;
+  color: #334155;
+  background: #fff;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.fn-operations-action:hover {
+  border-color: #94a3b8;
+  background: #f1f5f9;
+}
+
+.fn-operations-action--primary {
+  border-color: #8b1e23;
+  color: #fff;
+  background: #8b1e23;
+}
+
+.fn-operations-action--primary:hover {
+  border-color: #72181d;
+  background: #72181d;
+}
+
+.fn-operations-action--danger {
+  border-color: #fecaca;
+  color: #991b1b;
+  background: #fff;
+}
+
+.fn-operations-action--danger:hover {
+  border-color: #fca5a5;
+  background: #fef2f2;
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .fn-operations-table {
+    min-width: 820px;
+  }
+}
+
+@media (max-width: 767px) {
+  .fn-operations-table,
+  .fn-operations-table tbody,
+  .fn-operations-table tr,
+  .fn-operations-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .fn-operations-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+
+  .fn-operations-table tbody {
+    display: grid;
+    gap: 0.5rem;
+    padding: 0.5rem;
+  }
+
+  .fn-operations-table tbody tr {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background: #fff;
+  }
+
+  .fn-operations-table td {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 0.25rem;
+    border: 0;
+    padding: 0.5rem;
+    overflow-wrap: anywhere;
+  }
+
+  .fn-operations-table td::before {
+    display: block;
+    color: #64748b;
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    content: attr(data-label);
+  }
+
+  .fn-operations-table td:first-child,
+  .fn-operations-table td:last-child {
+    grid-column: 1 / -1;
+  }
+
+}

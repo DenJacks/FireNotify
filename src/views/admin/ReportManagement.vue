@@ -3,9 +3,14 @@
 import { computed, onMounted, onBeforeUnmount, ref } from 'vue'
 
 import {
-  deleteReportFile,
-  getReportFile
-} from '../../utils/reportFileStorage.js'
+  createReport,
+  deleteReport as deleteReportFromApi,
+  getReports,
+  updateReport,
+  updateReportSubmission
+} from '../../utils/reportApi.js'
+import '../../styles/operations.css'
+import { formatOperationDate, formatOperationTime } from '../../utils/operationsFormat.js'
 
 const props = defineProps({
   currentUser: {
@@ -23,6 +28,28 @@ const props = defineProps({
     required: true
   }
 })
+
+const getUserDisplayName = user => {
+  if (!user) return 'Admin'
+  const fullName = `${user.first_name || user.firstName || ''} ${user.last_name || user.lastName || ''}`.trim()
+  return fullName || user.name || user.username || user.email || 'Admin'
+}
+
+const getAssignedByName = report => {
+  if (report.assigned_by_name || report.assignedByName) {
+    return report.assigned_by_name || report.assignedByName
+  }
+
+  const creator = report.assigned_by ?? report.assignedBy ?? report.created_by ?? report.createdBy
+  if (creator && typeof creator === 'object') return getUserDisplayName(creator)
+
+  const creatorId = creator
+  const matchedCreator = props.registeredUsers.find(user => String(user.id) === String(creatorId))
+  if (matchedCreator) return getUserDisplayName(matchedCreator)
+
+  return report.assigned_by_username || report.assignedByUsername ||
+    report.assigned_by_email || report.assignedByEmail || 'Admin'
+}
 
 
 
@@ -44,6 +71,8 @@ const SYNC_EVENT = 'fireNotifyReportsUpdated'
 const searchQuery = ref('')
 const selectedType = ref('All Report Types')
 const selectedStatus = ref('All Status')
+const selectedPersonnelId = ref('All Personnel')
+const selectedPeriod = ref('All Time')
 
 const showReportModal = ref(false)
 const showDetailsModal = ref(false)
@@ -52,6 +81,7 @@ const showReviewModal = ref(false)
 
 const editingReport = ref(null)
 const selectedReport = ref(null)
+const hasTimeValue = value => /(?:T|\s)\d{1,2}:\d{2}/.test(String(value || ''))
 const reportToDelete = ref(null)
 
 const toastMessage = ref('')
@@ -119,64 +149,76 @@ const reportForm = ref(emptyReport())
    SAMPLE REPORT DATA
 ========================================================= */
 
-const defaultReports = [
-  {
-    id: 'REP-001',
-    title: 'Fire Safety Inspection Report',
-    type: 'Inspection Report',
-
-    submittedBy: 'Juan Dela Cruz',
-    rank: 'FO3',
-
-    station: 'BFP Balingasag',
-
-    submittedDate: 'September 9, 2026',
-    deadline: 'September 10, 2026 • 5:00 PM',
-
-    status: 'Submitted',
-
-    description:
-      'Fire safety inspection conducted at Balingasag Public Market Complex.',
-
-    attachment: 'InspectionChecklist_Sept9.pdf',
-
-    assignedPersonnel: [],
-
-    assignedToId: '',
-    assignedToUsername: '',
-    assignedToName: '',
-    assignedToEmail: '',
-
-    assignedBy: 'Admin',
-    assignedById: 'admin-default',
-
-    startedAt: null,
-    submittedAt: null,
-
-    submissionNote: '',
-    submittedByUser: null,
-
-    createdAt: new Date().toISOString()
-  }
-]
-
 /* =========================================================
    LOAD REPORTS
 ========================================================= */
 
-const loadReports = () => {
+const loadReports = async () => {
   try {
-    const savedReports = localStorage.getItem(STORAGE_KEY)
-
-    if (savedReports) {
-      reports.value = JSON.parse(savedReports)
-    } else {
-      reports.value = defaultReports
-      saveReports()
+    const reportRecords = await getReports()
+    const peopleById = new Map(props.registeredUsers.map(person => [String(person.id), person]))
+    const statusLabels = {
+      PENDING: 'Pending',
+      IN_PROGRESS: 'In Progress',
+      SUBMITTED: 'Submitted',
+      FOR_REVIEW: 'For Review',
+      APPROVED: 'Approved',
+      RETURNED: 'Returned',
+      REJECTED: 'Rejected'
     }
+
+    reports.value = reportRecords.flatMap(report => {
+      const assignedPeople = (report.assigned_personnel_ids || [])
+        .map(id => peopleById.get(String(id)))
+        .filter(Boolean)
+        .map(person => ({
+          ...person,
+          name: person.name || `${person.firstName || person.first_name || ''} ${person.lastName || person.last_name || ''}`.trim() || person.username || person.email
+        }))
+
+      return (report.assignments || []).map((assignment, assignmentIndex) => {
+        const person = peopleById.get(String(assignment.personnel))
+        const name = person?.name || `${person?.firstName || person?.first_name || ''} ${person?.lastName || person?.last_name || ''}`.trim() || assignment.personnel_name || person?.username || person?.email || 'Personnel'
+        const status = statusLabels[assignment.status] || 'Pending'
+        const date = report.deadline ? new Date(report.deadline) : null
+        const overdue = date && !Number.isNaN(date.getTime()) && date < new Date() && ['Pending', 'In Progress', 'Returned'].includes(status)
+
+        return {
+          id: report.id,
+          rowId: assignment.id,
+          reportId: report.id,
+          submissionId: assignment.id,
+          title: report.title,
+          type: report.report_type,
+          description: report.description,
+          submittedBy: name,
+          submittedById: assignment.personnel,
+          assignedToId: assignment.personnel,
+          assignedPersonnel: assignedPeople,
+          assignedById: report.assigned_by ?? report.created_by,
+          assignedBy: getAssignedByName(report),
+          assignedByName: getAssignedByName(report),
+          deadline: report.deadline,
+          submittedDate: assignment.submitted_at || '',
+          status: overdue ? 'Overdue' : status,
+          submissionStatus: assignment.status,
+          accomplishment: assignment.content || '',
+          remarks: assignment.review_comment || '',
+          reviewComment: assignment.review_comment || '',
+          reviewedBy: assignment.reviewer ? peopleById.get(String(assignment.reviewer))?.name || 'Admin' : '',
+          reviewedAt: assignment.reviewed_at || '',
+          attachment: assignment.attachment || '',
+          filename: assignment.attachment?.split('/').pop() || '',
+          hasEvidence: Boolean(assignment.attachment),
+          isActiveAssignment: assignment.is_active,
+          isPrimaryAssignment: assignmentIndex === 0,
+          createdAt: report.created_at
+        }
+      })
+    })
   } catch (error) {
     console.error('Failed to load reports:', error)
-    reports.value = defaultReports
+    showToast('Unable to load reports from Django.', 'error')
   }
 }
 
@@ -188,7 +230,7 @@ const reports = ref([])
 
 const personnel = computed(() => {
   return props.registeredUsers
-    .filter(user => user.role !== 'admin')
+    .filter(user => String(user?.role || '').trim().toUpperCase() === 'PERSONNEL')
     .map(user => ({
       ...user,
 
@@ -426,10 +468,21 @@ const filteredReports = computed(() => {
       selectedStatus.value === 'All Status' ||
       report.status === selectedStatus.value
 
+    const matchesPersonnel = selectedPersonnelId.value === 'All Personnel' ||
+      String(report.assignedToId || report.submittedById) === String(selectedPersonnelId.value)
+    const reportDate = new Date(report.submittedDate || report.deadline)
+    const validReportDate = !Number.isNaN(reportDate.getTime())
+    const now = new Date()
+    const matchesPeriod = selectedPeriod.value === 'All Time' ||
+      (validReportDate && selectedPeriod.value === 'Weekly' && reportDate >= new Date(now.getTime() - 7 * 86400000)) ||
+      (validReportDate && selectedPeriod.value === 'Monthly' && reportDate.getMonth() === now.getMonth() && reportDate.getFullYear() === now.getFullYear())
+
     return (
       matchesSearch &&
       matchesType &&
-      matchesStatus
+      matchesStatus &&
+      matchesPersonnel &&
+      matchesPeriod
     )
   })
 })
@@ -437,7 +490,9 @@ const filteredReports = computed(() => {
 const hasFilters = computed(() =>
   searchQuery.value ||
   selectedType.value !== 'All Report Types' ||
-  selectedStatus.value !== 'All Status'
+  selectedStatus.value !== 'All Status' ||
+  selectedPersonnelId.value !== 'All Personnel' ||
+  selectedPeriod.value !== 'All Time'
 )
 
 /* =========================================================
@@ -510,14 +565,7 @@ const onTimeSubmission = computed(() => {
 ========================================================= */
 
 const saveReports = () => {
-  localStorage.setItem(
-    STORAGE_KEY,
-    JSON.stringify(reports.value)
-  )
-
-  window.dispatchEvent(
-    new CustomEvent(SYNC_EVENT)
-  )
+  window.dispatchEvent(new CustomEvent(SYNC_EVENT))
 }
 
 /* =========================================================
@@ -560,7 +608,11 @@ const clearFilters = () => {
     'All Report Types'
   selectedStatus.value =
     'All Status'
+  selectedPersonnelId.value = 'All Personnel'
+  selectedPeriod.value = 'All Time'
 }
+
+const printReports = () => window.print()
 
 /* =========================================================
    CREATE REPORT
@@ -625,7 +677,7 @@ const openEditReport = report => {
    SAVE REPORT
 ========================================================= */
 
-const saveReport = () => {
+const saveReport = async () => {
   if (
     !reportForm.value.title ||
     !reportForm.value.type
@@ -685,101 +737,31 @@ const saveReport = () => {
     return
   }
 
-  const firstPersonnel =
-    assignedPeople[0]
-
-  const baseReport = {
-    ...reportForm.value,
-
-    assignedPersonnel:
-      assignedPeople,
-
-    assignedToId:
-      firstPersonnel.id,
-
-    assignedToUsername:
-      firstPersonnel.username,
-
-    assignedToName:
-      firstPersonnel.name,
-
-    assignedToEmail:
-      firstPersonnel.email,
-
-    assignedBy:
-      props.currentUser?.name ||
-      reportForm.value.assignedBy ||
-      'Admin User',
-
-    assignedById:
-      props.currentUser?.id ||
-      reportForm.value.assignedById ||
-      'admin-default'
+  const payload = {
+    title: reportForm.value.title.trim(),
+    report_type: reportForm.value.type,
+    description: reportForm.value.description || '',
+    deadline: reportForm.value.deadline || '',
+    assigned_personnel: assignedPeople.map(person => person.id)
   }
 
-  /*
-    Admin creates an assignment, not a personnel submission.
-    The worker must explicitly upload a file later.
-  */
-  if (!editingReport.value) {
-    baseReport.status = 'Pending Submission'
-    baseReport.submissionStatus = 'Not Submitted'
-    baseReport.createdAt =
-      new Date().toISOString()
-    baseReport.startedAt = null
-    baseReport.submittedAt = null
-    baseReport.submittedBy = null
-    baseReport.filename = ''
-    baseReport.fileType = ''
-    baseReport.fileSize = null
-    baseReport.fileStored = false
-    baseReport.attachment = ''
-    baseReport.submissionNote = ''
-    baseReport.submittedByUser = null
-  }
-
-  if (editingReport.value) {
-    const index =
-      reports.value.findIndex(
-        report =>
-          report.id ===
-          editingReport.value.id
-      )
-
-    if (index !== -1) {
-      reports.value[index] = {
-        ...reports.value[index],
-        ...baseReport,
-        id: editingReport.value.id
-      }
+  try {
+    if (editingReport.value) {
+      await updateReport(editingReport.value.reportId || editingReport.value.id, payload)
+      showToast('Report assignment updated successfully.')
+    } else {
+      payload.assigned_by = props.currentUser?.id || null
+      await createReport(payload)
+      showToast('Report assigned successfully.')
     }
-
-    showToast(
-      'Report assignment updated successfully.'
-    )
-  } else {
-    const newId =
-      'REP-' +
-      String(
-        Date.now()
-      ).slice(-6)
-
-    reports.value.unshift({
-      ...baseReport,
-      id: newId
-    })
-
-    showToast(
-      'Report assigned successfully.'
-    )
+    await loadReports()
+    showReportModal.value = false
+    selectedPersonnelIds.value = []
+    personnelSearch.value = ''
+  } catch (error) {
+    console.error('FireNotify: report save failed', error)
+    showToast(error.message || 'Unable to save report.', 'error')
   }
-
-  saveReports()
-
-  showReportModal.value = false
-
-  selectedPersonnelIds.value = []
-  personnelSearch.value = ''
 }
 
 /* =========================================================
@@ -807,7 +789,7 @@ const openReview = (
   showReviewModal.value = true
 }
 
-const submitReview = () => {
+const submitReview = async () => {
   if (!selectedReport.value) return
 
   const report =
@@ -831,72 +813,34 @@ const submitReview = () => {
     return
   }
 
-  if (
-    reviewAction.value === 'approve'
-  ) {
-    report.status = 'Approved'
-    report.submissionStatus = 'Approved'
-
-    report.reviewComment =
-      reviewComment.value
-
-    report.reviewedBy =
-      props.currentUser?.name ||
-      'Admin User'
-
-    report.reviewedAt =
-      new Date().toISOString()
-
-    showToast(
-      'Report approved successfully.'
-    )
+  if (!report.submissionId) {
+    showToast('This activity has no submission to review.', 'error')
+    return
   }
 
-  if (
-    reviewAction.value === 'reject'
-  ) {
-    report.status = 'Rejected'
-    report.submissionStatus = 'Rejected'
+  const nextStatus = {
+    approve: 'APPROVED',
+    return: 'RETURNED',
+    reject: 'REJECTED'
+  }[reviewAction.value]
+  try {
+    await updateReportSubmission(report.submissionId, {
+      status: nextStatus,
+      review_comment: reviewComment.value.trim(),
+      reviewer: props.currentUser?.id || null
+    })
 
-    report.reviewComment =
-      reviewComment.value
-
-    report.reviewedBy =
-      props.currentUser?.name ||
-      'Admin User'
-
-    report.reviewedAt =
-      new Date().toISOString()
-
-    showToast(
-      'Report rejected.'
-    )
+    await loadReports()
+    showToast({
+      approve: 'Report approved successfully.',
+      return: 'Report returned for correction.',
+      reject: 'Report rejected.'
+    }[reviewAction.value])
+    showReviewModal.value = false
+  } catch (error) {
+    console.error('FireNotify: report review failed', error)
+    showToast('Unable to save the report review.', 'error')
   }
-
-  if (
-    reviewAction.value === 'return'
-  ) {
-    report.status = 'Returned'
-    report.submissionStatus = 'Returned'
-
-    report.reviewComment =
-      reviewComment.value
-
-    report.reviewedBy =
-      props.currentUser?.name ||
-      'Admin User'
-
-    report.reviewedAt =
-      new Date().toISOString()
-
-    showToast(
-      'Report returned for correction.'
-    )
-  }
-
-  saveReports()
-
-  showReviewModal.value = false
 }
 
 /* =========================================================
@@ -926,29 +870,14 @@ const deleteReport = async () => {
   if (!reportToDelete.value) return
 
   const targetReport = reportToDelete.value
-  const reportId = targetReport.fileReferenceId || targetReport.id
-
   try {
-    const fileDeleted = await deleteReportFile(reportId)
-
-    if (!fileDeleted) {
-      showToast('Unable to remove the stored file for this report.', 'error')
-      return
-    }
+    await deleteReportFromApi(targetReport.reportId || targetReport.id)
+    await loadReports()
   } catch (error) {
-    console.error('FireNotify: admin delete file failed', error)
-    showToast('Unable to remove the stored file for this report.', 'error')
+    console.error('FireNotify: admin report delete failed', error)
+    showToast(error.message || 'Unable to delete report.', 'error')
     return
   }
-
-  reports.value =
-    reports.value.filter(
-      report =>
-        report.id !==
-        targetReport.id
-    )
-
-  saveReports()
 
   showDeleteModal.value = false
   reportToDelete.value = null
@@ -1036,87 +965,38 @@ const getInitials = name => {
 ========================================================= */
 
 const viewFile = async file => {
-  const report = file && file.reportId ? file : null
-  const attachmentId = report?.reportId || report?.id || file?.id || file?.reportId
-  const targetReport = report || selectedReport.value || file
-
+  const targetReport = file?.attachment ? file : selectedReport.value || file
   if (!targetReport) {
     showToast('No attachment available.', 'error')
     return
   }
 
-  const reportId = targetReport.fileReferenceId || targetReport.id || attachmentId
-
-  try {
-    const fileRecord = await getReportFile(reportId)
-
-    if (!fileRecord || !fileRecord.file) {
-      showToast('This report has no uploaded file available.', 'error')
-      return
-    }
-
-    const rawFile = fileRecord.file
-    const mimeType = (fileRecord.mimeType || targetReport.fileType || 'application/pdf').toLowerCase()
-    const displayName = fileRecord.filename || targetReport.filename || targetReport.attachment || 'report-file'
-
-    let blob = rawFile
-
-    if (rawFile instanceof Blob || rawFile instanceof File) {
-      blob = rawFile
-    } else if (rawFile instanceof ArrayBuffer) {
-      blob = new Blob([rawFile], { type: mimeType })
-    } else if (ArrayBuffer.isView(rawFile)) {
-      const buffer = rawFile.buffer.slice(rawFile.byteOffset, rawFile.byteOffset + rawFile.byteLength)
-      blob = new Blob([buffer], { type: mimeType })
-    } else if (typeof rawFile === 'string') {
-      blob = new Blob([rawFile], { type: mimeType })
-    } else {
-      blob = new Blob([String(rawFile || '')], { type: mimeType })
-    }
-
-    if (!blob || !(blob instanceof Blob) || blob.size === 0) {
-      showToast('The attached file is empty or unreadable.', 'error')
-      return
-    }
-
-    const objectUrl = URL.createObjectURL(blob)
-
-    if (mimeType.includes('pdf')) {
-      const previewWindow = window.open(objectUrl, '_blank')
-
-      if (!previewWindow) {
-        window.location.href = objectUrl
-      }
-
-      setTimeout(() => URL.revokeObjectURL(objectUrl), 15000)
-      showToast(`Opening ${displayName}...`)
-      return
-    }
-
-    const link = document.createElement('a')
-    link.href = objectUrl
-    link.download = displayName
-    document.body.appendChild(link)
-    link.click()
-    link.remove()
-    setTimeout(() => URL.revokeObjectURL(objectUrl), 15000)
-    showToast(`Downloading ${displayName}...`)
-  } catch (error) {
-    console.error('FireNotify: unable to retrieve report file', error)
-    showToast('Unable to retrieve the uploaded file for this report.', 'error')
+  if (!targetReport.attachment) {
+    showToast('This report has no uploaded file available.', 'error')
+    return
   }
+  const fileUrl = targetReport.attachment.startsWith('http')
+    ? targetReport.attachment
+    : `http://127.0.0.1:8000${targetReport.attachment}`
+  window.open(fileUrl, '_blank', 'noopener')
 }
 
 const downloadAttachment = report => {
   if (!report) return
 
-  const reportId = report.fileReferenceId || report.id
-  if (!reportId) {
+  if (!report.attachment) {
     showToast('No attachment is available for download.', 'error')
     return
   }
-
-  viewFile({ reportId, id: reportId })
+  const fileUrl = report.attachment.startsWith('http')
+    ? report.attachment
+    : `http://127.0.0.1:8000${report.attachment}`
+  const link = document.createElement('a')
+  link.href = fileUrl
+  link.download = report.filename || 'report-attachment'
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
 }
 
 /* =========================================================
@@ -1151,15 +1031,13 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-4">
 
     <!-- =====================================================
          HEADER
     ====================================================== -->
 
-    <section
-      class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6"
-    >
+    <section class="fn-operations-panel">
       <div
         class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5"
       >
@@ -1177,17 +1055,24 @@ onBeforeUnmount(() => {
           <p
             class="text-base text-slate-500 mt-1"
           >
-            Create reports, assign them to personnel,
-            monitor submissions, and review completed reports.
+            Activity records and personnel submissions from Django.
           </p>
         </div>
 
-        <button
-          @click="openCreateReport"
-          class="px-6 py-3 rounded-xl bg-[#8B1E23] text-white font-bold hover:bg-[#72181D] transition shadow-sm"
-        >
-          + Assign Report
-        </button>
+        <div class="flex flex-wrap gap-3">
+          <button
+            @click="openCreateReport"
+            class="px-6 py-3 rounded-xl bg-[#8B1E23] text-white font-bold hover:bg-[#72181D] transition shadow-sm"
+          >
+            + Assign Report
+          </button>
+          <button
+            @click="printReports"
+            class="px-6 py-3 rounded-xl border border-slate-300 bg-white text-slate-700 font-bold hover:bg-slate-50 transition"
+          >
+            Print PDF
+          </button>
+        </div>
       </div>
     </section>
 
@@ -1196,7 +1081,7 @@ onBeforeUnmount(() => {
     ====================================================== -->
 
     <section
-      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5"
+      class="fn-operations-summary fn-operations-summary--five"
     >
 
       <div
@@ -1323,6 +1208,25 @@ onBeforeUnmount(() => {
           <option>Overdue</option>
         </select>
 
+        <select
+          v-model="selectedPersonnelId"
+          class="h-12 px-4 rounded-xl border border-slate-300 text-base lg:w-56 focus:ring-2 focus:ring-[#8B1E23] outline-none"
+        >
+          <option value="All Personnel">All Personnel</option>
+          <option v-for="person in personnel" :key="person.id" :value="person.id">
+            {{ person.name || `${person.firstName || ''} ${person.lastName || ''}`.trim() || person.username }}
+          </option>
+        </select>
+
+        <select
+          v-model="selectedPeriod"
+          class="h-12 px-4 rounded-xl border border-slate-300 text-base lg:w-40 focus:ring-2 focus:ring-[#8B1E23] outline-none"
+        >
+          <option>All Time</option>
+          <option>Weekly</option>
+          <option>Monthly</option>
+        </select>
+
         <button
           v-if="hasFilters"
           @click="clearFilters"
@@ -1343,11 +1247,11 @@ onBeforeUnmount(() => {
     >
 
       <div
-        class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-200 pb-5"
+        class="fn-operations-heading"
       >
         <div>
           <h2
-            class="text-xl font-bold text-slate-900"
+            class="text-base font-bold text-slate-900"
           >
             Assigned Reports
           </h2>
@@ -1355,193 +1259,60 @@ onBeforeUnmount(() => {
           <p
             class="text-sm text-slate-500 mt-1"
           >
-            {{ filteredReports.length }}
-            report(s) displayed
+            {{ filteredReports.length }} {{ filteredReports.length === 1 ? 'report' : 'reports' }} displayed
           </p>
         </div>
 
-        <div
-          class="text-sm font-semibold text-slate-500"
-        >
+        <div class="text-xs font-semibold text-slate-600">
           {{ submittedCount }} submitted
         </div>
       </div>
 
-      <div
-        v-if="filteredReports.length"
-        class="mt-5 space-y-4"
-      >
-
-        <div
-          v-for="report in filteredReports"
-          :key="report.id"
-          class="p-5 rounded-xl border border-slate-200 hover:border-slate-300 hover:shadow-sm transition"
-          :class="{
-            'bg-red-50 border-red-200':
-              report.status === 'Overdue'
-          }"
-        >
-
-          <div
-            class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5"
-          >
-
-            <div class="flex-1 min-w-0">
-
-              <div
-                class="flex items-center gap-3 flex-wrap"
-              >
-
-                <h3
-                  class="text-lg font-bold text-slate-900"
-                >
-                  {{ report.title }}
-                </h3>
-
-                <span
-                  class="px-3 py-1 rounded-full text-xs font-bold border"
-                  :class="getStatusClass(report.status)"
-                >
-                  {{ report.status }}
-                </span>
-
-                <span
-                  class="px-3 py-1 rounded-full text-xs font-bold"
-                  :class="getTypeClass(report.type)"
-                >
-                  {{ report.type }}
-                </span>
-
-              </div>
-
-              <div
-                class="flex flex-wrap items-center gap-x-5 gap-y-2 mt-3 text-sm"
-              >
-
-                <span
-                  class="text-slate-600"
-                >
-                  <strong>
-                    Assigned to:
-                  </strong>
-
-                  <span
-                    v-if="report.assignedPersonnel?.length"
-                  >
-                    {{
-                      report.assignedPersonnel
-                        .map(person => person.name)
-                        .join(', ')
-                    }}
-                  </span>
-
-                  <span
-                    v-else
-                  >
-                    No personnel assigned
-                  </span>
-                </span>
-
-                <span
-                  class="text-slate-400"
-                >
-                  ID: {{ report.id }}
-                </span>
-
-              </div>
-
-              <p
-                v-if="report.status === 'Overdue'"
-                class="text-sm text-[#8B1E23] font-semibold mt-2"
-              >
-                Deadline:
-                {{ report.deadline }}
-              </p>
-
-              <p
-                v-else
-                class="text-sm text-slate-400 mt-2"
-              >
-                Deadline:
-                {{ report.deadline || 'No deadline' }}
-              </p>
-
-            </div>
-
-            <!-- ACTIONS -->
-
-            <div
-              class="flex flex-wrap gap-2"
-            >
-
-              <button
-                @click="viewReport(report)"
-                class="px-4 py-2.5 rounded-lg border border-slate-300 text-sm font-bold hover:bg-slate-100"
-              >
-                View
-              </button>
-
-              <button
-                v-if="
-                  report.status === 'Submitted' ||
-                  report.status === 'For Review'
-                "
-                @click="openReview(report, 'approve')"
-                class="px-4 py-2.5 rounded-lg bg-green-600 text-white text-sm font-bold hover:bg-green-700"
-              >
-                Approve
-              </button>
-
-              <button
-                v-if="
-                  report.status === 'Submitted' ||
-                  report.status === 'For Review'
-                "
-                @click="openReview(report, 'return')"
-                class="px-4 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-bold hover:bg-blue-700"
-              >
-                Return
-              </button>
-
-              <button
-                v-if="
-                  report.status === 'Submitted' ||
-                  report.status === 'For Review'
-                "
-                @click="openReview(report, 'reject')"
-                class="px-4 py-2.5 rounded-lg border border-red-300 text-red-700 text-sm font-bold hover:bg-red-50"
-              >
-                Reject
-              </button>
-
-              <button
-                v-if="report.status === 'Overdue'"
-                @click="sendReminder(report)"
-                class="px-4 py-2.5 rounded-lg bg-[#8B1E23] text-white text-sm font-bold hover:bg-[#72181D]"
-              >
-                Reminder
-              </button>
-
-              <button
-                @click="openEditReport(report)"
-                class="px-3 py-2.5 rounded-lg border border-slate-300 text-sm font-bold hover:bg-slate-100"
-              >
-                Edit
-              </button>
-
-              <button
-                @click="openDeleteReport(report)"
-                class="px-3 py-2.5 rounded-lg border border-red-200 text-red-600 text-sm font-bold hover:bg-red-50"
-              >
-                Delete
-              </button>
-
-            </div>
-
-          </div>
-
-        </div>
-
+      <div v-if="filteredReports.length" class="fn-operations-table-wrap">
+        <table class="fn-operations-table">
+          <thead>
+            <tr><th>Report</th><th>Assigned Personnel</th><th>Deadline</th><th>Status</th><th>Submission</th><th class="text-right">Actions</th></tr>
+          </thead>
+          <tbody>
+            <tr v-for="report in filteredReports" :key="report.rowId">
+              <td data-label="Report" class="min-w-0">
+                <div class="flex min-w-0 flex-col gap-1.5 whitespace-normal">
+                  <p class="break-words text-sm font-semibold leading-5 text-slate-900">{{ report.title }}</p>
+                  <p class="break-words text-xs leading-5 text-slate-600"><span class="font-semibold">Report Type:</span> {{ report.type || 'Report' }}</p>
+                  <p v-if="report.location" class="break-words text-xs leading-5 text-slate-600"><span class="font-semibold">Location:</span> {{ report.location }}</p>
+                  <p v-if="report.description" class="break-words whitespace-pre-wrap text-xs leading-5 text-slate-600"><span class="font-semibold">Description/Details:</span> {{ report.description }}</p>
+                  <p v-if="report.accomplishment" class="break-words whitespace-pre-wrap text-xs leading-5 text-slate-600"><span class="font-semibold">Submission:</span> {{ report.accomplishment }}</p>
+                  <p v-if="report.reviewComment" class="break-words whitespace-pre-wrap text-xs leading-5 text-amber-800"><span class="font-semibold">Review/Remarks:</span> {{ report.reviewComment }}</p>
+                </div>
+              </td>
+              <td data-label="Assigned Personnel"><span class="block min-w-0 break-words leading-5">{{ report.assignedPersonnel?.length ? report.assignedPersonnel.map(person => person.name).join(', ') : 'No personnel assigned' }}</span></td>
+              <td data-label="Deadline">
+                <div class="flex flex-col gap-0.5">
+                  <span class="leading-5">{{ formatOperationDate(report.deadline) }}</span>
+                  <span v-if="hasTimeValue(report.deadline)" class="text-xs leading-5 text-slate-500">{{ formatOperationTime(report.deadline) }}</span>
+                </div>
+              </td>
+              <td data-label="Status"><span class="fn-operations-badge" :class="getStatusClass(report.status)">{{ report.status }}</span></td>
+              <td data-label="Submission">
+                <div class="flex flex-col gap-0.5">
+                  <span class="leading-5">{{ report.submittedDate ? formatOperationDate(report.submittedDate) : 'Not submitted' }}</span>
+                  <span v-if="hasTimeValue(report.submittedDate)" class="text-xs leading-5 text-slate-500">{{ formatOperationTime(report.submittedDate) }}</span>
+                </div>
+              </td>
+              <td data-label="Actions">
+                <div class="flex flex-wrap gap-1.5 sm:justify-end">
+                  <button @click="viewReport(report)" class="fn-operations-action">View</button>
+                  <button v-if="report.submissionId && ['Submitted', 'For Review'].includes(report.status)" @click="openReview(report, 'approve')" class="fn-operations-action fn-operations-action--primary">Approve</button>
+                  <button v-if="report.submissionId && ['Submitted', 'For Review'].includes(report.status)" @click="openReview(report, 'return')" class="fn-operations-action">Return</button>
+                  <button v-if="report.submissionId && ['Submitted', 'For Review'].includes(report.status)" @click="openReview(report, 'reject')" class="fn-operations-action fn-operations-action--danger">Reject</button>
+                  <button v-if="report.status === 'Overdue'" @click="sendReminder(report)" class="fn-operations-action fn-operations-action--primary">Reminder</button>
+                  <button v-if="report.isPrimaryAssignment" @click="openEditReport(report)" class="fn-operations-action">Edit</button>
+                  <button v-if="report.isPrimaryAssignment" @click="openDeleteReport(report)" class="fn-operations-action fn-operations-action--danger">Delete</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
       <div
@@ -2123,14 +1894,8 @@ onBeforeUnmount(() => {
 
           <div>
 
-            <p
-              class="text-xs font-bold text-[#8B1E23] uppercase tracking-wide"
-            >
-              {{ selectedReport.id }}
-            </p>
-
             <h3
-              class="text-xl font-bold text-slate-900 mt-1"
+              class="mt-1 break-words text-xl font-bold leading-6 text-slate-900"
             >
               {{ selectedReport.title }}
             </h3>
@@ -2236,8 +2001,7 @@ onBeforeUnmount(() => {
                 class="font-bold text-slate-900 mt-1"
               >
                 {{
-                  selectedReport.deadline ||
-                  'No deadline'
+                  selectedReport.deadline ? formatOperationDate(selectedReport.deadline) : 'No deadline'
                 }}
               </p>
 
@@ -2274,13 +2038,9 @@ onBeforeUnmount(() => {
                 Submitted Date
               </p>
 
-              <p
-                class="font-bold text-slate-900 mt-1"
-              >
-                {{
-                  selectedReport.submittedDate ||
-                  'Pending'
-                }}
+              <p class="mt-1 flex flex-col gap-0.5 font-bold leading-5 text-slate-900">
+                <span>{{ selectedReport.submittedDate ? formatOperationDate(selectedReport.submittedDate) : 'Pending' }}</span>
+                <span v-if="hasTimeValue(selectedReport.submittedDate)" class="text-xs font-normal text-slate-500">{{ formatOperationTime(selectedReport.submittedDate) }}</span>
               </p>
 
             </div>
@@ -2295,13 +2055,9 @@ onBeforeUnmount(() => {
                 Submitted At
               </p>
 
-              <p
-                class="font-bold text-slate-900 mt-1"
-              >
-                {{
-                  selectedReport.submittedAt ||
-                  'Not submitted'
-                }}
+              <p class="mt-1 flex flex-col gap-0.5 font-bold leading-5 text-slate-900">
+                <span>{{ selectedReport.submittedAt ? formatOperationDate(selectedReport.submittedAt) : 'Not submitted' }}</span>
+                <span v-if="hasTimeValue(selectedReport.submittedAt)" class="text-xs font-normal text-slate-500">{{ formatOperationTime(selectedReport.submittedAt) }}</span>
               </p>
 
             </div>
@@ -2319,7 +2075,7 @@ onBeforeUnmount(() => {
             </p>
 
             <p
-              class="text-sm text-slate-600 mt-2 leading-6"
+              class="mt-2 break-words whitespace-pre-wrap text-sm leading-6 text-slate-600"
             >
               {{
                 selectedReport.description ||
@@ -2327,6 +2083,21 @@ onBeforeUnmount(() => {
               }}
             </p>
 
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="p-4 rounded-xl bg-slate-50">
+              <p class="text-xs text-slate-500">Accomplishment</p>
+              <p class="mt-2 break-words whitespace-pre-wrap text-sm leading-6 text-slate-700">{{ selectedReport.accomplishment || 'No submission yet.' }}</p>
+            </div>
+            <div class="p-4 rounded-xl bg-slate-50">
+              <p class="text-xs text-slate-500">Remarks</p>
+              <p class="mt-2 break-words whitespace-pre-wrap text-sm leading-6 text-slate-700">{{ selectedReport.remarks || 'No remarks.' }}</p>
+            </div>
+            <div v-if="selectedReport.revisionNote" class="p-4 rounded-xl bg-amber-50 border border-amber-100 md:col-span-2">
+              <p class="text-xs font-bold text-amber-700">Revision Information</p>
+              <p class="mt-2 break-words whitespace-pre-wrap text-sm leading-6 text-slate-700">{{ selectedReport.revisionNote }}</p>
+            </div>
           </div>
 
           <!-- SUBMISSION NOTE -->
@@ -2345,7 +2116,7 @@ onBeforeUnmount(() => {
             </p>
 
             <p
-              class="text-sm text-slate-700 mt-2"
+              class="mt-2 break-words whitespace-pre-wrap text-sm leading-6 text-slate-700"
             >
               {{ selectedReport.submissionNote }}
             </p>
@@ -2368,7 +2139,7 @@ onBeforeUnmount(() => {
             </p>
 
             <p
-              class="text-sm text-slate-700 mt-2"
+              class="mt-2 break-words whitespace-pre-wrap text-sm leading-6 text-slate-700"
             >
               {{ selectedReport.reviewComment }}
             </p>

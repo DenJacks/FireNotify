@@ -1,10 +1,10 @@
 <template>
-  <div class="w-full min-w-0 space-y-6">
+  <div class="w-full min-w-0 space-y-4">
 
     <!-- ========================================================= -->
     <!-- PAGE HEADER -->
     <!-- ========================================================= -->
-    <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+    <section class="border-b border-slate-200 pb-3">
 
       <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5">
 
@@ -13,37 +13,18 @@
             FIRENOTIFY PERSONNEL PORTAL
           </p>
 
-          <h2 class="text-2xl font-bold text-slate-900 mt-1">
-            Activities
+          <h2 class="text-xl font-bold text-slate-900 mt-1">
+            Station Activities
           </h2>
 
           <p class="text-sm text-slate-500 mt-1">
-            View, monitor, and manage station activities.
+            View station activity assignments, schedules, and submission status.
           </p>
         </div>
 
-        <div class="flex items-center gap-3">
-
-          <div
-            class="h-12 w-12 rounded-xl bg-[#8B1E23]/10 flex items-center justify-center"
-          >
-            <span
-              v-html="ICONS.tasks"
-              class="h-6 w-6 text-[#8B1E23]"
-            ></span>
-          </div>
-
-          <div>
-            <p class="text-xs text-slate-400">
-              Portal
-            </p>
-
-            <p class="text-base font-bold text-slate-900">
-              Station Activities
-            </p>
-          </div>
-
-        </div>
+        <p class="text-sm font-semibold text-slate-600">
+          {{ filteredActivities.length }} {{ filteredActivities.length === 1 ? 'activity' : 'activities' }} found
+        </p>
 
       </div>
 
@@ -53,10 +34,10 @@
     <!-- ========================================================= -->
     <!-- ACTIVITY SUMMARY -->
     <!-- ========================================================= -->
-    <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+    <section class="fn-operations-summary border-b border-slate-200 pb-3">
 
       <!-- TOTAL -->
-      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+      <div class="bg-white border border-slate-200 rounded-md p-3">
         <div class="flex items-center justify-between">
 
           <div>
@@ -64,7 +45,7 @@
               Total Activities
             </p>
 
-            <p class="text-3xl font-bold text-slate-900 mt-1">
+            <p class="text-xl font-bold text-slate-900 mt-1">
               {{ totalActivities }}
             </p>
 
@@ -74,11 +55,11 @@
           </div>
 
           <div
-            class="h-12 w-12 rounded-xl bg-blue-50 flex items-center justify-center"
+            class="h-9 w-9 rounded-md bg-blue-50 flex items-center justify-center"
           >
             <span
               v-html="ICONS.tasks"
-              class="h-6 w-6 text-blue-600"
+              class="h-5 w-5 text-blue-600"
             ></span>
           </div>
 
@@ -87,7 +68,7 @@
 
 
       <!-- SCHEDULED -->
-      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+      <div class="bg-white border border-slate-200 rounded-md p-3">
         <div class="flex items-center justify-between">
 
           <div>
@@ -95,7 +76,7 @@
               Scheduled
             </p>
 
-            <p class="text-3xl font-bold text-yellow-600 mt-1">
+            <p class="text-xl font-bold text-yellow-600 mt-1">
               {{ scheduledActivities }}
             </p>
 
@@ -105,11 +86,11 @@
           </div>
 
           <div
-            class="h-12 w-12 rounded-xl bg-yellow-50 flex items-center justify-center"
+            class="h-9 w-9 rounded-md bg-yellow-50 flex items-center justify-center"
           >
             <span
               v-html="ICONS.clock"
-              class="h-6 w-6 text-yellow-600"
+              class="h-5 w-5 text-yellow-600"
             ></span>
           </div>
 
@@ -118,7 +99,7 @@
 
 
       <!-- COMPLETED -->
-      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+      <div class="bg-white border border-slate-200 rounded-md p-3">
         <div class="flex items-center justify-between">
 
           <div>
@@ -126,7 +107,7 @@
               Completed
             </p>
 
-            <p class="text-3xl font-bold text-green-600 mt-1">
+            <p class="text-xl font-bold text-green-600 mt-1">
               {{ completedActivities }}
             </p>
 
@@ -136,11 +117,11 @@
           </div>
 
           <div
-            class="h-12 w-12 rounded-xl bg-green-50 flex items-center justify-center"
+            class="h-9 w-9 rounded-md bg-green-50 flex items-center justify-center"
           >
             <span
               v-html="ICONS.check"
-              class="h-6 w-6 text-green-600"
+              class="h-5 w-5 text-green-600"
             ></span>
           </div>
 
@@ -149,7 +130,7 @@
 
 
       <!-- OVERDUE -->
-      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+      <div class="bg-white border border-slate-200 rounded-md p-3">
         <div class="flex items-center justify-between">
 
           <div>
@@ -157,7 +138,7 @@
               Overdue
             </p>
 
-            <p class="text-3xl font-bold text-[#8B1E23] mt-1">
+            <p class="text-xl font-bold text-[#8B1E23] mt-1">
               {{ overdueActivities }}
             </p>
 
@@ -167,11 +148,11 @@
           </div>
 
           <div
-            class="h-12 w-12 rounded-xl bg-red-50 flex items-center justify-center"
+            class="h-9 w-9 rounded-md bg-red-50 flex items-center justify-center"
           >
             <span
               v-html="ICONS.siren"
-              class="h-6 w-6 text-[#8B1E23]"
+              class="h-5 w-5 text-[#8B1E23]"
             ></span>
           </div>
 
@@ -184,7 +165,7 @@
     <!-- ========================================================= -->
     <!-- SEARCH + FILTERS -->
     <!-- ========================================================= -->
-    <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+    <section class="border-b border-slate-200 pb-3">
 
       <div class="flex flex-col xl:flex-row xl:items-end gap-4">
 
@@ -363,17 +344,15 @@
     <!-- ========================================================= -->
     <!-- MAIN CONTENT -->
     <!-- ========================================================= -->
-    <section class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+    <section class="space-y-4">
 
       <!-- ======================================================= -->
       <!-- ACTIVITY LIST -->
       <!-- ======================================================= -->
-      <div
-        class="xl:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-sm p-6"
-      >
+      <div class="fn-operations-panel">
 
         <div
-          class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-200 pb-5"
+          class="fn-operations-heading"
         >
 
           <div>
@@ -386,11 +365,7 @@
             </p>
           </div>
 
-          <span
-            class="w-fit px-3 py-1.5 rounded-full bg-blue-50 text-blue-700 text-xs font-bold"
-          >
-            {{ filteredActivities.length }} Results
-          </span>
+          <span class="text-xs font-semibold text-slate-600">{{ filteredActivities.length }} found</span>
 
         </div>
 
@@ -398,7 +373,7 @@
         <!-- EMPTY STATE -->
         <div
           v-if="filteredActivities.length === 0"
-          class="py-14 text-center"
+          class="py-8 text-center"
         >
 
           <div
@@ -427,236 +402,48 @@
         </div>
 
 
-        <!-- ACTIVITY CARDS -->
-        <div
-          v-else
-          class="mt-5 space-y-4"
-        >
-
-          <article
-            v-for="activity in filteredActivities"
-            :key="activity.id"
-            class="p-5 rounded-xl border transition-all hover:shadow-sm"
-            :class="activityCardClass(activity.status)"
-          >
-
-            <div class="flex flex-col lg:flex-row lg:items-start gap-4">
-
-              <!-- ICON -->
-              <div
-                class="h-12 w-12 rounded-xl flex items-center justify-center shrink-0"
-                :class="activityIconClass(activity.status)"
-              >
-
-                <span
-                  v-html="activityIcon(activity.status)"
-                  class="h-6 w-6"
-                ></span>
-
-              </div>
-
-
-              <!-- INFORMATION -->
-              <div class="flex-1 min-w-0">
-
-                <div
-                  class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3"
-                >
-
-                  <div class="min-w-0">
-
-                    <div class="flex flex-wrap items-center gap-2">
-
-                      <h4 class="text-base font-bold text-slate-900">
-                        {{ activity.title }}
-                      </h4>
-
-                      <span
-                        class="px-2.5 py-1 rounded-full text-xs font-bold"
-                        :class="statusClass(activity.status)"
-                      >
-                        {{ activity.status }}
-                      </span>
-
-                    </div>
-
-                    <p class="text-sm text-slate-500 mt-1">
-                      {{ activity.location || 'No location specified' }}
-                    </p>
-
+        <div v-else class="fn-operations-table-wrap">
+          <table class="fn-operations-table">
+            <thead>
+              <tr>
+                <th>Activity</th><th>Type</th><th>Assigned Personnel</th><th>Deadline</th><th>Priority</th><th>Status</th><th class="text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="activity in filteredActivities" :key="activity.id">
+                <td data-label="Activity">
+                  <div class="flex min-w-0 flex-col gap-1.5">
+                    <p class="break-words text-sm font-semibold leading-5 text-slate-900">{{ activity.title }}</p>
+                    <p v-if="activity.description" class="break-words whitespace-pre-wrap text-xs leading-5 text-slate-500">{{ activity.description }}</p>
+                    <p class="break-words text-xs leading-5 text-slate-500">{{ activity.location || 'No location specified' }}</p>
                   </div>
-
-                  <span
-                    class="w-fit px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 text-xs font-semibold"
-                  >
-                    {{ activity.type || 'Activity' }}
-                  </span>
-
-                </div>
-
-
-                <!-- DETAILS -->
-                <div
-                  class="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-2 mt-4"
-                >
-
-                  <p class="text-sm text-slate-500">
-
-                    <span class="font-semibold text-slate-700">
-                      Date:
-                    </span>
-
-                    {{ formatDate(activity.date) }}
-
-                  </p>
-
-
-                  <p class="text-sm text-slate-500">
-
-                    <span class="font-semibold text-slate-700">
-                      Time:
-                    </span>
-
-                    {{ activity.time || 'Not specified' }}
-
-                  </p>
-
-
-                  <p class="text-sm text-slate-500">
-
-                    <span class="font-semibold text-slate-700">
-                      Assigned:
-                    </span>
-
-                    {{ assignedPersonnelName(activity) }}
-
-                  </p>
-
-
-                  <p class="text-sm text-slate-500">
-
-                    <span class="font-semibold text-slate-700">
-                      Created:
-                    </span>
-
-                    {{ formatCreatedDate(activity.createdAt) }}
-
-                  </p>
-
-                </div>
-
-
-                <!-- DESCRIPTION -->
-                <div
-                  v-if="activity.description"
-                  class="mt-4 p-3 rounded-lg bg-white/70 border border-slate-200"
-                >
-
-                  <p class="text-xs font-semibold text-slate-500 mb-1">
-                    Description
-                  </p>
-
-                  <p class="text-sm text-slate-600 leading-relaxed">
-                    {{ activity.description }}
-                  </p>
-
-                </div>
-
-
-                <!-- PROGRESS -->
-                <div
-                  v-if="activity.status === 'In Progress'"
-                  class="mt-4"
-                >
-
-                  <div class="flex justify-between items-center mb-2">
-
-                    <span class="text-xs font-semibold text-slate-500">
-                      Activity Progress
-                    </span>
-
-                    <span class="text-xs font-bold text-blue-600">
-                      {{ normalizedProgress(activity.progress) }}%
-                    </span>
-
+                </td>
+                <td data-label="Type"><span class="fn-operations-badge">{{ activity.type || 'Activity' }}</span></td>
+                <td data-label="Assigned Personnel">
+                  <div class="flex items-center gap-2">
+                    <span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#8B1E23] text-[10px] font-bold text-white">{{ assignedPersonnelName(activity).slice(0, 1).toUpperCase() }}</span>
+                    <span class="min-w-0 break-words"><span class="block break-words font-medium leading-5 text-slate-800">{{ assignedPersonnelName(activity) }}</span><span v-if="activity.rank || activity.assignedPersonnel?.[0]?.rank" class="mt-0.5 block text-xs leading-5 text-slate-500">{{ activity.rank || activity.assignedPersonnel?.[0]?.rank }}</span></span>
                   </div>
-
-                  <div class="h-2.5 rounded-full bg-slate-200 overflow-hidden">
-
-                    <div
-                      class="h-full bg-blue-600 rounded-full transition-all duration-500"
-                      :style="{
-                        width: `${normalizedProgress(activity.progress)}%`
-                      }"
-                    ></div>
-
+                </td>
+                <td data-label="Schedule">
+                  <div class="flex flex-col gap-0.5">
+                    <span class="leading-5">{{ formatDate(activity.date) }}</span>
+                    <span class="text-xs leading-5 text-slate-500">{{ formatTime(activity.time) }}</span>
                   </div>
-
-                </div>
-
-
-                <!-- COMPLETED -->
-                <p
-                  v-if="activity.status === 'Completed'"
-                  class="mt-4 text-xs font-semibold text-green-700"
-                >
-                  ✓ Activity completed successfully
-                </p>
-
-
-                <!-- OVERDUE -->
-                <p
-                  v-if="activity.status === 'Overdue'"
-                  class="mt-4 text-xs font-bold text-[#8B1E23]"
-                >
-                  ⚠ This activity requires attention.
-                </p>
-
-
-                <!-- ACTIONS -->
-                <div class="mt-4 flex flex-wrap gap-2">
-
-                  <button
-                    @click="openDetails(activity)"
-                    class="px-4 py-2 rounded-lg bg-[#8B1E23] text-white text-sm font-semibold hover:bg-[#72181D] transition"
-                  >
-                    View Details
-                  </button>
-
-
-                  <button
-                    v-if="activity.status === 'Scheduled' || activity.status === 'Assigned' || activity.status === 'Overdue'"
-                    @click="startActivity(activity)"
-                    class="px-4 py-2 rounded-lg border border-slate-300 bg-white text-slate-700 text-sm font-semibold hover:bg-slate-100 transition"
-                  >
-                    Start Activity
-                  </button>
-
-                  <button
-                    v-if="activity.status === 'In Progress' || activity.status === 'Returned'"
-                    @click="openSubmissionModal(activity)"
-                    class="px-4 py-2 rounded-lg bg-[#8B1E23] text-white text-sm font-semibold hover:bg-[#72181D] transition"
-                  >
-                    {{ activity.status === 'Returned' ? 'Revise Submission' : 'Submit for Verification' }}
-                  </button>
-
-
-                  <button
-                    v-if="activity.status === 'Overdue'"
-                    @click="resolveActivity(activity)"
-                    class="px-4 py-2 rounded-lg border border-red-200 bg-red-50 text-[#8B1E23] text-sm font-semibold hover:bg-red-100 transition"
-                  >
-                    Resolve Activity
-                  </button>
-
-                </div>
-
-              </div>
-
-            </div>
-
-          </article>
-
+                </td>
+                <td data-label="Priority"><span class="fn-operations-badge">{{ (activity.priority || 'Medium').toUpperCase() }}</span></td>
+                <td data-label="Status"><span class="fn-operations-badge" :class="statusClass(activity.status)">{{ activity.status }}</span></td>
+                <td data-label="Actions">
+                  <div class="flex flex-wrap gap-1.5 sm:justify-end">
+                    <button @click="openDetails(activity)" class="fn-operations-action">View</button>
+                    <button v-if="activity.status === 'Scheduled' || activity.status === 'Assigned' || activity.status === 'Overdue'" @click="startActivity(activity)" class="fn-operations-action">Start</button>
+                    <button v-if="['Scheduled', 'Assigned', 'In Progress', 'Ongoing', 'Delayed', 'Returned', 'Overdue'].includes(activity.status)" @click="openSubmissionModal(activity)" class="fn-operations-action fn-operations-action--primary">{{ activity.status === 'Returned' ? 'Revise' : 'Submit' }}</button>
+                    <button v-if="activity.status === 'Overdue'" @click="resolveActivity(activity)" class="fn-operations-action fn-operations-action--danger">Resolve</button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
       </div>
@@ -665,7 +452,7 @@
       <!-- ======================================================= -->
       <!-- RIGHT SIDEBAR -->
       <!-- ======================================================= -->
-      <div class="space-y-6">
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
 
 
         <!-- TODAY'S ACTIVITIES -->
@@ -798,10 +585,9 @@
                     {{ item.title }}
                   </p>
 
-                  <p class="text-xs text-slate-500 mt-1">
-                    {{ formatDate(item.date) }}
-                    ·
-                    {{ item.time || 'Time not specified' }}
+                  <p class="mt-1 flex flex-col gap-0.5 text-xs leading-5 text-slate-500">
+                    <span>{{ formatDate(item.date) }}</span>
+                    <span>{{ formatTime(item.time) }}</span>
                   </p>
 
                   <p class="text-xs text-slate-500 mt-1">
@@ -915,35 +701,7 @@
         </div>
 
 
-        <!-- QUICK INFORMATION -->
-        <div
-          class="rounded-2xl bg-[#8B1E23] text-white p-6 shadow-sm"
-        >
-
-          <div class="flex items-start gap-3">
-
-            <div
-              class="h-10 w-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0"
-            >
-              ℹ
-            </div>
-
-            <div>
-
-              <h3 class="font-bold">
-                Activity Reminder
-              </h3>
-
-              <p class="text-sm text-white/75 mt-2 leading-relaxed">
-                Keep activity statuses updated to maintain accurate
-                station operations and compliance records.
-              </p>
-
-            </div>
-
-          </div>
-
-        </div>
+      
 
       </div>
 
@@ -1046,7 +804,7 @@
               </p>
 
               <p class="text-sm font-bold text-slate-900 mt-1">
-                {{ selectedActivity.time || 'Not specified' }}
+                    {{ formatTime(selectedActivity.time) }}
               </p>
 
             </div>
@@ -1156,11 +914,21 @@
           </button>
 
           <button
-            v-if="selectedActivity.status === 'In Progress' || selectedActivity.status === 'Returned'"
+            v-if="
+              selectedActivity.status === 'Scheduled' ||
+              selectedActivity.status === 'Assigned' ||
+              selectedActivity.status === 'In Progress' ||
+              selectedActivity.status === 'Returned' ||
+              selectedActivity.status === 'Overdue'
+            "
             @click="openSubmissionModal(selectedActivity); closeDetails()"
             class="px-5 py-2.5 rounded-xl bg-[#8B1E23] text-white text-sm font-bold hover:bg-[#72181D]"
           >
-            Submit for Verification
+            {{
+              selectedActivity.status === 'Returned'
+                ? 'Revise Submission'
+                : 'Upload Activity'
+            }}
           </button>
 
         </div>
@@ -1276,18 +1044,17 @@
       class="fixed inset-0 z-[70] bg-slate-900/50 flex items-center justify-center p-4"
       @click.self="closeSubmissionModal"
     >
-      <div class="fn-modal-panel w-full max-w-2xl bg-white rounded-2xl shadow-xl overflow-hidden">
-        <div class="px-6 py-5 border-b border-slate-200">
+      <div class="fn-modal-panel flex max-h-[calc(100dvh-2rem)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
+        <div class="shrink-0 px-6 py-5 border-b border-slate-200">
           <p class="text-xs font-bold uppercase tracking-wide text-[#8B1E23]">Activity Submission</p>
           <h3 class="text-xl font-bold text-slate-900 mt-1">{{ submissionActivity.title }}</h3>
           <p class="text-sm text-slate-500 mt-1">Submit accomplishment for Admin verification.</p>
           <div class="mt-3 flex flex-wrap gap-3 text-xs text-slate-500">
             <span>Status: {{ submissionActivity.status }}</span>
-            <span>Reference: {{ submissionActivity.id }}</span>
           </div>
         </div>
 
-        <div class="p-6 space-y-5">
+        <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain p-6 space-y-5">
           <div>
             <label class="block text-sm font-bold text-slate-700 mb-2">
               Accomplishment / Work Summary
@@ -1316,7 +1083,7 @@
           </div>
         </div>
 
-        <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-3">
+        <div class="shrink-0 px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-3">
           <button type="button" @click="closeSubmissionModal" class="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-bold">Cancel</button>
           <button type="button" @click="submitActivityForVerification" :disabled="!activityAccomplishment.trim()" class="px-5 py-2.5 rounded-xl bg-[#8B1E23] text-white font-bold disabled:opacity-50">Submit for Verification</button>
         </div>
@@ -1367,6 +1134,8 @@ import {
   ref
 } from 'vue'
 
+import '../../styles/operations.css'
+import { formatOperationDate, formatOperationTime } from '../../utils/operationsFormat.js'
 import {
   deleteTaskActivityEvidence,
   saveTaskActivityEvidence
@@ -1424,6 +1193,90 @@ const ACTIVITY_STORAGE_KEY = 'fireNotifyActivities'
 ========================================================= */
 
 const activities = ref([])
+const serverActivities = ref([])
+
+const activityStatusLabels = {
+  SCHEDULED: 'Scheduled',
+  ONGOING: 'Ongoing',
+  COMPLETED: 'Completed',
+  DELAYED: 'Delayed',
+  FOR_VERIFICATION: 'For Verification',
+  VERIFIED: 'Verified',
+  RETURNED: 'Returned'
+}
+
+const activityAssignmentIds = activity => {
+  const ids = []
+  const addId = value => {
+    if (typeof value === 'string' || typeof value === 'number') {
+      ids.push(String(value))
+    } else if (value && typeof value === 'object') {
+      const id = value.id ?? value.userId ?? value.user_id
+      if (id !== null && id !== undefined) ids.push(String(id))
+    }
+  }
+
+  addId(activity?.assigned_personnel)
+  addId(activity?.assignedToId)
+  addId(activity?.assigned_to)
+  if (activity?.assignedTo && typeof activity.assignedTo === 'object') {
+    addId(activity.assignedTo)
+  }
+
+  if (Array.isArray(activity?.assignedPersonnel)) {
+    activity.assignedPersonnel.forEach(addId)
+  } else if (activity?.assignedPersonnel && typeof activity.assignedPersonnel === 'object') {
+    addId(activity?.assignedPersonnel)
+  }
+
+  return ids
+}
+
+const isAssignedToCurrentUser = activity => {
+  const userId = props.currentUser?.id
+  return userId !== null && userId !== undefined &&
+    activityAssignmentIds(activity).includes(String(userId))
+}
+
+const normalizeServerActivity = (activity, localActivity = null) => {
+  const assignedId = String(activity.assigned_personnel)
+  const assignedPerson = props.registeredUsers.find(person =>
+    String(person.id) === assignedId
+  ) || (String(props.currentUser?.id) === assignedId ? props.currentUser : null) || { id: activity.assigned_personnel }
+  const localUpdatedAt = localActivity?.updatedAt ? new Date(localActivity.updatedAt).getTime() : 0
+  const serverUpdatedAt = activity.updated_at ? new Date(activity.updated_at).getTime() : 0
+  const serverStatus = activityStatusLabels[activity.status] || activity.status || 'Scheduled'
+  const keepLocalStatus = localActivity?.status && (
+    localUpdatedAt > serverUpdatedAt ||
+    (localActivity.status === 'Overdue' && ['Scheduled', 'In Progress'].includes(serverStatus))
+  )
+  const priority = activity.priority || localActivity?.priority || 'MEDIUM'
+
+  return normalizeActivity({
+    ...activity,
+    ...localActivity,
+    id: activity.id,
+    title: activity.title,
+    name: activity.title,
+    type: activity.activity_type || localActivity?.type || 'Other',
+    priority: priority.charAt(0) + priority.slice(1).toLowerCase(),
+    location: activity.location || localActivity?.location || 'Not specified',
+    date: activity.activity_date,
+    schedule: activity.activity_date,
+    time: activity.activity_time || '',
+    assigned_personnel: activity.assigned_personnel,
+    assignedToId: activity.assigned_personnel,
+    assignedTo: assignedPerson,
+    assignedPersonnel: [assignedPerson],
+    status: keepLocalStatus
+      ? localActivity.status
+      : serverStatus,
+    progress: localActivity?.progress ?? 0,
+    description: activity.description || localActivity?.description || '',
+    createdAt: activity.created_at || localActivity?.createdAt || null,
+    updatedAt: keepLocalStatus ? localActivity.updatedAt : activity.updated_at || null
+  })
+}
 
 
 /* =========================================================
@@ -1431,40 +1284,46 @@ const activities = ref([])
 ========================================================= */
 
 const loadActivities = () => {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(ACTIVITY_STORAGE_KEY) || '[]')
+    const localActivities = Array.isArray(parsed)
+      ? parsed.filter(isAssignedToCurrentUser).map(normalizeActivity)
+      : []
+    const activitiesById = new Map(localActivities.map(activity => [String(activity.id), activity]))
+
+    serverActivities.value.forEach(activity => {
+      const id = String(activity.id)
+      activitiesById.set(id, normalizeServerActivity(activity, activitiesById.get(id)))
+    })
+
+    activities.value = Array.from(activitiesById.values())
+    refreshOverdueActivities()
+  } catch (error) {
+    console.error('Failed to load FireNotify activities:', error)
+    activities.value = []
+  }
+}
+
+const loadAssignedActivitiesFromApi = async () => {
+  const userId = props.currentUser?.id
+  if (userId === null || userId === undefined) return
 
   try {
+    const response = await fetch('http://127.0.0.1:8000/api/activities/')
+    if (!response.ok) throw new Error(`Activities API HTTP ${response.status}`)
 
-    const stored = localStorage.getItem(
-      ACTIVITY_STORAGE_KEY
+    const records = await response.json()
+    if (!Array.isArray(records)) throw new Error('Invalid activities response')
+
+    serverActivities.value = records.filter(activity =>
+      activity.assigned_personnel !== null &&
+      activity.assigned_personnel !== undefined &&
+      String(activity.assigned_personnel) === String(userId)
     )
-
-    if (!stored) {
-      activities.value = []
-      return
-    }
-
-    const parsed = JSON.parse(stored)
-
-    if (!Array.isArray(parsed)) {
-      activities.value = []
-      return
-    }
-
-    activities.value = parsed.map(normalizeActivity)
-
-    refreshOverdueActivities()
-
+    loadActivities()
   } catch (error) {
-
-    console.error(
-      'Failed to load FireNotify activities:',
-      error
-    )
-
-    activities.value = []
-
+    console.error('Failed to load assigned activities from Django:', error)
   }
-
 }
 
 
@@ -1545,11 +1404,12 @@ const normalizeActivity = (activity) => {
 const saveActivities = () => {
 
   try {
-
-    localStorage.setItem(
-      ACTIVITY_STORAGE_KEY,
-      JSON.stringify(activities.value)
+    const stored = JSON.parse(localStorage.getItem(ACTIVITY_STORAGE_KEY) || '[]')
+    const activitiesById = new Map(
+      (Array.isArray(stored) ? stored : []).map(activity => [String(activity.id), activity])
     )
+    activities.value.forEach(activity => activitiesById.set(String(activity.id), activity))
+    localStorage.setItem(ACTIVITY_STORAGE_KEY, JSON.stringify(Array.from(activitiesById.values())))
 
     /*
       Custom event lets another FireNotify component
@@ -2052,27 +1912,10 @@ const startOfToday = () => {
 
 
 const formatDate = (value) => {
-
-  if (!value) {
-    return 'Not specified'
-  }
-
-  const date = parseDate(value)
-
-  if (!date) {
-    return String(value)
-  }
-
-  return new Intl.DateTimeFormat(
-    'en-US',
-    {
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric'
-    }
-  ).format(date)
-
+  return formatOperationDate(value)
 }
+
+const formatTime = value => formatOperationTime(value)
 
 
 const formatCreatedDate = (value) => {
@@ -2337,39 +2180,139 @@ const submitActivityForVerification = async () => {
   if (!submissionActivity.value) return
 
   if (!activityAccomplishment.value.trim()) {
-    showToast('Please provide an accomplishment/work summary before submitting.')
+    showToast(
+      'Please provide an accomplishment/work summary before submitting.'
+    )
     return
   }
 
-  const item = activities.value.find(record => record.id === submissionActivity.value.id)
-  if (!item) return
+  const item = activities.value.find(
+    record =>
+      String(record.id) ===
+      String(submissionActivity.value.id)
+  )
 
-  await deleteTaskActivityEvidence({
-    recordId: item.id,
-    recordType: 'activity'
-  })
+  if (!item) {
+    showToast('Activity not found.')
+    return
+  }
 
-  const evidence = await saveTaskActivityEvidence({
-    recordId: item.id,
-    recordType: 'activity',
-    files: activityEvidenceFiles.value
-  })
+  try {
+    // =====================================================
+    // CREATE FORM DATA
+    // =====================================================
 
-  Object.assign(item, {
-    status: 'For Verification',
-    progress: 90,
-    accomplishment: activityAccomplishment.value.trim(),
-    remarks: activityRemarks.value.trim(),
-    evidence,
-    submittedAt: new Date().toISOString(),
-    submittedBy: props.currentUser?.name || props.currentUser?.identifier || 'Personnel',
-    updatedAt: new Date().toISOString()
-  })
+    const formData = new FormData()
 
-  saveActivities()
-  closeSubmissionModal()
-  notifyAdmin(item)
-  showToast('Activity submitted for verification.')
+    formData.append(
+      'activity',
+      String(item.id)
+    )
+
+    formData.append(
+      'submitted_by',
+      String(props.currentUser?.id || '')
+    )
+
+    formData.append(
+      'accomplishment',
+      activityAccomplishment.value.trim()
+    )
+
+    formData.append(
+      'remarks',
+      activityRemarks.value.trim()
+    )
+
+    // =====================================================
+    // ADD EVIDENCE FILES
+    // =====================================================
+
+    activityEvidenceFiles.value.forEach(file => {
+      formData.append(
+        'evidence',
+        file
+      )
+    })
+
+    // =====================================================
+    // SEND TO DJANGO
+    // =====================================================
+
+    const response = await fetch(
+      'http://127.0.0.1:8000/api/activity-submissions/',
+      {
+        method: 'POST',
+        body: formData
+      }
+    )
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      console.error(
+        'Submission API error:',
+        data
+      )
+
+      throw new Error(
+        data?.error ||
+        'Failed to submit activity.'
+      )
+    }
+
+    console.log(
+      'Activity submission saved to Django:',
+      data
+    )
+
+    // =====================================================
+    // UPDATE FRONTEND ACTIVITY
+    // =====================================================
+
+    Object.assign(item, {
+      status: 'For Verification',
+      progress: 90,
+      accomplishment:
+        activityAccomplishment.value.trim(),
+      remarks:
+        activityRemarks.value.trim(),
+      submittedAt:
+        data.submitted_at ||
+        new Date().toISOString(),
+      submittedBy:
+        props.currentUser?.name ||
+        props.currentUser?.identifier ||
+        'Personnel',
+      updatedAt:
+        data.updated_at ||
+        new Date().toISOString()
+    })
+
+    // Keep local frontend data updated
+    saveActivities()
+
+    // Existing notification
+    notifyAdmin(item)
+
+    closeSubmissionModal()
+
+    showToast(
+      'Activity submitted for verification.'
+    )
+
+  } catch (error) {
+
+    console.error(
+      'Failed to submit activity:',
+      error
+    )
+
+    showToast(
+      error.message ||
+      'Failed to submit activity. Please try again.'
+    )
+  }
 }
 
 const openStatusModal = (activity) => {
@@ -2699,6 +2642,7 @@ const handleStorageChange = (event) => {
   ) {
 
     loadActivities()
+    void loadAssignedActivitiesFromApi()
 
   }
 
@@ -2708,6 +2652,7 @@ const handleStorageChange = (event) => {
 const handleActivitiesUpdated = () => {
 
   loadActivities()
+  void loadAssignedActivitiesFromApi()
 
 }
 
@@ -2718,20 +2663,6 @@ const handleActivitiesUpdated = () => {
    in the same browser/application.
 ========================================================= */
 
-let activityPoller = null
-
-const startActivityPolling = () => {
-
-  activityPoller =
-    setInterval(() => {
-
-      loadActivities()
-
-    }, 1000)
-
-}
-
-
 /* =========================================================
    LIFECYCLE
 ========================================================= */
@@ -2739,6 +2670,7 @@ const startActivityPolling = () => {
 onMounted(() => {
 
   loadActivities()
+  void loadAssignedActivitiesFromApi()
 
   window.addEventListener(
     'storage',
@@ -2749,8 +2681,6 @@ onMounted(() => {
     'fireNotifyActivitiesUpdated',
     handleActivitiesUpdated
   )
-
-  startActivityPolling()
 
 })
 
@@ -2766,19 +2696,6 @@ onBeforeUnmount(() => {
     'fireNotifyActivitiesUpdated',
     handleActivitiesUpdated
   )
-
-
-  if (activityPoller) {
-
-    clearInterval(
-      activityPoller
-    )
-
-    activityPoller = null
-
-  }
-
-
   if (toastTimer) {
 
     clearTimeout(

@@ -8,6 +8,10 @@ import {
 
 import { getTaskActivityEvidence } from '../../utils/reportFileStorage.js'
 import { resolvePersonnelName } from '../../utils/personnelName.js'
+import { createTask as createTaskInApi, deleteTask as deleteTaskFromApi, getTasks, updateTask as updateTaskInApi } from '../../utils/taskService.js'
+import '../../styles/operations.css'
+import { formatOperationDate, formatOperationTime } from '../../utils/operationsFormat.js'
+const hasTimeValue = value => /(?:T|\s)\d{1,2}:\d{2}/.test(String(value || ''))
 
 /* =========================================================
    PROPS
@@ -44,6 +48,7 @@ const emit = defineEmits([
 const TASK_STORAGE_KEY = 'firenotify_tasks'
 
 const tasks = ref([])
+const personnelDirectory = ref([])
 
 /* =========================================================
    FILTERS
@@ -70,6 +75,7 @@ const showSubmissionModal = ref(false)
 const selectedPersonnel = ref(null)
 const personnelToDelete = ref(null)
 const selectedTaskSubmission = ref(null)
+const editingTask = ref(null)
 const submissionEvidence = ref([])
 const submissionEvidenceUrls = ref([])
 const returnNote = ref('')
@@ -107,8 +113,12 @@ const taskForm = ref({
 ========================================================= */
 
 const personnel = computed(() => {
-  return props.registeredUsers
-    .filter(user => user.role !== 'admin')
+  const users = personnelDirectory.value.length
+    ? personnelDirectory.value
+    : props.registeredUsers
+
+  return users
+    .filter(user => String(user?.role || '').trim().toUpperCase() === 'PERSONNEL')
     .map(user => ({
       ...user,
 
@@ -341,11 +351,24 @@ const getCurrentUserName = () => {
   )
 }
 
-const assignedPersonnelName = task => resolvePersonnelName(
-  task?.assignedToId || task?.assignedToName || task?.assignedTo,
-  props.registeredUsers,
-  'Personnel unavailable'
-)
+const assignedPersonnelName = task => {
+  const assigned = task?.assignedToId ?? task?.assigned_to ?? task?.assigned_personnel ?? task?.assignedToName ?? task?.assignedTo
+  const assignedId = assigned && typeof assigned === 'object'
+    ? assigned.id ?? assigned.userId ?? ''
+    : assigned
+  const person = personnel.value.find(user => String(user.id) === String(assignedId))
+
+  if (person) {
+    return fullName(person) || person.username || person.email || 'Personnel unavailable'
+  }
+
+  if (assigned && typeof assigned === 'object') {
+    const name = `${assigned.firstName || assigned.first_name || ''} ${assigned.lastName || assigned.last_name || ''}`.trim()
+    return name || assigned.username || assigned.email || 'Personnel unavailable'
+  }
+
+  return resolvePersonnelName(assigned, personnel.value, 'Personnel unavailable')
+}
 
 const showToast = (
   message,
@@ -464,35 +487,39 @@ const openTaskSubmission = async task => {
   showSubmissionModal.value = true
 }
 
-const verifyTask = task => {
-  tasks.value = tasks.value.map(item => item.id === task.id
-    ? { ...item, status: 'Verified', verifiedAt: new Date().toISOString(), verifiedBy: props.currentUser?.name || 'Administrator' }
-    : item
-  )
+const verifyTask = async task => {
+  try {
+    const updated = await updateTaskInApi(task.id, { status: 'Verified', progress: 100 })
+    tasks.value = tasks.value.map(item => item.id === task.id ? updated : item)
+  } catch (error) {
+    showToast(error.message, 'error')
+    return
+  }
   saveTasks()
   showSubmissionModal.value = false
   submissionEvidenceUrls.value.forEach(url => URL.revokeObjectURL(url))
   submissionEvidenceUrls.value = []
-  notifyPersonnel(task, 'Your task has been verified', `${task.title} was verified by Admin.`)
   showToast('Task submission verified successfully.')
 }
 
-const returnTaskForRevision = task => {
+const returnTaskForRevision = async task => {
   const note = returnNote.value.trim()
   if (!note) {
     showToast('Please provide a revision note.', 'error')
     return
   }
 
-  tasks.value = tasks.value.map(item => item.id === task.id
-    ? { ...item, status: 'Returned', revisionNote: note, returnedAt: new Date().toISOString() }
-    : item
-  )
+  try {
+    const updated = await updateTaskInApi(task.id, { status: 'Returned', revisionNote: note })
+    tasks.value = tasks.value.map(item => item.id === task.id ? updated : item)
+  } catch (error) {
+    showToast(error.message, 'error')
+    return
+  }
   saveTasks()
   showSubmissionModal.value = false
   submissionEvidenceUrls.value.forEach(url => URL.revokeObjectURL(url))
   submissionEvidenceUrls.value = []
-  notifyPersonnel(task, 'Your task requires revision', `${task.title}: ${note}`)
   showToast('Task returned for revision.')
 }
 
@@ -532,33 +559,35 @@ const getAssignmentClass = status => {
    LOAD TASKS
 ========================================================= */
 
-const loadTasks = () => {
-
+const loadPersonnelUsers = async () => {
   try {
+    const response = await fetch('http://127.0.0.1:8000/api/users/')
+    if (!response.ok) throw new Error(`Users API HTTP ${response.status}`)
+    const users = await response.json()
+    if (!Array.isArray(users)) throw new Error('Invalid users response')
 
-    const saved =
-      localStorage.getItem(
-        TASK_STORAGE_KEY
-      )
-
-    const parsed =
-      saved
-        ? JSON.parse(saved)
-        : []
-
-    tasks.value =
-      Array.isArray(parsed)
-        ? parsed
-        : []
-
+    personnelDirectory.value = users.map(user => {
+      const firstName = user.firstName || user.first_name || ''
+      const lastName = user.lastName || user.last_name || ''
+      return {
+        ...user,
+        firstName,
+        lastName,
+        name: user.name || `${firstName} ${lastName}`.trim() || user.username || user.email || ''
+      }
+    })
   } catch (error) {
+    console.error('FireNotify: Failed to load personnel from Django', error)
+    personnelDirectory.value = []
+  }
+}
 
-    console.error(
-      'FireNotify: Failed to load tasks',
-      error
-    )
-
-    tasks.value = []
+const loadTasks = async () => {
+  try {
+    tasks.value = await getTasks()
+  } catch (error) {
+    console.error('FireNotify: Failed to load tasks from Django', error)
+    showToast('Unable to load tasks from the server.', 'error')
   }
 }
 
@@ -566,74 +595,21 @@ const loadTasks = () => {
    SAVE TASKS
 ========================================================= */
 
-const saveTasks = () => {
-
-  try {
-
-    localStorage.setItem(
-      TASK_STORAGE_KEY,
-      JSON.stringify(tasks.value)
-    )
-
-    window.dispatchEvent(
-      new CustomEvent(
-        'fireNotifyTasksUpdated'
-      )
-    )
-
-  } catch (error) {
-
-    console.error(
-      'FireNotify: Failed to save tasks',
-      error
-    )
-  }
-}
-
-const notifyPersonnel = (task, title, detail) => {
-  try {
-    const key = 'firenotify_notifications'
-    const current = JSON.parse(localStorage.getItem(key) || '[]')
-    const notification = {
-      id: `notif-task-${task.id}-${Date.now()}`,
-      title,
-      detail,
-      type: 'Task Alerts',
-      status: 'unread',
-      read: false,
-      createdAt: new Date().toISOString(),
-      assignedToId: task.assignedToId,
-      taskId: task.id
-    }
-    localStorage.setItem(key, JSON.stringify([notification, ...current]))
-    window.dispatchEvent(new CustomEvent('fireNotifyNotificationsUpdated'))
-  } catch (error) {
-    console.warn('FireNotify: unable to notify personnel about task review', error)
-  }
-}
+const saveTasks = () => window.dispatchEvent(new CustomEvent('fireNotifyTasksUpdated'))
 
 /* =========================================================
    RESET TASK FORM
 ========================================================= */
 
 const resetTaskForm = () => {
-
   taskForm.value = {
-
     title: '',
-
     subtopic: '',
-
     type: 'General Task',
-
     priority: 'Medium',
-
     location: '',
-
     dueDate: '',
-
     time: '',
-
     description: ''
   }
 }
@@ -643,14 +619,8 @@ const resetTaskForm = () => {
 ========================================================= */
 
 const viewPersonnel = person => {
-
-  if (!person) {
-    return
-  }
-
-  selectedPersonnel.value =
-    person
-
+  if (!person) return
+  selectedPersonnel.value = person
   showDetailsModal.value = true
 }
 
@@ -848,6 +818,8 @@ const openTaskModal = person => {
   selectedPersonnel.value =
     person
 
+  editingTask.value = null
+
   resetTaskForm()
 
   showDetailsModal.value =
@@ -857,11 +829,33 @@ const openTaskModal = person => {
     true
 }
 
+const openEditTask = task => {
+  const person = personnel.value.find(item => String(item.id) === String(task.assignedToId))
+  if (!person) {
+    showToast('Assigned personnel could not be found.', 'error')
+    return
+  }
+
+  selectedPersonnel.value = person
+  editingTask.value = task
+  taskForm.value = {
+    title: task.title || '',
+    subtopic: task.subtopic || '',
+    type: task.type || 'General Task',
+    priority: task.priority || 'Medium',
+    location: task.location || '',
+    dueDate: task.dueDate || '',
+    time: task.time || '',
+    description: task.description || ''
+  }
+  showTaskModal.value = true
+}
+
 /* =========================================================
    SAVE / ASSIGN TASK
 ========================================================= */
 
-const saveTask = () => {
+const saveTask = async () => {
 
   if (!selectedPersonnel.value) {
 
@@ -899,17 +893,13 @@ const saveTask = () => {
 
   const person =
     selectedPersonnel.value
+  const wasEditing = Boolean(editingTask.value)
 
   /* =====================================================
      CREATE TASK
   ===================================================== */
 
   const newTask = {
-
-    id:
-      `TASK-${Date.now()}-${Math.random()
-        .toString(36)
-        .slice(2, 7)}`,
 
     title:
       taskForm.value.title.trim(),
@@ -996,14 +986,26 @@ const saveTask = () => {
      ADD TO TASK LIST
   ===================================================== */
 
-  tasks.value.unshift(
-    newTask
-  )
-
-  /* =====================================================
-     SAVE TO LOCAL STORAGE
-  ===================================================== */
-
+  try {
+    if (editingTask.value) {
+      const updated = await updateTaskInApi(editingTask.value.id, {
+        title: newTask.title,
+        description: newTask.description,
+        type: newTask.type,
+        priority: newTask.priority,
+        location: newTask.location,
+        dueDate: newTask.dueDate,
+        time: newTask.time,
+        assignedToId: newTask.assignedToId
+      })
+      tasks.value = tasks.value.map(item => item.id === updated.id ? updated : item)
+    } else {
+      tasks.value.unshift(await createTaskInApi(newTask))
+    }
+  } catch (error) {
+    showToast(error.message, 'error')
+    return
+  }
   saveTasks()
 
   /* =====================================================
@@ -1013,11 +1015,13 @@ const saveTask = () => {
   showTaskModal.value =
     false
 
+  editingTask.value = null
+
   resetTaskForm()
 
-  showToast(
-    `Task assigned to ${fullName(person)} successfully.`
-  )
+  showToast(wasEditing
+    ? `Task updated for ${fullName(person)}.`
+    : `Task assigned to ${fullName(person)} successfully.`)
 
   console.log(
     'FireNotify: New task assigned',
@@ -1029,17 +1033,19 @@ const saveTask = () => {
    DELETE TASK
 ========================================================= */
 
-const deleteTask = task => {
+const deleteTask = async task => {
 
   if (!task) {
     return
   }
 
-  tasks.value =
-    tasks.value.filter(
-      item =>
-        item.id !== task.id
-    )
+  try {
+    await deleteTaskFromApi(task.id)
+  } catch (error) {
+    showToast(error.message, 'error')
+    return
+  }
+  tasks.value = tasks.value.filter(item => item.id !== task.id)
 
   saveTasks()
 
@@ -1082,9 +1088,9 @@ const handleTaskUpdate = () => {
 
 let taskSyncInterval = null
 
-onMounted(() => {
-
-  loadTasks()
+onMounted(async () => {
+  await loadPersonnelUsers()
+  await loadTasks()
 
   window.addEventListener(
     'storage',
@@ -1099,11 +1105,7 @@ onMounted(() => {
   /*
    * Backup sync.
    */
-  taskSyncInterval =
-    setInterval(
-      loadTasks,
-      1000
-    )
+  taskSyncInterval = setInterval(loadTasks, 30000)
 })
 
 onUnmounted(() => {
@@ -1132,7 +1134,7 @@ onUnmounted(() => {
 
 <template>
 
-  <div class="space-y-6">
+  <div class="space-y-4">
 
     <!-- =====================================================
          HEADER
@@ -1478,12 +1480,6 @@ onUnmounted(() => {
                       {{ fullName(person) }}
                     </p>
 
-                    <p
-                      class="text-xs text-slate-500 mt-1"
-                    >
-                      {{ person.id }}
-                    </p>
-
                   </div>
 
                 </div>
@@ -1649,18 +1645,14 @@ onUnmounted(() => {
          ASSIGNED TASKS
     ====================================================== -->
 
-    <section
-      class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6"
-    >
+    <section class="fn-operations-panel">
 
-      <div
-        class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5"
-      >
+      <div class="fn-operations-heading">
 
         <div>
 
           <h2
-            class="text-xl font-bold text-slate-900"
+            class="text-base font-bold text-slate-900"
           >
             Assigned Tasks
           </h2>
@@ -1674,170 +1666,45 @@ onUnmounted(() => {
         </div>
 
         <span
-          class="px-3 py-1.5 rounded-full bg-[#8B1E23]/10 text-[#8B1E23] text-xs font-bold"
+          class="text-xs font-semibold text-slate-600"
         >
-          {{ assignedTasks.length }} Tasks
+          {{ assignedTasks.length }} {{ assignedTasks.length === 1 ? 'task' : 'tasks' }}
         </span>
 
       </div>
 
 
-      <div
-        v-if="assignedTasks.length"
-        class="space-y-3"
-      >
-
-        <div
-          v-for="task in assignedTasks"
-          :key="task.id"
-          class="border border-slate-200 rounded-xl p-4 hover:bg-slate-50 transition"
-        >
-
-          <div
-            class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4"
-          >
-
-            <div class="min-w-0">
-
-              <div
-                class="flex items-center gap-2 flex-wrap"
-              >
-
-                <h3
-                  class="font-bold text-slate-900"
-                >
-                  {{ task.title }}
-                </h3>
-
-                <span
-                  class="px-2.5 py-1 rounded-full text-xs font-bold"
-                  :class="getTaskStatusClass(task.status)"
-                >
-                  {{ task.status }}
-                </span>
-
-              </div>
-
-
-              <p
-                class="text-sm text-slate-500 mt-1"
-              >
-
-                Assigned to:
-
-                <span
-                  class="font-semibold text-slate-700"
-                >
-                  {{ assignedPersonnelName(task) }}
-                </span>
-
-              </p>
-
-
-              <p
-                v-if="task.subtopic"
-                class="text-sm text-[#8B1E23] font-semibold mt-2"
-              >
-                {{ task.subtopic }}
-              </p>
-
-
-              <p
-                v-if="task.description"
-                class="text-sm text-slate-600 mt-2"
-              >
-                {{ task.description }}
-              </p>
-
-
-              <div
-                class="flex flex-wrap gap-3 mt-3 text-xs text-slate-500"
-              >
-
-                <span>
-                  📅 {{ task.dueDate }}
-                </span>
-
-                <span>
-                  🕐 {{ task.time }}
-                </span>
-
-                <span>
-                  📍 {{ task.location }}
-                </span>
-
-                <span>
-                  ⚡ {{ task.priority }}
-                </span>
-
-              </div>
-
-
-              <p
-                class="text-xs text-slate-400 mt-3"
-              >
-                Assigned by:
-                {{ task.assignedBy }}
-              </p>
-
-
-              <!-- PERSONNEL SUBMISSION -->
-
-              <div
-                v-if="task.accomplishment || task.submissionNote"
-                class="mt-3 p-3 rounded-lg bg-purple-50 border border-purple-100"
-              >
-
-                <p
-                  class="text-xs font-bold text-purple-700"
-                >
-                  Personnel Submission
-                </p>
-
-                <p
-                  class="text-sm text-purple-700 mt-1"
-                >
-                  {{ task.accomplishment || task.submissionNote }}
-                </p>
-
-                <p
-                  v-if="task.submittedAt"
-                  class="text-xs text-purple-500 mt-2"
-                >
-                  Submitted:
-                  {{
-                    new Date(
-                      task.submittedAt
-                    ).toLocaleString()
-                  }}
-                </p>
-
-              </div>
-
-            </div>
-
-
-            <div class="flex flex-wrap gap-2 self-start">
-              <button
-                v-if="task.status === 'For Verification' || task.status === 'Submitted'"
-                @click="openTaskSubmission(task)"
-                class="px-4 py-2 rounded-lg bg-purple-50 text-purple-700 text-xs font-bold hover:bg-purple-100"
-              >
-                View Submission
-              </button>
-
-              <button
-                @click="deleteTask(task)"
-                class="px-4 py-2 rounded-lg bg-red-50 text-red-700 text-xs font-bold hover:bg-red-100"
-              >
-                Delete
-              </button>
-            </div>
-
-          </div>
-
-        </div>
-
+      <div v-if="assignedTasks.length" class="fn-operations-table-wrap">
+        <table class="fn-operations-table">
+          <thead>
+            <tr><th>Task</th><th>Assigned To</th><th>Deadline</th><th>Priority</th><th>Status</th><th class="text-right">Actions</th></tr>
+          </thead>
+          <tbody>
+            <tr v-for="task in assignedTasks" :key="task.id">
+              <td data-label="Task" class="min-w-0">
+                <div class="flex min-w-0 flex-col gap-1">
+                  <span class="break-words text-sm font-semibold leading-5 text-slate-900">{{ task.title }}</span>
+                  <span v-if="task.subtopic" class="break-words text-xs leading-5 text-slate-500">{{ task.subtopic }}</span>
+                  <span v-if="task.description" class="break-words whitespace-pre-wrap text-xs leading-5 text-slate-500">{{ task.description }}</span>
+                  <span v-if="task.location" class="break-words text-xs leading-5 text-slate-500">{{ task.location }}</span>
+                  <span v-if="task.accomplishment || task.submissionNote" class="break-words whitespace-pre-wrap pt-1 text-xs leading-5 text-slate-600">Submission: {{ task.accomplishment || task.submissionNote }}</span>
+                  <span v-if="task.submittedAt" class="flex flex-col gap-0.5 pt-1 text-xs leading-5 text-slate-500"><span>Submitted</span><span>{{ formatOperationDate(task.submittedAt) }}</span><span v-if="hasTimeValue(task.submittedAt)">{{ formatOperationTime(task.submittedAt) }}</span></span>
+                </div>
+              </td>
+              <td data-label="Assigned To"><span class="block min-w-0 break-words leading-5">{{ assignedPersonnelName(task) }}</span></td>
+              <td data-label="Schedule"><div class="flex flex-col gap-0.5"><span class="leading-5">{{ formatOperationDate(task.dueDate) }}</span><span class="text-xs leading-5 text-slate-500">{{ formatOperationTime(task.time) }}</span></div></td>
+              <td data-label="Priority"><span class="fn-operations-badge">{{ (task.priority || 'Medium').toUpperCase() }}</span></td>
+              <td data-label="Status"><span class="fn-operations-badge" :class="getTaskStatusClass(task.status)">{{ task.status }}</span></td>
+              <td data-label="Actions">
+                <div class="flex flex-wrap gap-1.5 sm:justify-end">
+                  <button @click="openEditTask(task)" class="fn-operations-action">Edit</button>
+                  <button v-if="task.status === 'For Verification' || task.status === 'Submitted'" @click="openTaskSubmission(task)" class="fn-operations-action">View Submission</button>
+                  <button @click="deleteTask(task)" class="fn-operations-action fn-operations-action--danger">Delete</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
 
@@ -2139,18 +2006,6 @@ onUnmounted(() => {
               class="p-4 rounded-xl bg-slate-50"
             >
 
-              <p
-                class="text-xs text-slate-400 uppercase font-bold"
-              >
-                Personnel ID
-              </p>
-
-              <p
-                class="font-bold text-slate-900 mt-1"
-              >
-                {{ selectedPersonnel.id }}
-              </p>
-
             </div>
 
 
@@ -2341,7 +2196,7 @@ onUnmounted(() => {
               <h2
                 class="text-2xl font-bold mt-1"
               >
-                Assign Task
+                {{ editingTask ? 'Edit Task' : 'Assign Task' }}
               </h2>
 
               <p
@@ -2598,7 +2453,7 @@ onUnmounted(() => {
             @click="saveTask"
             class="px-5 py-2.5 rounded-xl bg-[#8B1E23] text-white font-bold hover:bg-[#72181D]"
           >
-            Assign Task
+            {{ editingTask ? 'Save Changes' : 'Assign Task' }}
           </button>
 
         </div>
@@ -2769,7 +2624,10 @@ onUnmounted(() => {
         <div class="p-6 space-y-5">
           <div class="flex items-center justify-between gap-3">
             <span class="px-3 py-1.5 rounded-full text-xs font-bold" :class="getTaskStatusClass(selectedTaskSubmission.status)">{{ selectedTaskSubmission.status }}</span>
-            <span class="text-xs text-slate-500">{{ selectedTaskSubmission.submittedAt || 'Submitted' }}</span>
+            <span class="flex flex-col gap-0.5 text-right text-xs leading-5 text-slate-500">
+              <span>{{ selectedTaskSubmission.submittedAt ? formatOperationDate(selectedTaskSubmission.submittedAt) : 'Not submitted' }}</span>
+              <span v-if="hasTimeValue(selectedTaskSubmission.submittedAt)">{{ formatOperationTime(selectedTaskSubmission.submittedAt) }}</span>
+            </span>
           </div>
 
           <div>

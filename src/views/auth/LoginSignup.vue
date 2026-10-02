@@ -501,9 +501,9 @@
 
           </div>
 
-          <span>
-            {{ successMessage }}
-          </span>
+          <div class="success-message-content">
+            <span>{{ successMessage }}</span>
+          </div>
 
         </div>
 
@@ -523,7 +523,7 @@
           <div class="form-field">
 
             <label>
-              BFP Email Address
+              Email Address
             </label>
 
             <div class="input-wrapper">
@@ -551,7 +551,7 @@
                 type="email"
                 required
                 autocomplete="email"
-                placeholder="Enter your BFP email"
+                placeholder="Enter your email"
               />
 
             </div>
@@ -772,7 +772,7 @@
           class="auth-form register-form"
         >
 
-          <!-- Names -->
+          <div class="form-section-title">Personal Information</div>
 
           <div class="two-column">
 
@@ -855,260 +855,117 @@
 
           </div>
 
-
-          <!-- Email -->
-
-          <div class="form-field">
-
-            <label>
-              BFP Email Address
-            </label>
-
-            <div class="input-wrapper">
-
-              <svg
-                class="input-icon"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <rect
-                  x="3"
-                  y="5"
-                  width="18"
-                  height="14"
-                  rx="2"
-                />
-
-                <path
-                  d="M3 7l9 6 9-6"
-                />
-              </svg>
-
-              <input
-                v-model="signupForm.email"
-                type="email"
-                required
-                autocomplete="email"
-                placeholder="officer@bfp.gov.ph"
-              />
-
+          <div class="two-column">
+            <div class="form-field">
+              <label>Email Address</label>
+              <div class="input-wrapper">
+                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="5" width="18" height="14" rx="2"/>
+                  <path d="M3 7l9 6 9-6"/>
+                </svg>
+                <input v-model="signupForm.email" type="email" required autocomplete="email" placeholder="name@example.com" />
+              </div>
             </div>
 
+            <div class="form-field">
+              <label>Username</label>
+              <div class="input-wrapper">
+                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="8" r="4"/>
+                  <path d="M4 20a8 8 0 0116 0"/>
+                </svg>
+                <input v-model="signupForm.username" type="text" required autocomplete="username" placeholder="Enter username" />
+              </div>
+            </div>
           </div>
 
+          <div class="form-section-title">BFP Information</div>
 
-          <!-- Passwords -->
+          <div class="two-column">
+            <div class="form-field">
+              <label>Badge Number</label>
+              <div class="input-wrapper">
+                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M7 7h10v10H7z"/>
+                  <path d="M9 10h6M9 14h6"/>
+                </svg>
+                <input v-model="signupForm.badgeNumber" type="text" required placeholder="Example: BFP-1001" />
+              </div>
+            </div>
+
+            <div class="form-field">
+              <label>Rank</label>
+              <div class="input-wrapper select-wrapper">
+                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+                <select v-model="signupForm.rank" required>
+                  <option value="">Select rank</option>
+                  <option value="FO1">FO1</option>
+                  <option value="FO2">FO2</option>
+                  <option value="FO3">FO3</option>
+                  <option value="FO4">FO4</option>
+                  <option value="SFO1">SFO1</option>
+                  <option value="SFO2">SFO2</option>
+                  <option value="SFO3">SFO3</option>
+                  <option value="SFO4">SFO4</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section-title">Account Security</div>
 
           <div class="two-column">
 
-            <!-- Password -->
-
             <div class="form-field">
-
-              <label>
-                Password
-              </label>
-
+              <label>Password</label>
               <div class="input-wrapper">
-
-                <svg
-                  class="input-icon"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <rect
-                    x="4"
-                    y="10"
-                    width="16"
-                    height="11"
-                    rx="2"
-                  />
-
-                  <path
-                    d="M8 10V7a4 4 0 018 0v3"
-                  />
+                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="4" y="10" width="16" height="11" rx="2"/>
+                  <path d="M8 10V7a4 4 0 018 0v3"/>
                 </svg>
-
-                <input
-                  v-model="signupForm.password"
-                  :type="
-                    showSignupPassword
-                      ? 'text'
-                      : 'password'
-                  "
-                  required
-                  autocomplete="new-password"
-                  placeholder="Enter password"
-                />
-
-                <button
-                  type="button"
-                  class="password-button"
-                  @click="
-                    showSignupPassword =
-                      !showSignupPassword
-                  "
-                >
-
-                  <svg
-                    v-if="!showSignupPassword"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <path
-                      d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"
-                    />
-
-                    <circle
-                      cx="12"
-                      cy="12"
-                      r="3"
-                    />
-                  </svg>
-
-                  <svg
-                    v-else
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <path
-                      d="M3 3l18 18"
-                    />
-
-                    <path
-                      d="M9.9 5.2A10.7 10.7 0 0112 5c6.5 0 10 7 10 7a17 17 0 01-3 3.8"
-                    />
-
-                    <path
-                      d="M6.6 6.6C3.7 8.5 2 12 2 12s3.5 7 10 7c1.4 0 2.7-.3 3.8-.8"
-                    />
-                  </svg>
-
+                <input v-model="signupForm.password" :type="showSignupPassword ? 'text' : 'password'" required autocomplete="new-password" placeholder="Enter password" />
+                <button type="button" class="password-button" @click="showSignupPassword = !showSignupPassword">
+                  <svg v-if="!showSignupPassword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+                  <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l18 18"/><path d="M9.9 5.2A10.7 10.7 0 0112 5c6.5 0 10 7 10 7a17 17 0 01-3 3.8"/><path d="M6.6 6.6C3.7 8.5 2 12 2 12s3.5 7 10 7c1.4 0 2.7-.3 3.8-.8"/></svg>
                 </button>
-
               </div>
-
             </div>
 
-
-            <!-- Confirm -->
-
             <div class="form-field">
-
-              <label>
-                Confirm Password
-              </label>
-
+              <label>Confirm Password</label>
               <div class="input-wrapper">
-
-                <svg
-                  class="input-icon"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <rect
-                    x="4"
-                    y="10"
-                    width="16"
-                    height="11"
-                    rx="2"
-                  />
-
-                  <path
-                    d="M8 10V7a4 4 0 018 0v3"
-                  />
+                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="4" y="10" width="16" height="11" rx="2"/>
+                  <path d="M8 10V7a4 4 0 018 0v3"/>
                 </svg>
-
-                <input
-                  v-model="signupForm.confirmPassword"
-                  :type="
-                    showSignupPassword
-                      ? 'text'
-                      : 'password'
-                  "
-                  required
-                  autocomplete="new-password"
-                  placeholder="Re-enter password"
-                />
-
+                <input v-model="signupForm.confirmPassword" :type="showSignupPassword ? 'text' : 'password'" required autocomplete="new-password" placeholder="Re-enter password" />
               </div>
-
             </div>
 
           </div>
 
-
-          <!-- Create Account -->
-
-          <button
-            type="submit"
-            class="primary-button"
-          >
-
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M12 5v14" />
-
-              <path d="M5 12h14" />
+          <button type="submit" class="primary-button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 5v14"/>
+              <path d="M5 12h14"/>
             </svg>
-
             Create Account
-
           </button>
 
-
-          <!-- Divider -->
-
           <div class="divider">
-
             <span></span>
-
             <small>OR</small>
-
             <span></span>
-
           </div>
 
-
-          <!-- BFP Register -->
-
-          <button
-            type="button"
-            class="secondary-button"
-            @click="handleBfpRegister"
-          >
-
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path
-                d="M12 3l7 4v5c0 4.5-3 7.8-7 9-4-1.2-7-4.5-7-9V7l7-4z"
-              />
-
-              <path
-                d="M9 12l2 2 4-4"
-              />
+          <button type="button" class="secondary-button" @click="handleBfpRegister">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 3l7 4v5c0 4.5-3 7.8-7 9-4-1.2-7-4.5-7-9V7l7-4z"/>
+              <path d="M9 12l2 2 4-4"/>
             </svg>
-
             Register with BFP Account
-
           </button>
 
         </form>
@@ -1219,6 +1076,9 @@ const signupForm = reactive({
   firstName: '',
   lastName: '',
   email: '',
+  username: '',
+  badgeNumber: '',
+  rank: '',
   password: '',
   confirmPassword: ''
 })
@@ -1355,6 +1215,12 @@ const handleLogin = async () => {
         'fireNotifyUser',
         JSON.stringify(user)
       )
+      localStorage.setItem(
+        'fireNotifyAuthenticated',
+        'true'
+      )
+      sessionStorage.removeItem('fireNotifyUser')
+      sessionStorage.removeItem('fireNotifyAuthenticated')
 
     } else {
 
@@ -1362,6 +1228,12 @@ const handleLogin = async () => {
         'fireNotifyUser',
         JSON.stringify(user)
       )
+      sessionStorage.setItem(
+        'fireNotifyAuthenticated',
+        'true'
+      )
+      localStorage.removeItem('fireNotifyUser')
+      localStorage.removeItem('fireNotifyAuthenticated')
     }
 
 
@@ -1417,6 +1289,19 @@ const handleSignup = async () => {
       .trim()
       .toLowerCase()
 
+  const username =
+    signupForm.username
+      .trim()
+
+  const badgeNumber =
+    signupForm.badgeNumber
+      .trim()
+
+  const rank =
+    signupForm.rank
+      .trim()
+      .toUpperCase()
+
   const password =
     signupForm.password
 
@@ -1431,63 +1316,51 @@ const handleSignup = async () => {
   const emailPattern =
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
+  const namePattern =
+    /^[A-Za-zÀ-ÖØ-öø-ÿ]+(?:[ '’-][A-Za-zÀ-ÖØ-öø-ÿ]+)*$/
+
 
   /* ---------------------------------------------
      Validate names
   --------------------------------------------- */
 
-  if (!firstName || !lastName) {
-
-    errorMessage.value =
-      'Please complete your first and last name.'
-
+  if (!firstName || !namePattern.test(firstName)) {
+    errorMessage.value = 'First name must contain only letters, spaces, hyphens, and apostrophes.'
     return
   }
 
-
-  /* ---------------------------------------------
-     Validate email
-  --------------------------------------------- */
-
-  if (
-    !email ||
-    !emailPattern.test(email)
-  ) {
-
-    errorMessage.value =
-      'Please enter a valid BFP email address.'
-
+  if (!lastName || !namePattern.test(lastName)) {
+    errorMessage.value = 'Last name must contain only letters, spaces, hyphens, and apostrophes.'
     return
   }
 
-
-  /* ---------------------------------------------
-     Validate password
-  --------------------------------------------- */
-
-  if (
-    !password ||
-    password.length < 8
-  ) {
-
-    errorMessage.value =
-      'Password must be at least 8 characters long.'
-
+  if (!email || !emailPattern.test(email)) {
+    errorMessage.value = 'Please enter a valid email address.'
     return
   }
 
+  if (!username) {
+    errorMessage.value = 'Username is required.'
+    return
+  }
 
-  /* ---------------------------------------------
-     Confirm password
-  --------------------------------------------- */
+  if (!badgeNumber) {
+    errorMessage.value = 'Badge number is required.'
+    return
+  }
 
-  if (
-    password !== confirmPassword
-  ) {
+  if (!rank) {
+    errorMessage.value = 'Please select your BFP rank.'
+    return
+  }
 
-    errorMessage.value =
-      'Passwords do not match.'
+  if (!password || password.length < 8) {
+    errorMessage.value = 'Password must be at least 8 characters long.'
+    return
+  }
 
+  if (password !== confirmPassword) {
+    errorMessage.value = 'Passwords do not match.'
     return
   }
 
@@ -1515,18 +1388,13 @@ const handleSignup = async () => {
         },
 
         body: JSON.stringify({
-
-          first_name:
-            firstName,
-
-          last_name:
-            lastName,
-
-          email:
-            email,
-
-          password:
-            password
+          first_name: firstName,
+          last_name: lastName,
+          email: email,
+          username: username,
+          badge_number: badgeNumber,
+          rank: rank,
+          password: password
         })
       }
     )
@@ -1561,12 +1429,7 @@ const handleSignup = async () => {
 
 
     successMessage.value =
-      'Registration successful. You may now sign in with your account.'
-
-
-    /* -------------------------------------------
-       Clear signup form
-    ------------------------------------------- */
+      'Registration submitted successfully. Your account is now pending administrator approval. You can log in once your account has been approved.'
 
     Object.assign(
       signupForm,
@@ -1574,18 +1437,15 @@ const handleSignup = async () => {
         firstName: '',
         lastName: '',
         email: '',
+        username: '',
+        badgeNumber: '',
+        rank: '',
         password: '',
         confirmPassword: ''
       }
     )
 
-
-    /* -------------------------------------------
-       Return to Login
-    ------------------------------------------- */
-
     isLogin.value = true
-
     showSignupPassword.value = false
 
 
@@ -2467,6 +2327,18 @@ const handleBfpRegister = () => {
     1px solid #bbf7d0;
 }
 
+.success-message-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.compact-button {
+  width: fit-content;
+  margin-top: 4px;
+}
+
 
 /* =========================================================
    FORM
@@ -2487,6 +2359,14 @@ const handleBfpRegister = () => {
   gap: 17px;
 }
 
+.form-section-title {
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #9f1d24;
+}
 
 .form-field {
 
@@ -2562,7 +2442,8 @@ const handleBfpRegister = () => {
 }
 
 
-.input-wrapper input {
+.input-wrapper input,
+.input-wrapper select {
 
   width: 100%;
 
@@ -2589,6 +2470,10 @@ const handleBfpRegister = () => {
     background 0.2s ease;
 }
 
+.input-wrapper select {
+  appearance: none;
+  background-image: none;
+}
 
 .input-wrapper input::placeholder {
 
@@ -2596,13 +2481,15 @@ const handleBfpRegister = () => {
 }
 
 
-.input-wrapper input:hover {
+.input-wrapper input:hover,
+.input-wrapper select:hover {
 
   border-color: #b8c4d3;
 }
 
 
-.input-wrapper input:focus {
+.input-wrapper input:focus,
+.input-wrapper select:focus {
 
   border-color: #9f1d24;
 

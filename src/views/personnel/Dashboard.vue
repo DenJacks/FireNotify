@@ -1,5 +1,32 @@
 <template>
-  <div class="w-full min-w-0 space-y-7">
+  <DashboardOverview
+    :current-user="currentUser"
+    :duty-status="dutyStatus"
+    :current-date="currentDate"
+    :activities="assignedActivities"
+    :tasks="assignedTasks"
+    :reports="assignedReports"
+    :notifications="notifications"
+    :pending-tasks="pendingTasks"
+    :pending-reports="pendingReports"
+    :unread-notifications="unreadNotifications"
+    :completed-activities="completedActivities"
+    :overdue-activities="overdueActivities"
+    :activity-compliance="activityCompliance"
+    :completed-tasks="completedTasks"
+    :overdue-tasks="overdueTasks"
+    :completion-percentage="completionPercentage"
+    :reviewed-reports="reviewedReports"
+    :report-compliance="reportCompliance"
+    :selected-task="selectedTask"
+    @view-task="viewTask"
+    @close-task="closeTask"
+    @acknowledge-task="acknowledgeTask"
+    @mark-notification-read="markNotificationRead"
+    @mark-all-notifications-read="markAllNotificationsRead"
+  />
+
+  <div v-if="false" class="w-full min-w-0 space-y-7">
 
     <!-- =========================================================
          WELCOME HEADER
@@ -643,6 +670,10 @@
 
 <script setup>
 import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
+import DashboardOverview from './DashboardOverview.vue'
+import { getTasks } from '../../utils/taskService.js'
+import { getNotifications } from '../../utils/notificationApi.js'
+import { getPersonnelReportSubmissions } from '../../utils/reportApi.js'
 
 const props = defineProps({
   currentUser: {
@@ -829,6 +860,7 @@ const isCompletedStatus = (status) => {
     'finished',
     'approved',
     'reviewed',
+    'verified',
     'submitted',
     'closed',
     'resolved'
@@ -855,6 +887,10 @@ const isOverdueStatus = (record) => {
 
   const dueDate = parseDateValue(record?.deadline || record?.dueDate || record?.date || record?.scheduleDate || record?.scheduledDate)
   if (!dueDate) return false
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(String(record?.deadline || record?.dueDate || record?.date || ''))) {
+    dueDate.setHours(23, 59, 59, 999)
+  }
 
   return dueDate < new Date() && !isCompletedStatus(record?.status)
 }
@@ -968,12 +1004,43 @@ const persistNotifications = (items) => {
   }
 }
 
-const refreshDashboard = () => {
+const refreshDashboard = async () => {
   users.value = readArray(USERS_KEY)
-  activities.value = readArray(ACTIVITIES_KEY)
-  tasks.value = readArray(TASKS_KEY)
-  reports.value = readArray(REPORTS_KEY)
-  notifications.value = readNotifications().filter(item => notificationMatchesCurrentUser(item) || !Object.keys(item || {}).some(key => ['assignedToId', 'assignedToUsername', 'assignedToEmail', 'userId', 'recipientId', 'personnelId'].includes(key)))
+  try {
+    const userId = String(getCurrentUser()?.id || '')
+    const [activityResponse, serverTasks, serverNotifications, serverReportSubmissions] = await Promise.all([
+      fetch('http://127.0.0.1:8000/api/activities/'),
+      getTasks(),
+      getNotifications(getCurrentUser()),
+      getPersonnelReportSubmissions(userId)
+    ])
+    if (!activityResponse.ok) throw new Error('Personnel dashboard API request failed.')
+    const activityRows = await activityResponse.json()
+    activities.value = activityRows
+      .filter(item => String(item.assigned_personnel || '') === userId)
+      .map(item => ({ ...item, assignedToId: item.assigned_personnel, date: item.activity_date, schedule: item.activity_date }))
+    tasks.value = serverTasks.filter(item => String(item.assignedToId) === userId)
+    const reportStatusLabels = {
+      PENDING: 'Pending', IN_PROGRESS: 'In Progress', SUBMITTED: 'Submitted',
+      FOR_REVIEW: 'For Review', APPROVED: 'Approved', RETURNED: 'Returned', REJECTED: 'Rejected'
+    }
+    const serverReports = serverReportSubmissions.map(item => ({
+      ...item,
+      title: item.report_title,
+      deadline: item.report_deadline,
+      assignedToId: item.personnel,
+      status: reportStatusLabels[item.status] || item.status
+    }))
+    const legacyReports = readArray(REPORTS_KEY).filter(report => recordMatchesCurrentUser(report))
+    reports.value = [...serverReports, ...legacyReports]
+    notifications.value = serverNotifications.map(item => ({ ...item, read: item.is_read }))
+  } catch (error) {
+    console.error('FireNotify: unable to load personnel dashboard data from Django', error)
+    activities.value = []
+    tasks.value = []
+    reports.value = readArray(REPORTS_KEY).filter(report => recordMatchesCurrentUser(report))
+    notifications.value = []
+  }
 }
 
 const assignedActivities = computed(() => {
@@ -1036,7 +1103,7 @@ const completionPercentage = computed(() => {
 const pendingReports = computed(() => {
   return assignedReports.value.filter(item => {
     const status = statusKey(item?.status)
-    return ['pending', 'submitted', 'for review', 'in progress', 'draft'].includes(status)
+    return ['pending', 'submitted', 'for review', 'in progress', 'returned', 'draft'].includes(status)
   }).length
 })
 
@@ -1179,7 +1246,6 @@ onMounted(() => {
     window.addEventListener(eventName, refreshDashboard)
   })
 
-  refreshTimer = setInterval(refreshDashboard, 800)
 })
 
 onBeforeUnmount(() => {
@@ -1190,8 +1256,5 @@ onBeforeUnmount(() => {
     window.removeEventListener(eventName, refreshDashboard)
   })
 
-  if (refreshTimer) {
-    clearInterval(refreshTimer)
-  }
 })
 </script>

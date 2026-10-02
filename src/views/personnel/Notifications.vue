@@ -667,14 +667,14 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
 import {
-  deletePersonnelNotification,
-  getPersonnelNotifications,
-  isNotificationRead,
-  markAllPersonnelNotificationsRead,
-  markPersonnelNotificationRead,
-  mergeDerivedPersonnelNotifications,
-  NOTIFICATION_EVENTS
-} from '../../utils/notificationService.js'
+  deleteNotification as deleteNotificationInApi,
+  getNotifications,
+  markAllNotificationsRead,
+  setNotificationRead
+} from '../../utils/notificationApi.js'
+
+const NOTIFICATION_EVENTS = ['fireNotifyNotificationsUpdated']
+const isNotificationRead = notification => Boolean(notification?.is_read ?? notification?.read)
 
 const props = defineProps({
   currentUser: {
@@ -784,28 +784,18 @@ const formatDeadline = value => {
   return `Due in ${days} days`
 }
 
-const deadlines = computed(() => {
-  const records = [
-    ...readRecords('firenotify_tasks'),
-    ...readRecords('fireNotifyActivities'),
-    ...readRecords('firenotify_reports')
-  ]
+const deadlineRecords = ref([])
 
-  return records
-    .filter(record => recordBelongsToUser(record))
-    .map(record => {
-      const deadline = record.deadline || record.dueDate || record.deadlineDate || record.date || record.schedule
-      return {
-        id: `${record.id}-deadline`,
-        title: record.title || record.name || record.activityName || 'Untitled record',
-        due: formatDeadline(deadline),
-        urgent: Boolean(parseDate(deadline) && parseDate(deadline).getTime() - Date.now() <= 86400000)
-      }
-    })
+const deadlines = computed(() => deadlineRecords.value
+    .map(record => ({
+      id: `${record.id}-deadline`,
+      title: record.title,
+      due: formatDeadline(record.deadline),
+      urgent: Boolean(parseDate(record.deadline) && parseDate(record.deadline).getTime() - Date.now() <= 86400000)
+    }))
     .filter(item => item.due !== 'No deadline')
     .sort((left, right) => Number(right.urgent) - Number(left.urgent))
-    .slice(0, 5)
-})
+    .slice(0, 5))
 
 
 /* =========================================================
@@ -822,11 +812,9 @@ const taskAlertCount = computed(() => {
   ).length
 })
 
-const reportAlertCount = computed(() => {
-  return notifications.value.filter(
-    item => item.type === 'Report Alerts'
-  ).length
-})
+const reportAlertCount = computed(() => notifications.value.filter(item =>
+  ['Report Alerts', 'Reports & Compliance'].includes(item.type)
+).length)
 
 const systemAlertCount = computed(() => {
   return notifications.value.filter(
@@ -877,74 +865,87 @@ const showToast = (message) => {
 }
 
 
-const markAllAsRead = () => {
-  markAllPersonnelNotificationsRead(props.currentUser)
-  refreshNotifications()
-
+const markAllAsRead = async () => {
+  await markAllNotificationsRead(props.currentUser)
+  await refreshNotifications()
   showToast('All notifications marked as read.')
 }
 
-
-const toggleRead = (notification) => {
-  markPersonnelNotificationRead(
-    notification.id,
-    props.currentUser,
-    !isNotificationRead(notification)
-  )
-  refreshNotifications()
-
-  showToast(
-    notification.read
-      ? 'Notification marked as read.'
-      : 'Notification marked as unread.'
-  )
+const toggleRead = async notification => {
+  await setNotificationRead(notification, props.currentUser, !isNotificationRead(notification))
+  await refreshNotifications()
+  showToast(notification.read ? 'Notification marked as read.' : 'Notification marked as unread.')
 }
 
-
-const deleteNotification = (id) => {
-  deletePersonnelNotification(id, props.currentUser)
-  refreshNotifications()
-
-  if (
-    selectedNotification.value &&
-    selectedNotification.value.id === id
-  ) {
-    selectedNotification.value = null
-  }
-
+const deleteNotification = async id => {
+  const notification = notifications.value.find(item => item.id === id)
+  if (!notification) return
+  await deleteNotificationInApi(notification, props.currentUser)
+  await refreshNotifications()
+  if (selectedNotification.value?.id === id) selectedNotification.value = null
   showToast('Notification deleted.')
 }
 
-
-const viewNotification = (notification) => {
+const viewNotification = async notification => {
   selectedNotification.value = notification
-
   if (!isNotificationRead(notification)) {
-    markPersonnelNotificationRead(notification.id, props.currentUser)
-    refreshNotifications()
+    await setNotificationRead(notification, props.currentUser, true)
+    await refreshNotifications()
   }
 }
 
-const refreshNotifications = () => {
-  mergeDerivedPersonnelNotifications(props.currentUser)
-  notifications.value = getPersonnelNotifications(props.currentUser).map(item => ({
-    ...item,
-    read: isNotificationRead(item),
-    message: item.message || item.detail || 'No additional details available.',
-    time: item.createdAt || item.timestamp || 'Recently'
-  }))
+const refreshNotifications = async () => {
+  try {
+    notifications.value = (await getNotifications(props.currentUser)).map(item => ({
+      ...item,
+      type: item.type === 'Reports & Compliance' ? 'Report Alerts' : item.type === 'Personnel Updates' ? 'System Alerts' : item.type,
+      read: isNotificationRead(item),
+      message: item.message || item.detail || 'No additional details available.',
+      time: item.createdAt || item.timestamp || 'Recently'
+    }))
+  } catch (error) {
+    console.error('FireNotify: unable to load notifications from Django', error)
+    notifications.value = []
+  }
+}
+
+const refreshDeadlines = async () => {
+  const userId = props.currentUser?.id
+  if (!userId) return
+  try {
+    const [taskResponse, activityResponse] = await Promise.all([
+      fetch('http://127.0.0.1:8000/api/tasks/'),
+      fetch('http://127.0.0.1:8000/api/activities/')
+    ])
+    if (!taskResponse.ok || !activityResponse.ok) throw new Error('Unable to load deadlines.')
+    const [tasks, activities] = await Promise.all([taskResponse.json(), activityResponse.json()])
+    deadlineRecords.value = [
+      ...tasks.filter(task => String(task.assigned_to) === String(userId) && !['COMPLETED', 'VERIFIED'].includes(task.status))
+        .map(task => ({ id: task.id, title: task.title, deadline: task.due_date })),
+      ...activities.filter(activity => String(activity.assigned_personnel) === String(userId) && !['COMPLETED', 'VERIFIED'].includes(activity.status))
+        .map(activity => ({ id: activity.id, title: activity.title, deadline: activity.activity_date }))
+    ].filter(record => record.deadline)
+  } catch (error) {
+    console.error('FireNotify: unable to load deadline records', error)
+    deadlineRecords.value = []
+  }
 }
 
 onMounted(() => {
   refreshNotifications()
-  window.addEventListener('storage', refreshNotifications)
+  refreshDeadlines()
   window.addEventListener('focus', refreshNotifications)
+  window.addEventListener('focus', refreshDeadlines)
+  window.addEventListener('fireNotifyTasksUpdated', refreshDeadlines)
+  window.addEventListener('fireNotifyActivitiesUpdated', refreshDeadlines)
   NOTIFICATION_EVENTS.forEach(eventName => window.addEventListener(eventName, refreshNotifications))
 })
 
 onBeforeUnmount(() => {
-  window.removeEventListener('storage', refreshNotifications)
   window.removeEventListener('focus', refreshNotifications)
+  window.removeEventListener('focus', refreshDeadlines)
+  window.removeEventListener('fireNotifyTasksUpdated', refreshDeadlines)
+  window.removeEventListener('fireNotifyActivitiesUpdated', refreshDeadlines)
   NOTIFICATION_EVENTS.forEach(eventName => window.removeEventListener(eventName, refreshNotifications))
 })
 

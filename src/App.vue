@@ -1,7 +1,7 @@
 ```vue
 <template>
 
-  <div>
+  <div v-if="!authInitializing">
 
     <!-- =====================================================
          LOGIN
@@ -28,7 +28,7 @@
       ================================================== -->
 
       <AdminDashboard
-        v-if="currentUser.role === 'admin'"
+        v-if="String(currentUser.role || '').toUpperCase() === 'ADMIN'"
         :current-user="currentUser"
         :registered-users="registeredUsers"
         @logout="handleLogout"
@@ -43,9 +43,9 @@
 
       <PersonnelDashboard
         v-else-if="
-          ['auth', 'personnel', 'inspector'].includes(
-            currentUser.role
-          )
+          ['ADMIN', 'AUTH', 'PERSONNEL', 'INSPECTOR'].includes(
+            String(currentUser.role || '').toUpperCase()
+          ) && String(currentUser.role || '').toUpperCase() !== 'ADMIN'
         "
         :current-user="currentUser"
         :registered-users="registeredUsers"
@@ -82,7 +82,7 @@
             @click="handleLogout"
             class="px-5 py-3 bg-red-600 hover:bg-red-700 rounded-xl font-semibold"
           >
-            Back to Login
+            Log Out
           </button>
 
         </div>
@@ -123,6 +123,16 @@ const USERS_STORAGE_KEY =
 
 const CURRENT_USER_KEY =
   'fireNotifyCurrentUser'
+const AUTH_SESSION_KEY =
+  'fireNotifyAuthenticated'
+
+const clearSavedAuthentication = () => {
+  localStorage.removeItem(CURRENT_USER_KEY)
+  localStorage.removeItem('fireNotifyUser')
+  localStorage.removeItem(AUTH_SESSION_KEY)
+  sessionStorage.removeItem('fireNotifyUser')
+  sessionStorage.removeItem(AUTH_SESSION_KEY)
+}
 
 
 /* =========================================================
@@ -137,7 +147,7 @@ const defaultUsers = [
       'admin-default',
 
     identifier:
-      'admin@bfp.gov.ph',
+      'admin@firenotify.local',
 
     password:
       'admin111',
@@ -180,6 +190,9 @@ const registeredUsers =
 
 const currentUser =
   ref(null)
+
+const authInitializing =
+  ref(true)
 
 
 /* =========================================================
@@ -273,7 +286,7 @@ const loadRegisteredUsers = () => {
           user.identifier
             ?.trim()
             .toLowerCase() ===
-          'admin@bfp.gov.ph'
+          'admin@firenotify.local'
       )
 
 
@@ -518,7 +531,19 @@ const handleLoginSuccess = user => {
 
   // Normalize Django role to lowercase
   role:
-    String(user.role || '').toLowerCase()
+    String(user.role || '').toUpperCase(),
+
+  badge_number:
+    user.badge_number || user.badgeNumber || '',
+
+  badgeNumber:
+    user.badge_number || user.badgeNumber || '',
+
+  rank:
+    user.rank || user.employeeRank || '',
+
+  status:
+    user.status || 'PENDING'
 
 }
 
@@ -543,55 +568,65 @@ const handleLoginSuccess = user => {
 
 const loadCurrentUser = () => {
 
-  let savedUser =
-    localStorage.getItem(
-      CURRENT_USER_KEY
-    )
+  const authStorage =
+    localStorage.getItem(AUTH_SESSION_KEY) === 'true'
+      ? localStorage
+      : sessionStorage.getItem(AUTH_SESSION_KEY) === 'true'
+        ? sessionStorage
+        : null
 
-  let storageType = 'localStorage'
-
-
-  if (!savedUser) {
-
-    savedUser =
-      sessionStorage.getItem(
-        'fireNotifyUser'
-      )
-
-    storageType = 'sessionStorage'
-
+  if (!authStorage) {
+    clearSavedAuthentication()
+    return
   }
 
+  const loginSession = authStorage.getItem('fireNotifyUser')
 
-  if (!savedUser) {
+  if (!loginSession) {
+    clearSavedAuthentication()
     return
   }
 
 
   try {
 
-    const user =
-      JSON.parse(
-        savedUser
-      )
+    const authenticatedUser = JSON.parse(loginSession)
+    const cachedUser = JSON.parse(
+      localStorage.getItem(CURRENT_USER_KEY) || 'null'
+    )
 
 
     if (
-      !user ||
-      !user.role
+      !authenticatedUser ||
+      !authenticatedUser.role
     ) {
 
-      localStorage.removeItem(
-        CURRENT_USER_KEY
-      )
-
-      sessionStorage.removeItem(
-        'fireNotifyUser'
-      )
+      clearSavedAuthentication()
 
       return
 
     }
+
+    const authenticatedIdentity = String(
+      authenticatedUser.email ||
+      authenticatedUser.identifier ||
+      authenticatedUser.username ||
+      ''
+    ).trim().toLowerCase()
+    const cachedIdentity = String(
+      cachedUser?.email ||
+      cachedUser?.identifier ||
+      cachedUser?.username ||
+      ''
+    ).trim().toLowerCase()
+    const cachedUserMatchesSession = Boolean(
+      cachedUser?.role && (
+        authenticatedUser.id && cachedUser.id
+          ? String(authenticatedUser.id) === String(cachedUser.id)
+          : authenticatedIdentity && authenticatedIdentity === cachedIdentity
+      )
+    )
+    const user = cachedUserMatchesSession ? cachedUser : authenticatedUser
 
 
     const userEmail =
@@ -656,7 +691,19 @@ const loadCurrentUser = () => {
         role:
           String(
             user.role || ''
-          ).toLowerCase()
+          ).toUpperCase(),
+
+        badge_number:
+          user.badge_number || user.badgeNumber || '',
+
+        badgeNumber:
+          user.badge_number || user.badgeNumber || '',
+
+        rank:
+          user.rank || user.employeeRank || '',
+
+        status:
+          user.status || 'PENDING'
 
       }
 
@@ -694,7 +741,19 @@ const loadCurrentUser = () => {
           user.role ||
           storedUser.role ||
           ''
-        ).toLowerCase()
+        ).toUpperCase(),
+
+      badge_number:
+        user.badge_number || user.badgeNumber || storedUser.badge_number || storedUser.badgeNumber || '',
+
+      badgeNumber:
+        user.badge_number || user.badgeNumber || storedUser.badge_number || storedUser.badgeNumber || '',
+
+      rank:
+        user.rank || user.employeeRank || storedUser.rank || storedUser.employeeRank || '',
+
+      status:
+        user.status || storedUser.status || 'PENDING'
 
     }
 
@@ -706,13 +765,7 @@ const loadCurrentUser = () => {
       error
     )
 
-    localStorage.removeItem(
-      CURRENT_USER_KEY
-    )
-
-    sessionStorage.removeItem(
-      'fireNotifyUser'
-    )
+    clearSavedAuthentication()
 
     currentUser.value =
       null
@@ -878,10 +931,7 @@ const handleLogout = () => {
   currentUser.value =
     null
 
-
-  localStorage.removeItem(
-    CURRENT_USER_KEY
-  )
+  clearSavedAuthentication()
 
 
   localStorage.removeItem(
@@ -970,6 +1020,7 @@ onMounted(async () => {
   }
 
   loadCurrentUser()
+  authInitializing.value = false
 
 })
 </script>

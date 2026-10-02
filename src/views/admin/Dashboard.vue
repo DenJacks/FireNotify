@@ -7,6 +7,10 @@ import {
 } from 'vue'
 
 import { resolvePersonnelName } from '../../utils/personnelName.js'
+import { getTasks, normalizeTask } from '../../utils/taskService.js'
+import { getNotifications } from '../../utils/notificationApi.js'
+import { getReportSubmissions } from '../../utils/reportApi.js'
+import DashboardOverview from './DashboardOverview.vue'
 
 const props = defineProps({
   currentUser: {
@@ -21,8 +25,8 @@ const props = defineProps({
 })
 
 /* =========================================================
-   FIRENOTIFY FRONTEND-ONLY LIVE DATA
-   ========================================================= */
+  FIRENOTIFY LIVE DATA
+  ========================================================= */
 
 const KEYS = {
   users: 'fireNotifyRegisteredUsers',
@@ -48,8 +52,6 @@ const notifications = ref([])
 
 const selected = ref(null)
 const selectedType = ref('')
-
-let refreshTimer = null
 
 
 /* =========================================================
@@ -219,26 +221,242 @@ const readNotifications = () => {
 }
 
 const refresh = async () => {
+  try {
+    // =========================================
+    // LOAD USERS FROM DJANGO
+    // =========================================
 
-  await loadUsersFromBackend()
+    await loadUsersFromBackend()
 
-  activities.value =
-    readArray(
-      KEYS.activities
+
+    // =========================================
+    // LOAD ACTIVITIES FROM DJANGO
+    // =========================================
+
+    const activitiesResponse = await fetch(
+      'http://127.0.0.1:8000/api/activities/'
     )
 
-  tasks.value =
-    readArray(
-      KEYS.tasks
+    if (!activitiesResponse.ok) {
+      throw new Error(
+        `Activities API HTTP ${activitiesResponse.status}`
+      )
+    }
+
+    const activitiesData =
+      await activitiesResponse.json()
+
+    if (!Array.isArray(activitiesData)) {
+      throw new Error(
+        'Invalid activities response'
+      )
+    }
+
+
+    // =========================================
+    // LOAD SUBMISSIONS FROM DJANGO
+    // =========================================
+
+    const submissionsResponse = await fetch(
+      'http://127.0.0.1:8000/api/activity-submissions/'
     )
 
-  reports.value =
-    readArray(
-      KEYS.reports
+    if (!submissionsResponse.ok) {
+      throw new Error(
+        `Submissions API HTTP ${submissionsResponse.status}`
+      )
+    }
+
+    const submissionsData =
+      await submissionsResponse.json()
+
+    if (!Array.isArray(submissionsData)) {
+      throw new Error(
+        'Invalid submissions response'
+      )
+    }
+
+    tasks.value = await getTasks()
+    notifications.value = await getNotifications(props.currentUser)
+    const reportSubmissions = await getReportSubmissions()
+
+
+    // =========================================
+    // MERGE ACTIVITIES + SUBMISSIONS
+    // =========================================
+
+    activities.value =
+      activitiesData.map(activity => {
+
+        const submission =
+          submissionsData.find(
+            item =>
+              String(item.activity) ===
+              String(activity.id)
+          )
+
+
+        const statusMap = {
+          SCHEDULED: 'Scheduled',
+          ONGOING: 'Ongoing',
+          COMPLETED: 'Completed',
+          DELAYED: 'Delayed',
+          FOR_VERIFICATION: 'For Verification',
+          VERIFIED: 'Verified',
+          RETURNED: 'Returned'
+        }
+
+
+        return {
+          ...activity,
+
+          id: activity.id,
+
+          title:
+            activity.title || 'Untitled Activity',
+
+          name:
+            activity.title || 'Untitled Activity',
+
+          type:
+            activity.activity_type ||
+            'Inspection',
+
+          activityType:
+            activity.activity_type ||
+            'Inspection',
+
+          location:
+            activity.location ||
+            'Not specified',
+
+          date:
+            activity.activity_date ||
+            '',
+
+          activityDate:
+            activity.activity_date ||
+            '',
+
+          schedule:
+            activity.activity_date ||
+            '',
+
+          time:
+            activity.activity_time ||
+            '',
+
+          activityTime:
+            activity.activity_time ||
+            '',
+
+          priority:
+            activity.priority ||
+            'MEDIUM',
+
+          description:
+            activity.description ||
+            '',
+
+          assignedPersonnel:
+            activity.assigned_personnel,
+
+          assignedTo:
+            activity.assigned_personnel,
+
+          status:
+            statusMap[
+              activity.status
+            ] ||
+            'Scheduled',
+
+          submissionId:
+            submission?.id ||
+            null,
+
+          submissionStatus:
+            submission?.status ||
+            null,
+
+          accomplishment:
+            submission?.accomplishment ||
+            '',
+
+          remarks:
+            submission?.remarks ||
+            '',
+
+          revisionNote:
+            submission?.revision_note ||
+            '',
+
+          submittedAt:
+            submission?.submitted_at ||
+            null,
+
+          submittedBy:
+            submission?.submitted_by ||
+            null,
+
+          evidence:
+            submission?.evidence ||
+            [],
+
+          hasSubmission:
+            !!submission,
+
+          createdAt:
+            activity.created_at ||
+            null,
+
+          updatedAt:
+            activity.updated_at ||
+            null
+        }
+      })
+
+
+    // =========================================
+    // KEEP TASKS / REPORTS / NOTIFICATIONS
+    // =========================================
+
+    const reportStatusLabels = {
+      PENDING: 'Pending',
+      IN_PROGRESS: 'In Progress',
+      SUBMITTED: 'Submitted',
+      FOR_REVIEW: 'For Review',
+      APPROVED: 'Approved',
+      RETURNED: 'Returned',
+      REJECTED: 'Rejected'
+    }
+    reports.value = reportSubmissions.map(submission => {
+      return {
+        ...submission,
+        title: submission.report_title,
+        deadline: submission.report_deadline,
+        assignedToId: submission.personnel,
+        status: reportStatusLabels[submission.status] || submission.status,
+        createdAt: submission.submitted_at || submission.created_at
+      }
+    })
+
+
+    console.log(
+      'Dashboard activities from Django:',
+      activities.value
     )
 
-  notifications.value =
-    readNotifications()
+  } catch (error) {
+
+    console.error(
+      'Failed to load Dashboard data:',
+      error
+    )
+
+    tasks.value = []
+    reports.value = []
+    notifications.value = []
+  }
 }
 
 
@@ -315,9 +533,7 @@ const statusOf = item => {
   )
 }
 
-
 const completed = status => {
-
   return [
     'completed',
     'complete',
@@ -326,7 +542,8 @@ const completed = status => {
     'closed',
     'approved',
     'reviewed',
-    'resolved'
+    'resolved',
+    'verified'
   ].includes(
     normalize(status)
   )
@@ -348,7 +565,7 @@ const personnel = computed(() => {
           'personnel'
         )
 
-      return role !== 'admin'
+      return role === 'personnel'
     }
   )
 })
@@ -402,11 +619,11 @@ const activityTitle = item => {
 
 
 const activityDate = item => {
-
   return (
+    item?.activity_date ||
+    item?.activityDate ||
     item?.date ||
     item?.startDate ||
-    item?.activityDate ||
     item?.scheduleDate ||
     item?.scheduledDate ||
     ''
@@ -455,6 +672,37 @@ const activityCompliance =
       ) * 100
     )
   })
+
+const pendingActivities = computed(() => activities.value.filter(item =>
+  ['scheduled', 'ongoing', 'delayed', 'for verification', 'returned'].includes(statusOf(item))
+).length)
+
+const verifiedActivities = computed(() => activities.value.filter(item =>
+  ['verified', 'completed'].includes(statusOf(item))
+).length)
+
+const activitiesDueToday = computed(() => activities.value.filter(item => {
+  const date = parseDate(activityDate(item))
+  return date && date.toDateString() === new Date().toDateString()
+}).length)
+
+const overdueActivities = computed(() => activities.value.filter(item => {
+  if (completed(item.status)) return false
+  const date = parseDate(activityDate(item))
+  if (!date) return false
+  date.setHours(23, 59, 59, 999)
+  return date < new Date()
+}).length)
+
+const pendingSubmissions = computed(() => reports.value.filter(item =>
+  statusOf(item) === 'for review'
+).length)
+
+const tasksDueToday = computed(() => tasks.value.filter(item => {
+  if (completed(item.status)) return false
+  const date = parseDate(taskDate(item))
+  return date && date.toDateString() === new Date().toDateString()
+}).length)
 
 
 const recentActivities =
@@ -657,6 +905,7 @@ const isOverdue = item => {
     return false
   }
 
+  date.setHours(23, 59, 59, 999)
 
   return (
     date.getTime() <
@@ -756,19 +1005,68 @@ const overdueReports =
 const totalDeadlines =
   computed(() => {
 
-    return (
-      taskDeadlines.value.length +
-      reportDeadlines.value.length
-    )
+    const activityDeadlines =
+      activities.value.filter(
+        activity =>
+          !!activityDate(activity)
+      ).length
+
+    return activityDeadlines + taskDeadlines.value.length
   })
 
 
 const overdueDeadlines =
   computed(() => {
 
+    const today =
+      new Date()
+
+    today.setHours(
+      23,
+      59,
+      59,
+      999
+    )
+
+
+    const overdueActivities =
+      activities.value.filter(
+        activity => {
+
+          if (
+            completed(
+              activity.status
+            )
+          ) {
+            return false
+          }
+
+          const date =
+            parseDate(
+              activityDate(activity)
+            )
+
+          if (!date) {
+            return false
+          }
+
+          date.setHours(
+            23,
+            59,
+            59,
+            999
+          )
+
+          return (
+            date.getTime() <
+            today.getTime()
+          )
+        }
+      ).length
+
+
     return (
-      overdueTasks.value.length +
-      overdueReports.value.length
+      overdueActivities + overdueTasks.value.length
     )
   })
 
@@ -810,7 +1108,8 @@ const unreadNotifications =
     return notifications.value.filter(
       item =>
         !item?.read &&
-        !item?.isRead
+        !item?.isRead &&
+        !item?.is_read
     ).length
   })
 
@@ -1075,21 +1374,6 @@ onMounted(() => {
   )
 
 
-  /*
-   * localStorage does not fire
-   * a storage event in the same tab.
-   *
-   * This makes the dashboard
-   * update even when the other
-   * Vue component saves data
-   * in the same browser tab.
-   */
-
-  refreshTimer =
-    window.setInterval(
-      refresh,
-      1000
-    )
 })
 
 
@@ -1114,24 +1398,39 @@ onBeforeUnmount(() => {
       )
     }
   )
-
-
-  if (refreshTimer) {
-
-    window.clearInterval(
-      refreshTimer
-    )
-
-    refreshTimer =
-      null
-  }
 })
 </script>
 
 
 <template>
 
-  <div class="space-y-6">
+  <DashboardOverview
+    :current-user="currentUser"
+    :personnel="personnel"
+    :total-personnel="totalPersonnel"
+    :active-personnel="activePersonnel"
+    :activities="activities"
+    :reports="reports"
+    :pending-reports="pendingReports"
+    :report-compliance="reportCompliance"
+    :deadline-compliance="deadlineCompliance"
+    :activity-compliance="activityCompliance"
+    :verified-activities="verifiedActivities"
+    :overdue-activities="overdueActivities"
+    :overdue-deadlines="overdueDeadlines"
+    :overdue-reports="overdueReports"
+    :reviewed-reports="reviewedReports"
+    :total-deadlines="totalDeadlines"
+    :unread-notifications="unreadNotifications"
+    :recent-activities="recentActivities"
+    :recent-reports="recentReports"
+    :activity-person="activityPerson"
+    :report-person="reportPerson"
+    :tasks="tasks"
+    :notifications="notifications"
+  />
+
+  <div v-if="false" class="space-y-6">
 
     <!-- =====================================================
          HEADER
@@ -1440,6 +1739,50 @@ onBeforeUnmount(() => {
 
       </div>
 
+    </section>
+
+
+    <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      <div class="bg-white border border-slate-200 rounded-xl p-4">
+        <p class="text-xs text-slate-500">Total Activities</p>
+        <p class="text-2xl font-bold text-slate-900 mt-1">{{ activities.length }}</p>
+      </div>
+      <div class="bg-white border border-slate-200 rounded-xl p-4">
+        <p class="text-xs text-slate-500">Due Today</p>
+        <p class="text-2xl font-bold text-amber-600 mt-1">{{ activitiesDueToday }}</p>
+      </div>
+      <div class="bg-white border border-slate-200 rounded-xl p-4">
+        <p class="text-xs text-slate-500">Pending Activities</p>
+        <p class="text-2xl font-bold text-blue-600 mt-1">{{ pendingActivities }}</p>
+      </div>
+      <div class="bg-white border border-slate-200 rounded-xl p-4">
+        <p class="text-xs text-slate-500">Verified / Completed</p>
+        <p class="text-2xl font-bold text-green-600 mt-1">{{ verifiedActivities }}</p>
+      </div>
+      <div class="bg-white border border-slate-200 rounded-xl p-4">
+        <p class="text-xs text-slate-500">Overdue Activities</p>
+        <p class="text-2xl font-bold text-red-600 mt-1">{{ overdueActivities }}</p>
+      </div>
+      <div class="bg-white border border-slate-200 rounded-xl p-4">
+        <p class="text-xs text-slate-500">Pending Submissions</p>
+        <p class="text-2xl font-bold text-purple-600 mt-1">{{ pendingSubmissions }}</p>
+      </div>
+      <div class="bg-white border border-slate-200 rounded-xl p-4">
+        <p class="text-xs text-slate-500">Total Tasks</p>
+        <p class="text-2xl font-bold text-slate-900 mt-1">{{ tasks.length }}</p>
+      </div>
+      <div class="bg-white border border-slate-200 rounded-xl p-4">
+        <p class="text-xs text-slate-500">Tasks Due Today</p>
+        <p class="text-2xl font-bold text-amber-600 mt-1">{{ tasksDueToday }}</p>
+      </div>
+      <div class="bg-white border border-slate-200 rounded-xl p-4">
+        <p class="text-xs text-slate-500">Overdue Tasks</p>
+        <p class="text-2xl font-bold text-red-600 mt-1">{{ overdueTasks.length }}</p>
+      </div>
+      <div class="bg-white border border-slate-200 rounded-xl p-4">
+        <p class="text-xs text-slate-500">Unread Notifications</p>
+        <p class="text-2xl font-bold text-[#8B1E23] mt-1">{{ unreadNotifications }}</p>
+      </div>
     </section>
 
 

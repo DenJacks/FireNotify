@@ -1,6 +1,6 @@
 ```vue
 <template>
-  <div class="space-y-6">
+  <div class="space-y-4">
 
     <!-- =====================================================
          HEADER
@@ -52,7 +52,7 @@
     ====================================================== -->
 
     <section
-      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5"
+      class="fn-operations-summary fn-operations-summary--five"
     >
 
       <div
@@ -188,26 +188,23 @@
          ACTIVITY TABLE
     ====================================================== -->
 
-    <section
-      class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6"
-    >
+    <section class="fn-operations-panel">
 
-      <div class="flex items-center justify-between mb-5">
+      <div class="fn-operations-heading">
         <div>
-          <h2 class="text-xl font-bold text-slate-900">
+          <h2 class="text-base font-bold text-slate-900">
             Station Activities
           </h2>
 
           <p class="text-sm text-slate-500 mt-1">
-            {{ filteredActivities.length }}
-            activities found
+            {{ filteredActivities.length }} {{ filteredActivities.length === 1 ? 'activity' : 'activities' }} found
           </p>
         </div>
       </div>
 
-      <div class="overflow-x-auto">
+      <div class="fn-operations-table-wrap">
 
-        <table class="w-full text-left">
+        <table class="fn-operations-table">
 
           <thead>
             <tr
@@ -227,7 +224,7 @@
               </th>
 
               <th class="pb-4 pr-5">
-                Schedule
+                Deadline
               </th>
 
               <th class="pb-4 pr-5">
@@ -253,34 +250,26 @@
               class="hover:bg-slate-50 transition"
             >
 
-              <td class="py-5 pr-5">
-
-                <p class="font-bold text-slate-900">
-                  {{ activity.name }}
-                </p>
-
-                <p class="text-xs text-slate-400 mt-1">
-                  {{ activity.id }}
-                </p>
-
-                <p class="text-xs text-slate-500 mt-1">
-                  {{ activity.location }}
-                </p>
-
+              <td data-label="Activity" class="min-w-0">
+                <div class="flex min-w-0 flex-col gap-1">
+                  <p class="break-words text-sm font-bold leading-5 text-slate-900">{{ activity.name }}</p>
+                  <p v-if="activity.description" class="break-words whitespace-pre-wrap text-xs leading-5 text-slate-500">{{ activity.description }}</p>
+                  <p v-if="activity.location" class="break-words text-xs leading-5 text-slate-500">{{ activity.location }}</p>
+                </div>
               </td>
 
-              <td class="py-5 pr-5">
+              <td data-label="Type">
 
                 <span
                   :class="getTypeClass(activity.type)"
-                  class="px-3 py-1.5 rounded-full text-xs font-bold"
+                  class="fn-operations-badge"
                 >
                   {{ activity.type }}
                 </span>
 
               </td>
 
-              <td class="py-5 pr-5 min-w-[220px]">
+              <td data-label="Assigned Personnel" class="min-w-[220px]">
 
                 <div
                   v-if="activity.assignedPersonnel?.length"
@@ -302,7 +291,7 @@
                     <div class="min-w-0">
 
                       <p
-                        class="text-sm font-semibold text-slate-700 truncate"
+                        class="break-words text-sm font-semibold leading-5 text-slate-700"
                       >
                         {{ assignedPersonnelName(person) }}
                       </p>
@@ -325,51 +314,42 @@
 
               </td>
 
-              <td class="py-5 pr-5">
-
-                <p
-                  class="text-sm font-semibold text-slate-700"
-                >
-                  {{ formatDate(activity.schedule) }}
-                </p>
-
-                <p
-                  class="text-xs text-slate-500 mt-1"
-                >
-                  {{ formatTime(activity.time) }}
-                </p>
-
+              <td data-label="Schedule">
+                <div class="flex flex-col gap-0.5">
+                  <span class="text-sm font-semibold leading-5 text-slate-700">{{ formatDate(activity.schedule) }}</span>
+                  <span class="text-xs leading-5 text-slate-500">{{ formatTime(activity.time) }}</span>
+                </div>
               </td>
 
-              <td class="py-5 pr-5">
+              <td data-label="Priority">
 
                 <span
                   :class="getPriorityClass(activity.priority)"
-                  class="px-3 py-1.5 rounded-full text-xs font-bold"
+                  class="fn-operations-badge"
                 >
                  {{ (activity.priority || 'Medium').toUpperCase() }}
                 </span>
 
               </td>
 
-              <td class="py-5 pr-5">
+              <td data-label="Status">
 
                 <span
                   :class="getStatusClass(activity.status)"
-                  class="px-3 py-1.5 rounded-full text-xs font-bold"
+                  class="fn-operations-badge"
                 >
                   {{ activity.status.toUpperCase() }}
                 </span>
 
               </td>
 
-              <td class="py-5 text-right">
+              <td data-label="Actions" class="text-right">
 
                 <div class="flex justify-end gap-2">
 
                   <button
                     @click="viewActivity(activity)"
-                    class="px-3 py-2 rounded-lg bg-slate-100 text-slate-700 text-xs font-bold hover:bg-slate-200"
+                    class="fn-operations-action"
                   >
                     View
                   </button>
@@ -377,21 +357,21 @@
                   <button
                     v-if="activity.status === 'For Verification'"
                     @click="openActivitySubmission(activity)"
-                    class="px-3 py-2 rounded-lg bg-purple-50 text-purple-700 text-xs font-bold hover:bg-purple-100"
+                    class="fn-operations-action"
                   >
                     View Submission
                   </button>
 
                   <button
                     @click="openEditModal(activity)"
-                    class="px-3 py-2 rounded-lg bg-blue-50 text-blue-700 text-xs font-bold hover:bg-blue-100"
+                    class="fn-operations-action"
                   >
                     Edit
                   </button>
 
                   <button
                     @click="openDeleteModal(activity)"
-                    class="px-3 py-2 rounded-lg bg-red-50 text-[#8B1E23] text-xs font-bold hover:bg-red-100"
+                    class="fn-operations-action fn-operations-action--danger"
                   >
                     Delete
                   </button>
@@ -807,24 +787,35 @@
               v-model="activityForm.type"
               class="w-full h-12 px-4 rounded-xl border border-slate-300"
             >
-
-              <option>
-                Inspection
+              <option v-for="type in activityTypes" :key="type" :value="type">
+                {{ type }}
               </option>
-
-              <option>
-                Fire Drill
-              </option>
-
-              <option>
-                Training
-              </option>
-
-              <option>
-                Emergency Response
-              </option>
-
             </select>
+
+            <button
+              v-if="!showNewActivityType"
+              type="button"
+              @click="showNewActivityType = true"
+              class="mt-2 text-sm font-bold text-[#8B1E23] hover:underline"
+            >
+              + Create New Activity Type
+            </button>
+
+            <div v-else class="mt-3 flex flex-wrap items-center gap-2">
+              <input
+                v-model="newActivityTypeName"
+                type="text"
+                placeholder="New Activity Type"
+                class="min-w-0 flex-1 h-10 px-3 rounded-lg border border-slate-300"
+                @keyup.enter="createActivityType"
+              />
+              <button type="button" @click="createActivityType" class="px-3 py-2 rounded-lg bg-[#8B1E23] text-white text-sm font-bold">
+                Create Type
+              </button>
+              <button type="button" @click="showNewActivityType = false; newActivityTypeName = ''" class="px-3 py-2 rounded-lg border border-slate-300 text-sm font-semibold">
+                Cancel
+              </button>
+            </div>
 
           </div>
 
@@ -1082,78 +1073,6 @@
           </div>
 
 
-          <!-- Priority + Status -->
-
-          <div
-            class="grid grid-cols-1 md:grid-cols-2 gap-4"
-          >
-
-            <div>
-
-              <label
-                class="block text-sm font-bold text-slate-700 mb-2"
-              >
-                Priority
-              </label>
-
-              <select
-                v-model="activityForm.priority"
-                class="w-full h-12 px-4 rounded-xl border border-slate-300"
-              >
-
-                <option>
-                  High
-                </option>
-
-                <option>
-                  Medium
-                </option>
-
-                <option>
-                  Low
-                </option>
-
-              </select>
-
-            </div>
-
-
-            <div>
-
-              <label
-                class="block text-sm font-bold text-slate-700 mb-2"
-              >
-                Status
-              </label>
-
-              <select
-                v-model="activityForm.status"
-                class="w-full h-12 px-4 rounded-xl border border-slate-300"
-              >
-
-                <option>
-                  Scheduled
-                </option>
-
-                <option>
-                  Ongoing
-                </option>
-
-                <option>
-                  Completed
-                </option>
-
-                <option>
-                  Delayed
-                </option>
-
-              </select>
-
-            </div>
-
-          </div>
-
-
           <!-- Description -->
 
           <div>
@@ -1228,10 +1147,6 @@
         >
 
           <div>
-
-            <p class="text-xs font-bold text-[#8B1E23]">
-              {{ selectedActivity.id }}
-            </p>
 
             <h2
               class="text-xl font-bold text-slate-900 mt-1"
@@ -1604,26 +1519,80 @@
         <div class="p-6 space-y-5">
           <div class="flex items-center justify-between gap-3">
             <span class="px-3 py-1.5 rounded-full text-xs font-bold" :class="getStatusClass(selectedActivitySubmission.status)">{{ selectedActivitySubmission.status }}</span>
-            <span class="text-xs text-slate-500">{{ selectedActivitySubmission.submittedAt || 'Submitted' }}</span>
+            <span class="flex flex-col gap-0.5 text-right text-xs leading-5 text-slate-500">
+              <span>{{ selectedActivitySubmission.submittedAt ? formatOperationDate(selectedActivitySubmission.submittedAt) : 'Not submitted' }}</span>
+              <span v-if="hasTimeValue(selectedActivitySubmission.submittedAt)">{{ formatOperationTime(selectedActivitySubmission.submittedAt) }}</span>
+            </span>
           </div>
-          <div>
-            <p class="text-xs font-bold uppercase tracking-wide text-slate-500">Accomplishment / Work Summary</p>
-            <p class="mt-2 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 whitespace-pre-line">{{ selectedActivitySubmission.accomplishment || 'No accomplishment provided.' }}</p>
-          </div>
-          <div v-if="selectedActivitySubmission.remarks">
-            <p class="text-xs font-bold uppercase tracking-wide text-slate-500">Remarks</p>
-            <p class="mt-2 text-sm text-slate-700 whitespace-pre-line">{{ selectedActivitySubmission.remarks }}</p>
-          </div>
-          <div v-if="submissionEvidence.length">
-            <p class="text-xs font-bold uppercase tracking-wide text-slate-500 mb-2">Evidence</p>
-            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              <button v-for="(item, index) in submissionEvidence" :key="item.id" type="button" class="rounded-xl border border-slate-200 p-2 text-left" @click="openEvidence(item)">
-                <img :src="submissionEvidenceUrls[index]" :alt="item.filename" class="h-24 w-full rounded-lg object-cover" />
-                <span class="block truncate text-xs font-semibold text-slate-700">{{ item.filename }}</span>
-              </button>
-            </div>
-          </div>
-          <textarea v-model="returnNote" rows="3" placeholder="Revision note when returning the submission..." class="fn-form-control resize-none"></textarea>
+         <div>
+  <p class="text-xs font-bold uppercase tracking-wide text-slate-500">
+    Accomplishment / Work Summary
+  </p>
+
+  <p
+    class="mt-2 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 whitespace-pre-line"
+  >
+    {{ selectedActivitySubmission.accomplishment || 'No accomplishment provided.' }}
+  </p>
+</div>
+
+<!-- EVIDENCE PHOTOS -->
+<div>
+  <p class="text-xs font-bold uppercase tracking-wide text-slate-500">
+    Evidence Photos
+  </p>
+
+  <div
+    v-if="
+      selectedActivitySubmission &&
+      selectedActivitySubmission.evidence &&
+      selectedActivitySubmission.evidence.length > 0
+    "
+    class="mt-2 grid grid-cols-2 gap-3 md:grid-cols-3"
+  >
+    <div
+      v-for="photo in selectedActivitySubmission.evidence"
+      :key="photo.id"
+      class="overflow-hidden rounded-xl border border-slate-200 bg-slate-50"
+    >
+      <img
+        :src="photo.file"
+        alt="Submitted evidence photo"
+        class="h-40 w-full object-cover"
+        @error="console.error('EVIDENCE IMAGE ERROR:', photo.file)"
+        @load="console.log('EVIDENCE IMAGE LOADED:', photo.file)"
+      />
+
+      <p class="px-3 py-2 text-xs text-slate-500">
+        Evidence
+      </p>
+    </div>
+  </div>
+
+  <p
+    v-else
+    class="mt-2 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-500"
+  >
+    No evidence photos submitted.
+  </p>
+</div>
+<!-- REMARKS -->
+<div v-if="selectedActivitySubmission.remarks">
+  <p class="text-xs font-bold uppercase tracking-wide text-slate-500">
+    Remarks
+  </p>
+
+  <p class="mt-2 text-sm text-slate-700 whitespace-pre-line">
+    {{ selectedActivitySubmission.remarks }}
+  </p>
+</div>
+
+<textarea
+  v-model="returnNote"
+  rows="3"
+  placeholder="Revision note when returning the submission..."
+  class="fn-form-control resize-none"
+></textarea>
         </div>
         <div class="p-6 border-t border-slate-200 flex flex-wrap justify-end gap-3">
           <button type="button" @click="showSubmissionModal = false" class="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-semibold">Close</button>
@@ -1677,6 +1646,9 @@ import {
 
 import { getTaskActivityEvidence } from '../../utils/reportFileStorage.js'
 import { resolvePersonnelName } from '../../utils/personnelName.js'
+import '../../styles/operations.css'
+import { formatOperationDate, formatOperationTime } from '../../utils/operationsFormat.js'
+const hasTimeValue = value => /(?:T|\s)\d{1,2}:\d{2}/.test(String(value || ''))
 
 
 /* =========================================================
@@ -1793,15 +1765,49 @@ const activityForm = ref({
 
   time: '',
 
-  priority: 'Medium',
-
-  status: 'Scheduled',
-
   location: '',
 
   description: ''
 
 })
+
+const ACTIVITY_TYPES_KEY = 'fireNotifyActivityTypes'
+const activityTypes = ref([
+  'Inspection',
+  'Fire Drill',
+  'Training',
+  'Emergency Response'
+])
+const showNewActivityType = ref(false)
+const newActivityTypeName = ref('')
+
+const mergeActivityTypes = values => {
+  const types = [...activityTypes.value, ...values]
+    .map(value => String(value || '').trim())
+    .filter(Boolean)
+  const uniqueTypes = [...new Map(types.map(type => [type.toLowerCase(), type])).values()]
+  activityTypes.value = uniqueTypes
+  localStorage.setItem(ACTIVITY_TYPES_KEY, JSON.stringify(uniqueTypes))
+}
+
+const loadSavedActivityTypes = () => {
+  try {
+    const saved = JSON.parse(localStorage.getItem(ACTIVITY_TYPES_KEY) || '[]')
+    if (Array.isArray(saved)) mergeActivityTypes(saved)
+  } catch (error) {
+    console.warn('FireNotify: unable to load saved activity types', error)
+  }
+}
+
+const createActivityType = () => {
+  const name = newActivityTypeName.value.trim()
+  if (!name) return
+  const existing = activityTypes.value.find(type => type.toLowerCase() === name.toLowerCase())
+  if (!existing) mergeActivityTypes([name])
+  activityForm.value.type = existing || name
+  newActivityTypeName.value = ''
+  showNewActivityType.value = false
+}
 
 
 const activities =
@@ -1980,7 +1986,7 @@ const personnel = computed(() => {
     .filter(
       user =>
         user &&
-        user.role !== 'admin'
+        String(user.role || '').trim().toUpperCase() === 'PERSONNEL'
     )
 
     .map(user => ({
@@ -2520,82 +2526,209 @@ const syncActivitiesFromStorage =
 
   }
 
-  const loadActivitiesFromBackend = async () => {
+ const loadActivitiesFromBackend = async () => {
   try {
-    const response = await fetch(
+    // =========================================
+    // LOAD ACTIVITIES
+    // =========================================
+
+    const activitiesResponse = await fetch(
       'http://127.0.0.1:8000/api/activities/'
     )
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`)
+    if (!activitiesResponse.ok) {
+      throw new Error(
+        `Activities API HTTP ${activitiesResponse.status}`
+      )
     }
 
-    const data = await response.json()
+    const activitiesData = await activitiesResponse.json()
 
-    if (!Array.isArray(data)) {
-      throw new Error('Invalid activities response')
+    if (!Array.isArray(activitiesData)) {
+      throw new Error(
+        'Invalid activities response'
+      )
     }
 
-    activities.value = data.map(activity => ({
-      ...activity,
+    mergeActivityTypes(activitiesData.map(activity => activity.activity_type))
 
-      name:
-        activity.title || '',
 
-      type:
-      activity.activity_type || 'Inspection',
+    // =========================================
+    // LOAD ACTIVITY SUBMISSIONS
+    // =========================================
 
-      
+    const submissionsResponse = await fetch(
+      'http://127.0.0.1:8000/api/activity-submissions/'
+    )
 
-      priority:
-  activity.priority
-    ? activity.priority.charAt(0) +
-      activity.priority.slice(1).toLowerCase()
-    : 'Medium',
+    if (!submissionsResponse.ok) {
+      throw new Error(
+        `Submissions API HTTP ${submissionsResponse.status}`
+      )
+    }
 
-      schedule:
-        activity.activity_date || '',
+    const submissionsData =
+      await submissionsResponse.json()
 
-      time:
-        activity.activity_time || '',
+    if (!Array.isArray(submissionsData)) {
+      throw new Error(
+        'Invalid submissions response'
+      )
+    }
 
-      assignedPersonnel:
-        activity.assigned_personnel
-          ? [
-              personnel.value.find(
-                person =>
-                  person.id ===
-                  activity.assigned_personnel
-              )
-            ].filter(Boolean)
-          : [],
 
-      personnel:
-        activity.assigned_personnel
-          ? 1
-          : 0,
+    // =========================================
+    // MERGE SUBMISSIONS INTO ACTIVITIES
+    // =========================================
 
-      status:
-        activity.status === 'PENDING'
-          ? 'Scheduled'
-          : activity.status,
+    activities.value = activitiesData.map(activity => {
 
-      createdAt:
-        activity.created_at,
+      // Find submission belonging to this activity
+      const submission =
+        submissionsData.find(
+          item =>
+            String(item.activity) ===
+            String(activity.id)
+        )
 
-      updatedAt:
-        activity.updated_at
-    }))
+
+      // =========================================
+      // ACTIVITY STATUS
+      // =========================================
+
+      const statusMap = {
+        SCHEDULED: 'Scheduled',
+        ONGOING: 'Ongoing',
+        COMPLETED: 'Completed',
+        DELAYED: 'Delayed',
+        FOR_VERIFICATION: 'For Verification',
+        VERIFIED: 'Verified',
+        RETURNED: 'Returned'
+      }
+
+
+      // =========================================
+      // RETURN MERGED ACTIVITY
+      // =========================================
+
+      return {
+
+        ...activity,
+
+        // Existing UI fields
+        name:
+          activity.title || '',
+
+        type:
+          activity.activity_type ||
+          'Inspection',
+
+        priority:
+          activity.priority
+            ? activity.priority.charAt(0) +
+              activity.priority.slice(1).toLowerCase()
+            : 'Medium',
+
+        schedule:
+          activity.activity_date || '',
+
+        time:
+          activity.activity_time || '',
+
+        assignedPersonnel:
+          activity.assigned_personnel
+            ? [
+                personnel.value.find(
+                  person =>
+                    person.id ===
+                    activity.assigned_personnel
+                )
+              ].filter(Boolean)
+            : [],
+
+        personnel:
+          activity.assigned_personnel
+            ? 1
+            : 0,
+
+
+        // =====================================
+        // IMPORTANT STATUS
+        // =====================================
+
+        status:
+          statusMap[activity.status] ||
+          'Scheduled',
+
+
+        // =====================================
+        // SUBMISSION DATA
+        // =====================================
+
+        submissionId:
+          submission?.id || null,
+
+        submissionStatus:
+          submission?.status || null,
+
+        accomplishment:
+          submission?.accomplishment || '',
+
+          
+
+        submissionRemarks:
+          submission?.remarks || '',
+
+        revisionNote:
+          submission?.revision_note || '',
+
+        submittedAt:
+          submission?.submitted_at || null,
+
+        submittedById:
+          submission?.submitted_by || null,
+
+        evidence:
+          submission?.evidence || [],
+
+        hasSubmission:
+          !!submission,
+
+
+          
+
+
+        // =====================================
+        // DATES
+        // =====================================
+
+        createdAt:
+          activity.created_at,
+
+        updatedAt:
+          activity.updated_at
+      }
+    })
+
+
+    // =========================================
+    // DEBUG
+    // =========================================
 
     console.log(
       'Activities loaded from Django:',
       activities.value
     )
 
+    console.log(
+      'Activity submissions loaded from Django:',
+      submissionsData
+    )
+
   } catch (error) {
 
     console.error(
-      'Failed to load activities from Django:',
+      'Failed to load activities/submissions from Django:',
       error
     )
 
@@ -2616,6 +2749,7 @@ const handleStorageChange =
     ) {
 
       syncActivitiesFromStorage()
+      void loadActivitiesFromBackend()
 
     }
 
@@ -2626,6 +2760,7 @@ const handleActivitySync =
   () => {
 
     syncActivitiesFromStorage()
+    void loadActivitiesFromBackend()
 
   }
 
@@ -2791,6 +2926,79 @@ const completionRate =
 
   })
 
+  /* =========================================================
+   COMPLIANCE / DEADLINE
+========================================================= */
+
+const overdueCount = computed(() => {
+  const todayDate = new Date(`${today.value}T23:59:59`)
+
+  return activities.value.filter(activity => {
+    if (!activity.schedule) return false
+
+    const activityDate =
+      new Date(`${activity.schedule}T23:59:59`)
+
+    const isPastDeadline =
+      activityDate < todayDate
+
+    const isFinished =
+      [
+        'Completed',
+        'Verified'
+      ].includes(activity.status)
+
+    return isPastDeadline && !isFinished
+  }).length
+})
+
+
+const forVerificationCount = computed(() =>
+  activities.value.filter(
+    activity =>
+      activity.status ===
+      'For Verification'
+  ).length
+)
+
+
+const verifiedCount = computed(() =>
+  activities.value.filter(
+    activity =>
+      activity.status ===
+      'Verified'
+  ).length
+)
+
+
+const returnedCount = computed(() =>
+  activities.value.filter(
+    activity =>
+      activity.status ===
+      'Returned'
+  ).length
+)
+
+
+const complianceRate = computed(() => {
+  const total = activities.value.length
+
+  if (!total) return 0
+
+  const compliant =
+    activities.value.filter(
+      activity =>
+        [
+          'Completed',
+          'Verified'
+        ].includes(activity.status)
+    ).length
+
+  return Math.round(
+    (compliant / total) * 100
+  )
+})
+
 
 /* =========================================================
    WORKLOAD
@@ -2924,10 +3132,6 @@ const resetActivityForm =
 
       time: '',
 
-      priority: 'Medium',
-
-      status: 'Scheduled',
-
       location: '',
 
       description: ''
@@ -2997,14 +3201,6 @@ const openEditModal =
       time:
         activity.time ||
         '',
-
-      priority:
-        activity.priority ||
-        'Medium',
-
-      status:
-        activity.status ||
-        'Scheduled',
 
       location:
         activity.location ||
@@ -3185,9 +3381,6 @@ const saveActivity =
             activity_type:
             form.type || '',
 
-            priority:
-  (form.priority || 'Medium').toUpperCase(),
-
             title:
               form.name.trim(),
 
@@ -3205,9 +3398,6 @@ const saveActivity =
 
             assigned_personnel:
               assignedPersonnel[0]?.id || null,
-
-            status:
-              'PENDING'
 
           })
         }
@@ -3268,9 +3458,6 @@ const saveActivity =
 
           assignedPersonnel,
 
-          status:
-            form.status || 'Scheduled',
-
           updatedAt:
             data.updated_at ||
             now
@@ -3328,11 +3515,7 @@ const saveActivity =
           activity_type:
           form.type || '',
 
-            priority:
-    (form.priority || 'Medium').toUpperCase(),
-
-           title:
-           form.name.trim(),
+          priority: 'MEDIUM',
 
           description:
             form.description || '',
@@ -3349,7 +3532,7 @@ const saveActivity =
           assigned_personnel:
             assignedPersonnel[0]?.id || null,
 
-          status: 'PENDING',
+          status: 'SCHEDULED',
 
           created_by:
             props.currentUser?.id || null
@@ -3400,8 +3583,7 @@ const saveActivity =
 
         assignedPersonnel,
 
-        status:
-          form.status || 'Scheduled',
+        status: 'Scheduled',
 
         createdAt:
           data.created_at ||
@@ -3465,43 +3647,49 @@ const saveActivity =
    DELETE ACTIVITY
 ========================================================= */
 
-const deleteActivity =
-  () => {
+const deleteActivity = async () => {
+  if (!selectedActivity.value) return
 
-    if (
-      !selectedActivity.value
-    ) {
-      return
+  const activityId = selectedActivity.value.id
+
+  try {
+    const response = await fetch(
+  `http://127.0.0.1:8000/api/activities/${activityId}/`,
+  {
+    method: 'DELETE'
+  }
+)
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`)
     }
-
-
-    const activityId =
-      selectedActivity.value.id
-
 
     activities.value =
       activities.value.filter(
-        activity =>
-          activity.id !==
-          activityId
+        activity => activity.id !== activityId
       )
 
+    saveActivities(false)
 
-    saveActivities()
-
-
-    showDeleteModal.value =
-      false
-
-    selectedActivity.value =
-      null
-
+    showDeleteModal.value = false
+    selectedActivity.value = null
 
     showToast(
       'Activity deleted successfully.'
     )
 
+  } catch (error) {
+    console.error(
+      'Failed to delete activity:',
+      error
+    )
+
+    showToast(
+      'Failed to delete activity.',
+      'error'
+    )
   }
+}
 
 
 /* =========================================================
@@ -3566,45 +3754,321 @@ const openActivitySubmission = async activity => {
   showSubmissionModal.value = true
 }
 
-const verifyActivity = activity => {
-  const item = activities.value.find(record => record.id === activity.id)
-  if (!item) return
-  Object.assign(item, {
-    status: 'Verified',
-    verifiedAt: new Date().toISOString(),
-    verifiedBy: props.currentUser?.name || 'Administrator',
-    updatedAt: new Date().toISOString()
-  })
-  saveActivities()
-  showSubmissionModal.value = false
-  submissionEvidenceUrls.value.forEach(url => URL.revokeObjectURL(url))
-  submissionEvidenceUrls.value = []
-  notifyPersonnel(activity, 'Your activity has been verified', `${activity.title || activity.name} was verified by Admin.`)
-  showToast('Activity submission verified successfully.')
+const verifyActivity = async activity => {
+  if (!activity?.id) return
+
+  try {
+    const submissionId =
+      activity.submissionId ||
+      selectedActivitySubmission.value?.id
+
+    if (!submissionId) {
+      throw new Error('Submission ID not found.')
+    }
+
+    // 1. Verify the submission in Django
+    const submissionResponse = await fetch(
+      `http://127.0.0.1:8000/api/activity-submissions/${submissionId}/`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          status: 'VERIFIED'
+        })
+      }
+    )
+
+    if (!submissionResponse.ok) {
+      const errorData = await submissionResponse.json().catch(() => ({}))
+
+      throw new Error(
+        errorData?.detail ||
+        errorData?.error ||
+        `Submission verification failed: HTTP ${submissionResponse.status}`
+      )
+    }
+
+    const updatedSubmission =
+      await submissionResponse.json()
+
+    // 2. Verify the activity itself in Django
+    const activityResponse = await fetch(
+      `http://127.0.0.1:8000/api/activities/${activity.id}/`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          status: 'VERIFIED'
+        })
+      }
+    )
+
+    if (!activityResponse.ok) {
+      const errorData = await activityResponse.json().catch(() => ({}))
+
+      throw new Error(
+        errorData?.detail ||
+        errorData?.error ||
+        `Activity verification failed: HTTP ${activityResponse.status}`
+      )
+    }
+
+    const updatedActivity =
+      await activityResponse.json()
+
+    // 3. Update frontend state
+    const item = activities.value.find(
+      record =>
+        String(record.id) ===
+        String(activity.id)
+    )
+
+    if (item) {
+      Object.assign(item, {
+        ...updatedActivity,
+        status: 'Verified',
+        submissionId:
+          updatedSubmission.id ||
+          submissionId,
+        submissionStatus:
+          updatedSubmission.status ||
+          'VERIFIED',
+        accomplishment:
+          updatedSubmission.accomplishment ||
+          item.accomplishment ||
+          '',
+        submissionRemarks:
+          updatedSubmission.remarks ||
+          item.submissionRemarks ||
+          '',
+        revisionNote:
+          updatedSubmission.revision_note ||
+          '',
+        submittedAt:
+          updatedSubmission.submitted_at ||
+          item.submittedAt ||
+          null,
+        updatedAt:
+          updatedActivity.updated_at ||
+          new Date().toISOString()
+      })
+    }
+
+    saveActivities(false)
+
+    showSubmissionModal.value = false
+
+    submissionEvidenceUrls.value.forEach(
+      url => URL.revokeObjectURL(url)
+    )
+
+    submissionEvidenceUrls.value = []
+
+    notifyPersonnel(
+      activity,
+      'Your activity has been verified',
+      `${activity.title || activity.name} was verified by Admin.`
+    )
+
+    showToast(
+      'Activity submission verified successfully.'
+    )
+  } catch (error) {
+    console.error(
+      'Failed to verify activity:',
+      error
+    )
+
+    showToast(
+      error.message ||
+      'Failed to verify activity.',
+      'error'
+    )
+  }
 }
 
-const returnActivityForRevision = activity => {
+  
+
+const returnActivityForRevision = async activity => {
   const note = returnNote.value.trim()
+
   if (!note) {
-    showToast('Please provide a revision note.', 'error')
+    showToast(
+      'Please provide a revision note.',
+      'error'
+    )
     return
   }
-  const item = activities.value.find(record => record.id === activity.id)
-  if (!item) return
-  Object.assign(item, {
-    status: 'Returned',
-    revisionNote: note,
-    returnedAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  })
-  saveActivities()
-  showSubmissionModal.value = false
-  submissionEvidenceUrls.value.forEach(url => URL.revokeObjectURL(url))
-  submissionEvidenceUrls.value = []
-  notifyPersonnel(activity, 'Your activity requires revision', `${activity.title || activity.name}: ${note}`)
-  showToast('Activity returned for revision.')
-}
 
+  const item = activities.value.find(
+    record =>
+      String(record.id) ===
+      String(activity.id)
+  )
+
+  if (!item) {
+    showToast(
+      'Activity not found.',
+      'error'
+    )
+    return
+  }
+
+  try {
+    // ==========================================
+    // 1. FIND SUBMISSION ID
+    // ==========================================
+    const submissionId =
+      item.submissionId ||
+      selectedActivitySubmission.value?.id
+
+    if (!submissionId) {
+      throw new Error(
+        'Submission ID not found.'
+      )
+    }
+
+    // ==========================================
+    // 2. SAVE RETURN STATUS TO DJANGO
+    // ==========================================
+    const submissionResponse =
+      await fetch(
+        `http://127.0.0.1:8000/api/activity-submissions/${submissionId}/`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type':
+              'application/json'
+          },
+          body: JSON.stringify({
+            status: 'RETURNED',
+            revision_note: note
+          })
+        }
+      )
+
+    if (!submissionResponse.ok) {
+      const errorData =
+        await submissionResponse
+          .json()
+          .catch(() => ({}))
+
+      throw new Error(
+        errorData?.detail ||
+        errorData?.error ||
+        `Return failed: HTTP ${submissionResponse.status}`
+      )
+    }
+
+    const updatedSubmission =
+      await submissionResponse.json()
+
+    // ==========================================
+    // 3. UPDATE ACTIVITY STATUS IN DJANGO
+    // ==========================================
+    const activityResponse =
+      await fetch(
+        `http://127.0.0.1:8000/api/activities/${activity.id}/`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type':
+              'application/json'
+          },
+          body: JSON.stringify({
+            status: 'RETURNED'
+          })
+        }
+      )
+
+    if (!activityResponse.ok) {
+      const errorData =
+        await activityResponse
+          .json()
+          .catch(() => ({}))
+
+      throw new Error(
+        errorData?.detail ||
+        errorData?.error ||
+        `Activity return failed: HTTP ${activityResponse.status}`
+      )
+    }
+
+    const updatedActivity =
+      await activityResponse.json()
+
+    // ==========================================
+    // 4. UPDATE FRONTEND
+    // ==========================================
+    Object.assign(item, {
+      ...updatedActivity,
+
+      status: 'Returned',
+
+      submissionId:
+        updatedSubmission.id ||
+        submissionId,
+
+      submissionStatus:
+        updatedSubmission.status ||
+        'RETURNED',
+
+      revisionNote:
+        updatedSubmission.revision_note ||
+        note,
+
+      updatedAt:
+        updatedActivity.updated_at ||
+        new Date().toISOString()
+    })
+
+    // ==========================================
+    // 5. OPTIONAL LOCAL CACHE UPDATE
+    // ==========================================
+    saveActivities(false)
+
+    // ==========================================
+    // 6. CLOSE MODAL / CLEAN EVIDENCE URLS
+    // ==========================================
+    showSubmissionModal.value = false
+
+    submissionEvidenceUrls.value.forEach(
+      url =>
+        URL.revokeObjectURL(url)
+    )
+
+    submissionEvidenceUrls.value = []
+
+    // ==========================================
+    // 7. NOTIFY PERSONNEL
+    // ==========================================
+    notifyPersonnel(
+      activity,
+      'Your activity requires revision',
+      `${activity.title || activity.name}: ${note}`
+    )
+
+    showToast(
+      'Activity returned for revision.'
+    )
+
+  } catch (error) {
+    console.error(
+      'Failed to return activity:',
+      error
+    )
+
+    showToast(
+      error.message ||
+      'Failed to return activity.',
+      'error'
+    )
+  }
+}
 const openEvidence = item => {
   if (!item?.file) return
   const url = URL.createObjectURL(item.file)
@@ -3684,83 +4148,13 @@ const showToast =
 
 const formatDate =
   date => {
-
-    if (!date) {
-      return '—'
-    }
-
-
-    const parsedDate =
-      new Date(
-        `${date}T00:00:00`
-      )
-
-
-    if (
-      Number.isNaN(
-        parsedDate.getTime()
-      )
-    ) {
-
-      return date
-
-    }
-
-
-    return parsedDate.toLocaleDateString(
-      'en-US',
-      {
-
-        month: 'short',
-
-        day: 'numeric',
-
-        year: 'numeric'
-
-      }
-    )
-
+    return formatOperationDate(date)
   }
 
 
 const formatTime =
   time => {
-
-    if (!time) {
-      return '—'
-    }
-
-
-    const [
-      hours,
-      minutes
-    ] =
-      time.split(':')
-
-
-    const date =
-      new Date()
-
-
-    date.setHours(
-      Number(hours),
-      Number(minutes),
-      0,
-      0
-    )
-
-
-    return date.toLocaleTimeString(
-      'en-US',
-      {
-
-        hour: 'numeric',
-
-        minute: '2-digit'
-
-      }
-    )
-
+    return formatOperationTime(time)
   }
 
 
@@ -3862,6 +4256,7 @@ const getTypeClass =
 
 onMounted(async () => {
 
+  loadSavedActivityTypes()
   await loadActivitiesFromBackend()
 
   window.addEventListener(
