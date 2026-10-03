@@ -202,6 +202,27 @@
         </div>
       </div>
 
+      <div class="flex gap-2 border-b border-slate-200 px-5 pt-4">
+        <button
+          type="button"
+          @click="activityView = 'active'"
+          class="border-b-2 px-4 py-3 text-sm font-bold transition"
+          :class="activityView === 'active' ? 'border-[#8B1E23] text-[#8B1E23]' : 'border-transparent text-slate-500 hover:text-slate-800'"
+        >
+          Active Activities
+          <span class="ml-1 text-xs">{{ activeActivityCount }}</span>
+        </button>
+        <button
+          type="button"
+          @click="activityView = 'archived'"
+          class="border-b-2 px-4 py-3 text-sm font-bold transition"
+          :class="activityView === 'archived' ? 'border-[#8B1E23] text-[#8B1E23]' : 'border-transparent text-slate-500 hover:text-slate-800'"
+        >
+          Archived Activities
+          <span class="ml-1 text-xs">{{ archivedActivityCount }}</span>
+        </button>
+      </div>
+
       <div class="fn-operations-table-wrap">
 
         <table class="fn-operations-table">
@@ -347,29 +368,77 @@
 
                 <div class="flex justify-end gap-2">
 
-                  <button
-                    @click="viewActivity(activity)"
-                    class="fn-operations-action"
-                  >
-                    View
-                  </button>
+                  <template v-if="activityView === 'archived'">
+                    <button
+                      @click="openActivitySubmission(activity)"
+                      class="fn-operations-action"
+                    >
+                      View Submission
+                    </button>
+                    <button
+                      @click="restoreActivity(activity)"
+                      class="fn-operations-action"
+                    >
+                      Restore
+                    </button>
+                    <button
+                      @click="openDeleteModal(activity)"
+                      class="fn-operations-action fn-operations-action--danger"
+                    >
+                      Delete
+                    </button>
+                  </template>
+
+                  <template v-else-if="activity.status === 'For Verification'">
+                    <button
+                      @click="openActivitySubmission(activity)"
+                      class="fn-operations-action"
+                    >
+                      View Submission
+                    </button>
+                  </template>
+
+                  <template v-else-if="activity.status === 'Verified'">
+                    <button
+                      @click="openActivitySubmission(activity)"
+                      class="fn-operations-action"
+                    >
+                      View Submission
+                    </button>
+                    <button
+                      @click="archiveActivity(activity)"
+                      class="fn-operations-action"
+                    >
+                      Archive
+                    </button>
+                  </template>
+
+                  <template v-else-if="activity.status === 'Returned'">
+                    <button
+                      @click="viewActivity(activity)"
+                      class="fn-operations-action"
+                    >
+                      View
+                    </button>
+                  </template>
+
+                  <template v-else>
+                    <button
+                      @click="viewActivity(activity)"
+                      class="fn-operations-action"
+                    >
+                      View
+                    </button>
+                    <button
+                      @click="openEditModal(activity)"
+                      class="fn-operations-action"
+                    >
+                      Edit
+                    </button>
+                  </template>
 
                   <button
-                    v-if="activity.status === 'For Verification'"
-                    @click="openActivitySubmission(activity)"
-                    class="fn-operations-action"
-                  >
-                    View Submission
-                  </button>
-
-                  <button
-                    @click="openEditModal(activity)"
-                    class="fn-operations-action"
-                  >
-                    Edit
-                  </button>
-
-                  <button
+                    v-if="activityView === 'active'"
                     @click="openDeleteModal(activity)"
                     class="fn-operations-action fn-operations-action--danger"
                   >
@@ -1587,7 +1656,8 @@
   </p>
 </div>
 
-<textarea
+            <textarea
+              v-if="selectedActivitySubmission.status === 'For Verification'"
   v-model="returnNote"
   rows="3"
   placeholder="Revision note when returning the submission..."
@@ -1596,8 +1666,8 @@
         </div>
         <div class="p-6 border-t border-slate-200 flex flex-wrap justify-end gap-3">
           <button type="button" @click="showSubmissionModal = false" class="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-semibold">Close</button>
-          <button type="button" @click="returnActivityForRevision(selectedActivitySubmission)" class="px-5 py-2.5 rounded-xl bg-yellow-600 text-white font-bold">Return for Revision</button>
-          <button type="button" @click="verifyActivity(selectedActivitySubmission)" class="px-5 py-2.5 rounded-xl bg-green-600 text-white font-bold">Verify</button>
+          <button v-if="selectedActivitySubmission.status === 'For Verification'" type="button" @click="returnActivityForRevision(selectedActivitySubmission)" class="px-5 py-2.5 rounded-xl bg-yellow-600 text-white font-bold">Return for Revision</button>
+          <button v-if="selectedActivitySubmission.status === 'For Verification'" type="button" @click="verifyActivity(selectedActivitySubmission)" class="px-5 py-2.5 rounded-xl bg-green-600 text-white font-bold">Verify</button>
         </div>
       </div>
     </div>
@@ -1704,6 +1774,8 @@ const selectedStatus =
 
 const selectedPriority =
   ref('All Priorities')
+
+const activityView = ref('active')
 
 
 const showActivityModal =
@@ -2780,6 +2852,9 @@ const filteredActivities =
     return activities.value.filter(
       activity => {
 
+        const isArchived = activity.is_archived === true
+        if (activityView.value === 'archived' ? !isArchived : isArchived) return false
+
         const assignedNames =
           Array.isArray(
             activity.assignedPersonnel
@@ -2850,6 +2925,14 @@ const filteredActivities =
     )
 
   })
+
+const activeActivityCount = computed(() =>
+  activities.value.filter(activity => activity.is_archived !== true).length
+)
+
+const archivedActivityCount = computed(() =>
+  activities.value.filter(activity => activity.is_archived === true).length
+)
 
 
 /* =========================================================
@@ -3688,6 +3771,59 @@ const deleteActivity = async () => {
       'Failed to delete activity.',
       'error'
     )
+  }
+}
+
+const archiveActivity = async activity => {
+  try {
+    const response = await fetch(
+      `http://127.0.0.1:8000/api/activities/${activity.id}/`,
+      {
+          
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ is_archived: true })
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`)
+    }
+
+    activity.is_archived = true
+    saveActivities(false)
+    showToast('Activity archived successfully.')
+  } catch (error) {
+    console.error('Failed to archive activity:', error)
+    showToast('Failed to archive activity.', 'error')
+  }
+}
+
+const restoreActivity = async activity => {
+  try {
+    const response = await fetch(
+      `http://127.0.0.1:8000/api/activities/${activity.id}/`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ is_archived: false })
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`)
+    }
+
+    activity.is_archived = false
+    saveActivities(false)
+    showToast('Activity restored successfully.')
+  } catch (error) {
+    console.error('Failed to restore activity:', error)
+    showToast('Failed to restore activity.', 'error')
   }
 }
 

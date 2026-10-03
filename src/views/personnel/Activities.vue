@@ -435,10 +435,18 @@
                 <td data-label="Status"><span class="fn-operations-badge" :class="statusClass(activity.status)">{{ activity.status }}</span></td>
                 <td data-label="Actions">
                   <div class="flex flex-wrap gap-1.5 sm:justify-end">
-                    <button @click="openDetails(activity)" class="fn-operations-action">View</button>
-                    <button v-if="activity.status === 'Scheduled' || activity.status === 'Assigned' || activity.status === 'Overdue'" @click="startActivity(activity)" class="fn-operations-action">Start</button>
-                    <button v-if="['Scheduled', 'Assigned', 'In Progress', 'Ongoing', 'Delayed', 'Returned', 'Overdue'].includes(activity.status)" @click="openSubmissionModal(activity)" class="fn-operations-action fn-operations-action--primary">{{ activity.status === 'Returned' ? 'Revise' : 'Submit' }}</button>
-                    <button v-if="activity.status === 'Overdue'" @click="resolveActivity(activity)" class="fn-operations-action fn-operations-action--danger">Resolve</button>
+                    <template v-if="['For Verification', 'Verified'].includes(activity.status)">
+                      <button @click="openActivityReview(activity)" class="fn-operations-action">View Submission</button>
+                    </template>
+                    <template v-else-if="activity.status === 'Returned'">
+                      <button @click="editActivity(activity)" class="fn-operations-action">Edit</button>
+                      <button @click="openSubmissionModal(activity)" class="fn-operations-action fn-operations-action--primary">Resubmit</button>
+                    </template>
+                    <template v-else>
+                      <button @click="openSubmissionModal(activity)" class="fn-operations-action fn-operations-action--primary">Submit</button>
+                    </template>
+                    <button @click="archiveActivity(activity)" class="fn-operations-action">Archive</button>
+                    <button @click="deleteActivity(activity)" class="fn-operations-action fn-operations-action--danger">Delete</button>
                   </div>
                 </td>
               </tr>
@@ -939,6 +947,42 @@
 
 
     <!-- ========================================================= -->
+    <!-- EDIT RETURNED ACTIVITY MODAL -->
+    <div
+      v-if="editingActivity"
+      class="fixed inset-0 z-[60] bg-slate-900/50 flex items-center justify-center p-4"
+      @click.self="editingActivity = null"
+    >
+      <div class="w-full max-w-xl rounded-2xl bg-white shadow-xl">
+        <div class="border-b border-slate-200 px-6 py-5">
+          <h3 class="text-lg font-bold text-slate-900">Edit Activity</h3>
+        </div>
+        <div class="space-y-4 p-6">
+          <label class="block text-sm font-semibold text-slate-700">Activity Name
+            <input v-model="activityEditForm.title" class="mt-1 h-11 w-full rounded-lg border border-slate-300 px-3" />
+          </label>
+          <label class="block text-sm font-semibold text-slate-700">Location
+            <input v-model="activityEditForm.location" class="mt-1 h-11 w-full rounded-lg border border-slate-300 px-3" />
+          </label>
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <label class="block text-sm font-semibold text-slate-700">Schedule
+              <input v-model="activityEditForm.date" type="date" class="mt-1 h-11 w-full rounded-lg border border-slate-300 px-3" />
+            </label>
+            <label class="block text-sm font-semibold text-slate-700">Time
+              <input v-model="activityEditForm.time" type="time" class="mt-1 h-11 w-full rounded-lg border border-slate-300 px-3" />
+            </label>
+          </div>
+          <label class="block text-sm font-semibold text-slate-700">Description
+            <textarea v-model="activityEditForm.description" rows="3" class="mt-1 w-full rounded-lg border border-slate-300 p-3"></textarea>
+          </label>
+        </div>
+        <div class="flex justify-end gap-3 border-t border-slate-200 px-6 py-4">
+          <button type="button" @click="editingActivity = null" class="rounded-lg border border-slate-300 px-4 py-2 font-semibold">Cancel</button>
+          <button type="button" @click="saveActivityEdit" class="rounded-lg bg-[#8B1E23] px-4 py-2 font-bold text-white">Save Changes</button>
+        </div>
+      </div>
+    </div>
+
     <!-- UPDATE STATUS MODAL -->
     <!-- ========================================================= -->
     <div
@@ -1038,6 +1082,43 @@
 
     </div>
 
+
+    <div
+      v-if="selectedActivitySubmission"
+      class="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/50 p-4"
+      @click.self="selectedActivitySubmission = null"
+    >
+      <div class="fn-modal-panel max-h-[calc(100dvh-2rem)] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-xl">
+        <div class="border-b border-slate-200 px-6 py-5">
+          <p class="text-xs font-bold uppercase tracking-wide text-[#8B1E23]">Activity Submission</p>
+          <h3 class="mt-1 text-xl font-bold text-slate-900">{{ selectedActivitySubmission.title }}</h3>
+          <p class="mt-1 text-sm text-slate-500">Submitted {{ selectedActivitySubmission.submittedAt ? formatDate(selectedActivitySubmission.submittedAt) : 'date unavailable' }}</p>
+        </div>
+        <div class="space-y-5 p-6">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-wide text-slate-500">Accomplishment / Work Summary</p>
+            <p class="mt-2 whitespace-pre-line rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">{{ selectedActivitySubmission.accomplishment || 'No accomplishment provided.' }}</p>
+          </div>
+          <div>
+            <p class="text-xs font-bold uppercase tracking-wide text-slate-500">Evidence Photos</p>
+            <div v-if="selectedActivitySubmission.evidence?.length" class="mt-2 grid grid-cols-2 gap-3 md:grid-cols-3">
+              <a v-for="photo in selectedActivitySubmission.evidence" :key="photo.id" :href="evidenceFileUrl(photo.file)" target="_blank" rel="noreferrer" class="overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+                <img :src="evidenceFileUrl(photo.file)" alt="Submitted evidence photo" class="h-40 w-full object-cover" />
+                <span class="block px-3 py-2 text-xs text-slate-500">Evidence</span>
+              </a>
+            </div>
+            <p v-else class="mt-2 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-500">No evidence photos submitted.</p>
+          </div>
+          <div v-if="selectedActivitySubmission.remarks">
+            <p class="text-xs font-bold uppercase tracking-wide text-slate-500">Remarks</p>
+            <p class="mt-2 whitespace-pre-line text-sm text-slate-700">{{ selectedActivitySubmission.remarks }}</p>
+          </div>
+        </div>
+        <div class="flex justify-end border-t border-slate-200 px-6 py-4">
+          <button type="button" @click="selectedActivitySubmission = null" class="rounded-xl border border-slate-300 px-5 py-2.5 font-semibold text-slate-700">Close</button>
+        </div>
+      </div>
+    </div>
 
     <div
       v-if="submissionActivity"
@@ -1287,11 +1368,15 @@ const loadActivities = () => {
   try {
     const parsed = JSON.parse(localStorage.getItem(ACTIVITY_STORAGE_KEY) || '[]')
     const localActivities = Array.isArray(parsed)
-      ? parsed.filter(isAssignedToCurrentUser).map(normalizeActivity)
+      ? parsed.filter(activity => !activity.is_archived && isAssignedToCurrentUser(activity)).map(normalizeActivity)
       : []
     const activitiesById = new Map(localActivities.map(activity => [String(activity.id), activity]))
 
     serverActivities.value.forEach(activity => {
+      if (activity.is_archived) {
+        activitiesById.delete(String(activity.id))
+        return
+      }
       const id = String(activity.id)
       activitiesById.set(id, normalizeServerActivity(activity, activitiesById.get(id)))
     })
@@ -1315,11 +1400,27 @@ const loadAssignedActivitiesFromApi = async () => {
     const records = await response.json()
     if (!Array.isArray(records)) throw new Error('Invalid activities response')
 
+    const submissionsResponse = await fetch('http://127.0.0.1:8000/api/activity-submissions/')
+    if (!submissionsResponse.ok) throw new Error(`Submissions API HTTP ${submissionsResponse.status}`)
+    const submissions = await submissionsResponse.json()
+    if (!Array.isArray(submissions)) throw new Error('Invalid activity submissions response')
+
     serverActivities.value = records.filter(activity =>
+      !activity.is_archived &&
       activity.assigned_personnel !== null &&
       activity.assigned_personnel !== undefined &&
       String(activity.assigned_personnel) === String(userId)
-    )
+    ).map(activity => {
+      const submission = submissions.find(item => String(item.activity) === String(activity.id))
+      return {
+        ...activity,
+        submissionId: submission?.id || null,
+        accomplishment: submission?.accomplishment || '',
+        remarks: submission?.remarks || '',
+        submittedAt: submission?.submitted_at || null,
+        evidence: submission?.evidence || []
+      }
+    })
     loadActivities()
   } catch (error) {
     console.error('Failed to load assigned activities from Django:', error)
@@ -1524,6 +1625,15 @@ const showDetailsModal = ref(false)
 const showStatusModal = ref(false)
 
 const selectedActivity = ref(null)
+const selectedActivitySubmission = ref(null)
+const editingActivity = ref(null)
+const activityEditForm = ref({
+  title: '',
+  location: '',
+  date: '',
+  time: '',
+  description: ''
+})
 
 const newStatus = ref('Scheduled')
 const newProgress = ref(10)
@@ -2146,6 +2256,126 @@ const openSubmissionModal = activity => {
   activityRemarks.value = activity.remarks || ''
   activityEvidenceFiles.value = []
   activityEvidencePreviews.value = []
+}
+
+const evidenceFileUrl = file => {
+  if (!file) return ''
+  try {
+    return new URL(file, 'http://127.0.0.1:8000').toString()
+  } catch {
+    return ''
+  }
+}
+
+const openActivityReview = activity => {
+  selectedActivitySubmission.value = activity
+}
+
+const archiveActivity = async activity => {
+  try {
+    const response = await fetch(
+      `http://127.0.0.1:8000/api/activities/${activity.id}/`,
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_archived: true })
+      }
+    )
+
+    if (!response.ok) throw new Error(`HTTP ${response.status}`)
+
+    activity.is_archived = true
+    const stored = JSON.parse(localStorage.getItem(ACTIVITY_STORAGE_KEY) || '[]')
+    if (Array.isArray(stored)) {
+      localStorage.setItem(ACTIVITY_STORAGE_KEY, JSON.stringify(
+        stored.map(item => String(item.id) === String(activity.id)
+          ? { ...item, is_archived: true }
+          : item)
+      ))
+    }
+    activities.value = activities.value.filter(item => String(item.id) !== String(activity.id))
+    serverActivities.value = serverActivities.value.filter(item => String(item.id) !== String(activity.id))
+    saveActivities()
+    showToast('Activity archived.')
+  } catch (error) {
+    console.error('Failed to archive activity:', error)
+    showToast('Failed to archive activity.')
+  }
+}
+
+const deleteActivity = async activity => {
+  try {
+    const response = await fetch(
+      `http://127.0.0.1:8000/api/activities/${activity.id}/`,
+      { method: 'DELETE' }
+    )
+
+    if (!response.ok) throw new Error(`HTTP ${response.status}`)
+
+    activities.value = activities.value.filter(item => String(item.id) !== String(activity.id))
+    serverActivities.value = serverActivities.value.filter(item => String(item.id) !== String(activity.id))
+    const stored = JSON.parse(localStorage.getItem(ACTIVITY_STORAGE_KEY) || '[]')
+    localStorage.setItem(ACTIVITY_STORAGE_KEY, JSON.stringify(
+      (Array.isArray(stored) ? stored : []).filter(item => String(item.id) !== String(activity.id))
+    ))
+    saveActivities()
+    showToast('Activity deleted.')
+  } catch (error) {
+    console.error('Failed to delete activity:', error)
+    showToast('Failed to delete activity.')
+  }
+}
+
+const editActivity = activity => {
+  editingActivity.value = activity
+  activityEditForm.value = {
+    title: activity.title || '',
+    location: activity.location || '',
+    date: activity.date || activity.schedule || '',
+    time: activity.time || '',
+    description: activity.description || ''
+  }
+}
+
+const saveActivityEdit = async () => {
+  if (!editingActivity.value) return
+  const activity = editingActivity.value
+
+  try {
+    const response = await fetch(
+      `http://127.0.0.1:8000/api/activities/${activity.id}/`,
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: activityEditForm.value.title.trim(),
+          location: activityEditForm.value.location.trim(),
+          activity_date: activityEditForm.value.date,
+          activity_time: activityEditForm.value.time,
+          description: activityEditForm.value.description
+        })
+      }
+    )
+
+    if (!response.ok) throw new Error(`HTTP ${response.status}`)
+    const updated = await response.json()
+    Object.assign(activity, {
+      ...updated,
+      title: updated.title,
+      name: updated.title,
+      location: updated.location,
+      date: updated.activity_date,
+      schedule: updated.activity_date,
+      time: updated.activity_time || '',
+      description: updated.description
+    })
+    editingActivity.value = null
+    saveActivities()
+    showToast('Activity updated.')
+  } catch (error) {
+    console.error('Failed to update activity:', error)
+    showToast('Failed to update activity.')
+  }
 }
 
 const closeSubmissionModal = () => {

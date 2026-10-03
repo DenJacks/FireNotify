@@ -61,6 +61,10 @@ class Activity(models.Model):
         default="SCHEDULED"
     )
 
+    is_archived = models.BooleanField(
+        default=False
+    )
+
     created_by = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,

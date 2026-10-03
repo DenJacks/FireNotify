@@ -44,6 +44,7 @@ class ActivitySerializer(serializers.ModelSerializer):
             "location",
             "assigned_personnel",
             "status",
+            "is_archived",
             "created_by",
             "created_at",
             "updated_at",
