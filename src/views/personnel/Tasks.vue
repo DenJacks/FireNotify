@@ -4,7 +4,7 @@
     <!-- =========================================================
          PAGE HEADER
     ========================================================== -->
-    <section class="border-b border-slate-200 pb-3">
+    <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
       <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
 
         <div>
@@ -226,15 +226,24 @@
           </p>
         </div>
 
-        <span class="text-xs font-semibold text-slate-600">{{ filteredTasks.length }} tasks</span>
+        <span v-if="hasLoadedTasks" class="text-xs font-semibold text-slate-600">{{ filteredTasks.length }} tasks</span>
+        <span v-else class="text-xs font-semibold text-slate-500">Loading tasks...</span>
 
       </div>
 
+      <div class="flex gap-2 border-b border-slate-200 px-5 pt-4">
+        <button type="button" @click="taskView = 'active'" class="border-b-2 px-4 py-3 text-sm font-bold" :class="taskView === 'active' ? 'border-[#8B1E23] text-[#8B1E23]' : 'border-transparent text-slate-500'">
+          Active Tasks <span class="ml-1 text-xs">{{ activeTaskCount }}</span>
+        </button>
+        <button type="button" @click="taskView = 'archived'" class="border-b-2 px-4 py-3 text-sm font-bold" :class="taskView === 'archived' ? 'border-[#8B1E23] text-[#8B1E23]' : 'border-transparent text-slate-500'">
+          Archived Tasks <span class="ml-1 text-xs">{{ archivedTaskCount }}</span>
+        </button>
+      </div>
 
-      <div v-if="filteredTasks.length" class="fn-operations-table-wrap">
+      <div class="fn-operations-table-wrap">
         <table class="fn-operations-table">
           <thead>
-            <tr><th>Task</th><th>Assigned To</th><th>Deadline</th><th>Priority</th><th>Status</th><th class="text-right">Actions</th></tr>
+            <tr><th>Task</th><th>Assigned To</th><th>Location</th><th>Deadline</th><th>Priority</th><th>Status</th><th class="text-right">Actions</th></tr>
           </thead>
           <tbody>
             <tr v-for="task in filteredTasks" :key="task.id">
@@ -243,10 +252,11 @@
                   <p class="break-words text-sm font-semibold leading-5 text-slate-900">{{ task.title }}</p>
                   <p v-if="task.subtopic" class="break-words text-xs leading-5 text-slate-600">{{ task.subtopic }}</p>
                   <p v-if="task.description" class="break-words whitespace-pre-wrap text-xs leading-5 text-slate-500">{{ task.description }}</p>
-                  <p v-if="task.location" class="break-words text-xs leading-5 text-slate-500">{{ task.location }}</p>
+                  <p v-if="task.status === 'Returned' && task.revisionNote" class="break-words whitespace-pre-wrap text-xs font-semibold leading-5 text-amber-700">Revision requested: {{ task.revisionNote }}</p>
                 </div>
               </td>
               <td data-label="Assigned To"><span class="block min-w-0 break-words leading-5">{{ task.assignedToName || props.currentUser?.name || [props.currentUser?.firstName, props.currentUser?.lastName].filter(Boolean).join(' ') || task.assignedToUsername || 'You' }}</span></td>
+              <td data-label="Location"><span class="block min-w-0 break-words leading-5">{{ task.location || 'Not specified' }}</span></td>
               <td data-label="Schedule">
                 <div class="flex flex-col gap-0.5">
                   <span class="leading-5">{{ formatOperationDate(task.due || task.dueDate) }}</span>
@@ -261,167 +271,40 @@
               </td>
               <td data-label="Actions">
                 <div class="flex flex-wrap gap-1.5 sm:justify-end">
-                  <button @click="viewDetails(task)" class="fn-operations-action">View</button>
-                  <button v-if="['Pending', 'Assigned', 'Overdue', 'In Progress', 'Returned'].includes(task.status)" @click="openSubmitModal(task)" class="fn-operations-action fn-operations-action--primary">{{ task.status === 'Returned' ? 'Revise' : 'Submit Task' }}</button>
-                  <span v-else-if="task.status === 'For Verification'" class="fn-operations-badge">For Verification</span>
-                  <span v-else-if="task.status === 'Verified' || task.status === 'Completed'" class="fn-operations-badge">Verified</span>
+                  <template v-if="taskView === 'archived'">
+                    <button type="button" v-if="['For Verification', 'Verified', 'Returned'].includes(task.status)" @click="openTaskSubmission(task)" class="fn-operations-action">View Submission</button>
+                    <button type="button" @click="restoreTask(task)" class="fn-operations-action">Restore</button>
+                    <button type="button" @click="requestDeleteTask(task)" class="fn-operations-action fn-operations-action--danger">Delete</button>
+                  </template>
+                  <template v-else>
+                    <button type="button" v-if="!['For Verification', 'Verified', 'Completed', 'Returned'].includes(task.status)" @click="viewDetails(task)" class="fn-operations-action">View</button>
+                    <button type="button" v-if="['For Verification', 'Verified'].includes(task.status)" @click="openTaskSubmission(task)" class="fn-operations-action">View Submission</button>
+                    <button type="button" v-if="['Pending', 'Assigned', 'Overdue', 'In Progress', 'Returned'].includes(task.status)" @click="openSubmitModal(task)" class="fn-operations-action fn-operations-action--primary">{{ task.status === 'Returned' ? 'Revise' : 'Submit Task' }}</button>
+                    <button type="button" @click="archiveTask(task)" class="fn-operations-action">Archive</button>
+                    <button type="button" @click="requestDeleteTask(task)" class="fn-operations-action fn-operations-action--danger">Delete</button>
+                  </template>
                 </div>
+              </td>
+            </tr>
+            <tr v-if="!hasLoadedTasks">
+              <td colspan="7" class="px-4 py-8 text-center text-sm text-slate-500">Loading tasks...</td>
+            </tr>
+            <tr v-else-if="!filteredTasks.length">
+              <td colspan="7" class="px-4 py-8 text-center">
+                <p class="font-bold text-slate-700">No tasks found</p>
+                <p class="mt-1 text-sm text-slate-500">Try changing your search or filters.</p>
+                <button @click="clearFilters" class="mt-3 fn-operations-action">Clear Filters</button>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
-      <div v-else class="px-4 py-6 text-center">
-        <h4 class="font-semibold text-slate-900">No assigned tasks</h4>
-        <p class="mt-1 text-sm text-slate-500">Your administrator has not assigned any tasks to you yet.</p>
-        <button @click="clearFilters" class="mt-3 fn-operations-action">Clear Filters</button>
-      </div>
 
     </section>
 
 
-    <!-- =========================================================
-         TODAY'S PRIORITY + RECENTLY COMPLETED
-    ========================================================== -->
-    <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+   
 
-      <!-- TODAY'S PRIORITY -->
-      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
-
-        <h3 class="text-lg font-bold text-slate-900">
-          Today's Priority
-        </h3>
-
-        <p class="text-sm text-slate-500 mt-1">
-          Tasks that require immediate attention.
-        </p>
-
-
-        <div class="mt-5 space-y-4">
-
-          <div
-            v-for="task in priorityTasks"
-            :key="task.id"
-            class="p-4 rounded-xl border"
-            :class="task.priority === 'High'
-              ? 'bg-red-50 border-red-100'
-              : 'bg-amber-50 border-amber-100'"
-          >
-
-            <div class="flex items-start gap-3">
-
-              <span
-                class="font-bold text-lg"
-                :class="task.priority === 'High'
-                  ? 'text-red-600'
-                  : 'text-amber-600'"
-              >
-                !
-              </span>
-
-              <div class="min-w-0">
-
-                <p class="font-bold text-slate-900">
-                  {{ task.title }}
-                </p>
-
-                <p
-                  v-if="task.subtopic"
-                  class="text-xs font-semibold text-[#8B1E23] mt-1"
-                >
-                  {{ task.subtopic }}
-                </p>
-
-                <p class="text-sm text-slate-500 mt-1">
-                  {{ task.location || 'No location specified' }}
-                </p>
-
-                <p
-                  class="text-xs font-bold mt-2"
-                  :class="task.priority === 'High'
-                    ? 'text-red-600'
-                    : 'text-amber-600'"
-                >
-                  {{ task.priority }} Priority · Due {{ formatOperationDate(task.due || task.dueDate) }}
-                </p>
-
-              </div>
-
-            </div>
-
-          </div>
-
-
-          <div
-            v-if="priorityTasks.length === 0"
-            class="text-sm text-slate-500 py-4"
-          >
-            No high-priority tasks at the moment.
-          </div>
-
-        </div>
-
-      </div>
-
-
-      <!-- RECENTLY COMPLETED -->
-      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
-
-        <h3 class="text-lg font-bold text-slate-900">
-          Recently Completed
-        </h3>
-
-        <p class="text-sm text-slate-500 mt-1">
-          Your latest submitted and completed assignments.
-        </p>
-
-
-        <div class="mt-5 space-y-4">
-
-          <div
-            v-for="task in recentlyCompleted"
-            :key="task.id"
-            class="flex items-center gap-4 p-4 rounded-xl bg-green-50"
-          >
-
-            <div
-              class="h-10 w-10 rounded-full bg-green-100
-                     flex items-center justify-center shrink-0"
-            >
-              <span class="text-green-600 font-bold">
-                ✓
-              </span>
-            </div>
-
-            <div class="min-w-0">
-
-              <p class="font-bold text-slate-900">
-                {{ task.title }}
-              </p>
-
-              <p v-if="task.completedAt || task.submittedAt" class="mt-1 flex flex-col gap-0.5 text-xs leading-5 text-slate-500">
-                <span>{{ formatOperationDate(task.completedAt || task.submittedAt) }}</span>
-                <span v-if="hasTimeValue(task.completedAt || task.submittedAt)">{{ formatOperationTime(task.completedAt || task.submittedAt) }}</span>
-              </p>
-              <p v-else class="mt-1 text-xs leading-5 text-slate-500">Completed</p>
-
-            </div>
-
-          </div>
-
-
-          <div
-            v-if="recentlyCompleted.length === 0"
-            class="text-sm text-slate-500 py-4"
-          >
-            No completed tasks yet.
-          </div>
-
-        </div>
-
-      </div>
-
-    </section>
 
 
     <!-- =========================================================
@@ -567,7 +450,7 @@
 
           <!-- SUBMISSION INFO -->
           <div
-            v-if="selectedTask.status === 'Submitted'"
+            v-if="['Submitted', 'For Verification', 'Verified', 'Returned'].includes(selectedTask.status)"
             class="p-4 rounded-xl bg-blue-50 border border-blue-100"
           >
 
@@ -585,6 +468,17 @@
               <span v-if="hasTimeValue(selectedTask.submittedAt)">{{ formatOperationTime(selectedTask.submittedAt) }}</span>
             </p>
 
+          </div>
+
+          <div v-if="['Submitted', 'For Verification', 'Verified', 'Returned'].includes(selectedTask.status)" class="rounded-xl border border-slate-200 p-4">
+            <p class="text-xs font-bold uppercase tracking-wide text-slate-500">Evidence Photos</p>
+            <div v-if="taskSubmissionEvidence.length" class="mt-3 grid grid-cols-2 gap-3 md:grid-cols-3">
+              <a v-for="(item, index) in taskSubmissionEvidence" :key="item.id" :href="taskSubmissionEvidenceUrls[index]" target="_blank" rel="noreferrer" class="overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+                <img :src="taskSubmissionEvidenceUrls[index]" :alt="item.filename || 'Task evidence photo'" class="h-32 w-full object-cover" />
+                <span class="block truncate px-2 py-1.5 text-xs text-slate-600">{{ item.filename || 'Evidence' }}</span>
+              </a>
+            </div>
+            <p v-else class="mt-2 text-sm text-slate-500">No evidence photos submitted.</p>
           </div>
 
 
@@ -651,88 +545,130 @@
     </div>
 
 
+    <div
+      v-if="pendingDeleteTask"
+      class="fixed inset-0 z-[75] flex items-center justify-center bg-slate-900/50 p-4"
+      @click.self="pendingDeleteTask = null"
+    >
+      <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+        <p class="text-xs font-bold uppercase tracking-wide text-[#8B1E23]">Task Action</p>
+        <h3 class="mt-2 text-xl font-bold text-slate-900">
+          {{ taskView === 'active' ? 'Move Task to Archive?' : 'Remove Task Assignment?' }}
+        </h3>
+        <p class="mt-2 text-sm text-slate-600">
+          <template v-if="taskView === 'active'">
+            Move <strong>{{ pendingDeleteTask.title }}</strong> to your Archived Tasks? Admin's task will remain unchanged.
+          </template>
+          <template v-else>
+            Remove <strong>{{ pendingDeleteTask.title }}</strong> from your assignments? The shared task and submission evidence will remain intact.
+          </template>
+        </p>
+        <div class="mt-6 flex justify-end gap-3">
+          <button type="button" @click="pendingDeleteTask = null" class="rounded-xl border border-slate-300 px-5 py-2.5 font-semibold text-slate-700">Cancel</button>
+          <button type="button" :disabled="taskActionPending" @click="deleteTask(pendingDeleteTask)" class="rounded-xl bg-[#8B1E23] px-5 py-2.5 font-bold text-white disabled:cursor-wait disabled:opacity-60">
+            {{ taskActionPending ? 'Saving...' : taskView === 'active' ? 'Move to Archive' : 'Remove Assignment' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- =========================================================
          SUBMIT TASK MODAL
     ========================================================== -->
     <div
       v-if="submitTask"
-      class="fixed inset-0 z-[60] bg-black/50 flex items-center
-             justify-center p-4"
+      class="fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4"
       @click.self="closeSubmitModal"
     >
 
-      <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg">
+      <div class="fn-modal-panel flex max-h-[calc(100dvh-2rem)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
 
-        <div class="p-6 border-b border-slate-200">
+        <div class="fn-modal-header shrink-0 bg-[#8B1E23] p-6 text-white">
 
-          <p class="text-xs font-bold uppercase tracking-wide text-[#8B1E23]">
-            Task Submission
-          </p>
+          <div class="flex items-start justify-between gap-4">
+            <div class="min-w-0">
+              <p class="fn-modal-header-label text-xs font-bold uppercase tracking-wide">
+                Task Submission
+              </p>
 
-          <h3 class="text-xl font-bold text-slate-900 mt-1">
-            Submit Task
-          </h3>
+              <h3 class="mt-1 text-2xl font-bold text-white">
+                {{ submitTask.status === 'Returned' ? 'Revise Task Submission' : 'Submit Task' }}
+              </h3>
 
-          <p class="text-sm text-slate-500 mt-1">
-            {{ submitTask.title }}
-          </p>
+              <p class="fn-modal-header-description mt-1 break-words text-sm">
+                {{ submitTask.title }}
+              </p>
 
-          <div class="mt-3 flex flex-wrap gap-3 text-xs text-white/80">
-            <span>Status: {{ submitTask.status }}</span>
+              <span class="mt-3 inline-flex rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white">
+                {{ submitTask.status }}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              @click="closeSubmitModal"
+              class="h-9 w-9 shrink-0 rounded-lg bg-white/10 text-white hover:bg-white/20"
+              aria-label="Close task submission"
+            >
+              ✕
+            </button>
           </div>
 
         </div>
 
 
-        <div class="p-6">
+        <div class="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain p-6">
 
-          <label class="block text-sm font-bold text-slate-700 mb-2">
-            Accomplishment / Work Summary
-            <span class="text-[#8B1E23]">*</span>
-          </label>
+          <div>
+            <label class="mb-2 block text-sm font-bold text-slate-700">
+              Accomplishment / Work Summary
+              <span class="text-[#8B1E23]">*</span>
+            </label>
 
-          <textarea
-            v-model="accomplishment"
-            rows="5"
-            placeholder="Describe the work completed, observations, and outcomes."
-            class="w-full px-4 py-3 rounded-xl border border-slate-300
-                   text-sm resize-none focus:outline-none
-                   focus:ring-2 focus:ring-[#8B1E23]/20
-                   focus:border-[#8B1E23]"
-          ></textarea>
+            <textarea
+              v-model="accomplishment"
+              rows="5"
+              placeholder="Describe the work completed, observations, and outcomes."
+              class="w-full resize-none rounded-xl border border-slate-300 px-4 py-3 text-sm focus:border-[#8B1E23] focus:outline-none focus:ring-2 focus:ring-[#8B1E23]/20"
+            ></textarea>
 
-          <p class="text-xs text-slate-500 mt-2">
-            Provide the work completed for Admin verification.
-          </p>
+            <p class="mt-2 text-xs text-slate-500">
+              Provide the work completed for Admin verification.
+            </p>
+          </div>
 
-          <label class="block text-sm font-bold text-slate-700 mt-4 mb-2">
-            Remarks <span class="font-normal text-slate-400">(Optional)</span>
-          </label>
+          <div>
+            <label class="mb-2 block text-sm font-bold text-slate-700">
+              Remarks <span class="font-normal text-slate-400">(Optional)</span>
+            </label>
 
-          <textarea
-            v-model="submissionRemarks"
-            rows="3"
-            placeholder="Remarks (optional)"
-            class="mt-4 w-full rounded-xl border border-slate-300 px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#8B1E23]/20 focus:border-[#8B1E23]"
-          ></textarea>
+            <textarea
+              v-model="submissionRemarks"
+              rows="3"
+              placeholder="Remarks (optional)"
+              class="w-full resize-none rounded-xl border border-slate-300 px-4 py-3 text-sm focus:border-[#8B1E23] focus:outline-none focus:ring-2 focus:ring-[#8B1E23]/20"
+            ></textarea>
+          </div>
 
-          <label class="block text-sm font-bold text-slate-700 mt-5 mb-2">
-            Evidence Photos <span class="font-normal text-slate-400">(optional)</span>
-          </label>
+          <div>
+            <label class="mb-2 block text-sm font-bold text-slate-700">
+              Evidence Photos <span class="font-normal text-slate-400">(optional)</span>
+            </label>
 
-          <input
-            type="file"
-            multiple
-            accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
-            @change="handleEvidenceSelection"
-            class="block w-full text-sm text-slate-600 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:bg-[#8B1E23] file:text-white file:font-semibold"
-          />
+            <input
+              type="file"
+              multiple
+              accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+              @change="handleEvidenceSelection"
+              class="block w-full text-sm text-slate-600 file:mr-4 file:rounded-xl file:border-0 file:bg-[#8B1E23] file:px-4 file:py-2.5 file:font-semibold file:text-white"
+            />
 
-          <div v-if="evidenceFiles.length" class="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-3">
-            <div v-for="(file, index) in evidenceFiles" :key="`${file.name}-${index}`" class="rounded-xl border border-slate-200 bg-slate-50 p-2">
-              <img v-if="evidencePreviews[index]" :src="evidencePreviews[index]" :alt="file.name" class="h-24 w-full rounded-lg object-cover" />
-              <p class="truncate text-xs font-semibold text-slate-700 mt-2">{{ file.name }}</p>
-              <button type="button" @click="removeEvidence(index)" class="mt-1 text-xs font-bold text-[#8B1E23]">Remove</button>
+            <div v-if="evidenceFiles.length" class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+              <div v-for="(file, index) in evidenceFiles" :key="`${file.name}-${index}`" class="rounded-xl border border-slate-200 bg-slate-50 p-2">
+                <img v-if="evidencePreviews[index]" :src="evidencePreviews[index]" :alt="file.name" class="h-24 w-full rounded-lg object-cover" />
+                <p class="mt-2 truncate text-xs font-semibold text-slate-700">{{ file.name }}</p>
+                <button type="button" @click="removeEvidence(index)" class="mt-1 text-xs font-bold text-[#8B1E23]">Remove</button>
+              </div>
             </div>
           </div>
 
@@ -740,7 +676,7 @@
 
 
         <div
-          class="flex justify-end gap-3 p-6 border-t border-slate-200"
+          class="flex shrink-0 justify-end gap-3 border-t border-slate-200 bg-slate-50 px-6 py-5"
         >
 
           <button
@@ -769,6 +705,26 @@
 
     </div>
 
+    <Transition name="toast">
+      <div
+        v-if="toastMessage"
+        class="fixed bottom-6 right-6 z-[90] flex max-w-sm items-center gap-3 rounded-xl border border-slate-200 bg-white px-5 py-4 shadow-xl"
+      >
+        <div
+          class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-bold"
+          :class="toastType === 'error' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'"
+        >
+          {{ toastType === 'error' ? '!' : '✓' }}
+        </div>
+        <div>
+          <p class="text-sm font-bold text-slate-900">
+            {{ toastType === 'error' ? 'Action Failed' : 'Action Successful' }}
+          </p>
+          <p class="mt-0.5 text-xs text-slate-500">{{ toastMessage }}</p>
+        </div>
+      </div>
+    </Transition>
+
   </div>
 </template>
 
@@ -783,11 +739,12 @@ import {
 
 import '../../styles/operations.css'
 import { formatOperationDate, formatOperationTime } from '../../utils/operationsFormat.js'
+import { getTaskActivityEvidence } from '../../utils/reportFileStorage.js'
 import {
   deleteTaskActivityEvidence,
   saveTaskActivityEvidence
 } from '../../utils/reportFileStorage.js'
-import { getTasks, updateTask } from '../../utils/taskService.js'
+import { getTaskArchiveIds, getTasks, removeTaskAssignment, setTaskArchive, updateTask } from '../../utils/taskService.js'
 const hasTimeValue = value => /(?:T|\s)\d{1,2}:\d{2}/.test(String(value || ''))
 
 
@@ -830,6 +787,9 @@ const TASK_STORAGE_KEY = 'firenotify_tasks'
 ========================================================= */
 
 const tasks = ref([])
+const hasLoadedTasks = ref(false)
+const taskView = ref('active')
+const archivedTaskIds = ref(new Set())
 
 
 /* =========================================================
@@ -846,6 +806,10 @@ const selectedPriority = ref('All')
 ========================================================= */
 
 const selectedTask = ref(null)
+const pendingDeleteTask = ref(null)
+const taskActionPending = ref(false)
+const taskSubmissionEvidence = ref([])
+const taskSubmissionEvidenceUrls = ref([])
 
 
 /* =========================================================
@@ -857,6 +821,18 @@ const accomplishment = ref('')
 const submissionRemarks = ref('')
 const evidenceFiles = ref([])
 const evidencePreviews = ref([])
+const toastMessage = ref('')
+const toastType = ref('success')
+let toastTimer = null
+
+const showToast = (message, type = 'success') => {
+  toastMessage.value = message
+  toastType.value = type
+  clearTimeout(toastTimer)
+  toastTimer = setTimeout(() => {
+    toastMessage.value = ''
+  }, 3000)
+}
 
 
 /* =========================================================
@@ -897,6 +873,8 @@ const loadTasks = async () => {
   const user = getCurrentUser()
   if (!user) {
     tasks.value = []
+    archivedTaskIds.value = new Set()
+    hasLoadedTasks.value = true
     return
   }
 
@@ -906,9 +884,17 @@ const loadTasks = async () => {
       String(task.assignedToId) === String(user.id || user.userId) ||
       String(task.assignedToUsername || '').toLowerCase() === String(user.username || '').toLowerCase()
     )
+    try {
+      archivedTaskIds.value = new Set(await getTaskArchiveIds(user.id || user.userId))
+    } catch (error) {
+      archivedTaskIds.value = new Set()
+      console.warn('Failed to load Personnel task archive state:', error)
+    }
   } catch (error) {
     console.error('Failed to load FireNotify tasks from Django:', error)
     tasks.value = []
+  } finally {
+    hasLoadedTasks.value = true
   }
 }
 
@@ -954,16 +940,28 @@ const filteredTasks = computed(() => {
       selectedPriority.value === 'All' ||
       task.priority === selectedPriority.value
 
+    const isArchived = archivedTaskIds.value.has(String(task.id))
+    const matchesArchiveView = taskView.value === 'archived' ? isArchived : !isArchived
+
 
     return (
       matchesSearch &&
       matchesStatus &&
-      matchesPriority
+      matchesPriority &&
+      matchesArchiveView
     )
 
   })
 
 })
+
+const activeTaskCount = computed(() =>
+  tasks.value.filter(task => !archivedTaskIds.value.has(String(task.id))).length
+)
+
+const archivedTaskCount = computed(() =>
+  tasks.value.filter(task => archivedTaskIds.value.has(String(task.id))).length
+)
 
 
 /* =========================================================
@@ -1034,6 +1032,22 @@ const viewDetails = task => {
 
 }
 
+const openTaskSubmission = async task => {
+  taskSubmissionEvidenceUrls.value.forEach(url => URL.revokeObjectURL(url))
+  taskSubmissionEvidenceUrls.value = []
+  selectedTask.value = task
+  try {
+    taskSubmissionEvidence.value = await getTaskActivityEvidence({
+      recordId: task.id,
+      recordType: 'task'
+    })
+  } catch (error) {
+    taskSubmissionEvidence.value = []
+    console.error('Failed to load task submission evidence:', error)
+  }
+  taskSubmissionEvidenceUrls.value = taskSubmissionEvidence.value.map(item => URL.createObjectURL(item.file))
+}
+
 
 /* =========================================================
    CLOSE DETAILS
@@ -1042,7 +1056,88 @@ const viewDetails = task => {
 const closeDetails = () => {
 
   selectedTask.value = null
+  taskSubmissionEvidenceUrls.value.forEach(url => URL.revokeObjectURL(url))
+  taskSubmissionEvidenceUrls.value = []
+  taskSubmissionEvidence.value = []
 
+}
+
+const archiveTask = async task => {
+  const user = getCurrentUser()
+  const userId = user?.id || user?.userId
+  if (userId === null || userId === undefined) {
+    showToast('Unable to identify the current Personnel user.', 'error')
+    return false
+  }
+
+  try {
+    await setTaskArchive(task.id, userId, true)
+    archivedTaskIds.value = new Set([...archivedTaskIds.value, String(task.id)])
+    window.dispatchEvent(new CustomEvent('fireNotifyTasksUpdated'))
+    showToast('Task archived for Personnel.')
+    return true
+  } catch (error) {
+    showToast(error.message || 'Unable to archive task.', 'error')
+    return false
+  }
+}
+
+const restoreTask = async task => {
+  const user = getCurrentUser()
+  const userId = user?.id || user?.userId
+  if (userId === null || userId === undefined) {
+    showToast('Unable to identify the current Personnel user.', 'error')
+    return
+  }
+
+  try {
+    await setTaskArchive(task.id, userId, false)
+    const archivedIds = new Set(archivedTaskIds.value)
+    archivedIds.delete(String(task.id))
+    archivedTaskIds.value = archivedIds
+    window.dispatchEvent(new CustomEvent('fireNotifyTasksUpdated'))
+    showToast('Task restored to your active tasks.')
+  } catch (error) {
+    showToast(error.message || 'Unable to restore task.', 'error')
+  }
+}
+
+const requestDeleteTask = task => {
+  pendingDeleteTask.value = task
+}
+
+const deleteTask = async task => {
+  const user = getCurrentUser()
+  const userId = user?.id || user?.userId
+  if (!task || taskActionPending.value) return
+  if (userId === null || userId === undefined) {
+    showToast('Unable to identify the current Personnel user.', 'error')
+    return
+  }
+
+  taskActionPending.value = true
+  try {
+    if (taskView.value === 'active') {
+      await setTaskArchive(task.id, userId, true)
+      archivedTaskIds.value = new Set([...archivedTaskIds.value, String(task.id)])
+      pendingDeleteTask.value = null
+      showToast('Task moved to your archive.')
+    } else {
+      await removeTaskAssignment(task.id, userId)
+      tasks.value = tasks.value.filter(item => String(item.id) !== String(task.id))
+      const archivedIds = new Set(archivedTaskIds.value)
+      archivedIds.delete(String(task.id))
+      archivedTaskIds.value = archivedIds
+      pendingDeleteTask.value = null
+      showToast('Task removed from your assignments.')
+    }
+
+    window.dispatchEvent(new CustomEvent('fireNotifyTasksUpdated'))
+  } catch (error) {
+    showToast(error.message || 'Unable to remove task assignment.', 'error')
+  } finally {
+    taskActionPending.value = false
+  }
 }
 
 
@@ -1090,7 +1185,7 @@ const handleEvidenceSelection = event => {
   )
 
   if (validFiles.length !== files.length) {
-    showToast('Please select JPG, PNG, or WEBP image files only.')
+    showToast('Please select JPG, PNG, or WEBP image files only.', 'error')
   }
 
   evidencePreviews.value.forEach(url => URL.revokeObjectURL(url))
@@ -1115,7 +1210,7 @@ const submitTaskToAdmin = async () => {
     !submitTask.value ||
     !accomplishment.value.trim()
   ) {
-    showToast('Please provide an accomplishment/work summary before submitting.')
+    showToast('Please provide an accomplishment/work summary before submitting.', 'error')
     return
   }
 
@@ -1141,7 +1236,7 @@ const submitTaskToAdmin = async () => {
       accomplishment: accomplishment.value.trim()
     })
   } catch (error) {
-    showToast(error.message || 'Unable to submit this task.')
+    showToast(error.message || 'Unable to submit this task.', 'error')
     return
   }
 
@@ -1151,6 +1246,7 @@ const submitTaskToAdmin = async () => {
 
 
   closeSubmitModal()
+  showToast('Task submitted for verification.')
 
 }
 
@@ -1372,6 +1468,8 @@ onBeforeUnmount(() => {
     'fireNotifyTasksUpdated',
     loadTasks
   )
+
+  if (toastTimer) clearTimeout(toastTimer)
 
 })
 </script>

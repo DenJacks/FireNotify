@@ -174,6 +174,25 @@ export const confirmTicketResolution = ({ ticketId, user }) => {
   return ticket
 }
 
+export const submitTicketFeedback = ({ ticketId, user, rating, comment = '' }) => {
+  const score = Number(rating)
+  if (!Number.isInteger(score) || score < 1 || score > 5) return null
+
+  const tickets = getSupportTickets()
+  const ticket = tickets.find(item => item.id === ticketId)
+  if (!ticket || normalize(ticket.userId) !== normalize(userId(user))) return null
+  if (!['Resolved', 'Closed'].includes(ticket.status) || ticket.feedback) return null
+
+  ticket.feedback = {
+    rating: score,
+    comment: String(comment).trim().slice(0, 500),
+    createdAt: new Date().toISOString()
+  }
+  ticket.updatedAt = ticket.feedback.createdAt
+  writeTickets(tickets)
+  return ticket
+}
+
 export const deleteSupportTicket = ({ ticketId, user }) => {
   const tickets = getSupportTickets()
   const ticket = tickets.find(item => item.id === ticketId)

@@ -5,7 +5,9 @@ import { computed, onMounted, onBeforeUnmount, ref } from 'vue'
 import {
   createReport,
   deleteReport as deleteReportFromApi,
+  getReportArchiveIds,
   getReports,
+  setReportArchive,
   updateReport,
   updateReportSubmission
 } from '../../utils/reportApi.js'
@@ -73,6 +75,45 @@ const selectedType = ref('All Report Types')
 const selectedStatus = ref('All Status')
 const selectedPersonnelId = ref('All Personnel')
 const selectedPeriod = ref('All Time')
+const reportView = ref('active')
+const archivedReportIds = ref(new Set())
+const REPORT_TYPES_KEY = 'fireNotifyReportTypes'
+const reportTypes = ref([
+  'Incident Report',
+  'Inspection Report',
+  'Accomplishment Report',
+  'Activity Report'
+])
+const showNewReportType = ref(false)
+const newReportTypeName = ref('')
+
+const mergeReportTypes = values => {
+  const types = [...reportTypes.value, ...values]
+    .map(value => String(value || '').trim())
+    .filter(Boolean)
+  const uniqueTypes = [...new Map(types.map(type => [type.toLowerCase(), type])).values()]
+  reportTypes.value = uniqueTypes
+  localStorage.setItem(REPORT_TYPES_KEY, JSON.stringify(uniqueTypes))
+}
+
+const loadSavedReportTypes = () => {
+  try {
+    const saved = JSON.parse(localStorage.getItem(REPORT_TYPES_KEY) || '[]')
+    if (Array.isArray(saved)) mergeReportTypes(saved)
+  } catch (error) {
+    console.warn('FireNotify: unable to load saved report types', error)
+  }
+}
+
+const createReportType = () => {
+  const name = newReportTypeName.value.trim()
+  if (!name) return
+  const existing = reportTypes.value.find(type => type.toLowerCase() === name.toLowerCase())
+  if (!existing) mergeReportTypes([name])
+  reportForm.value.type = existing || name
+  newReportTypeName.value = ''
+  showNewReportType.value = false
+}
 
 const showReportModal = ref(false)
 const showDetailsModal = ref(false)
@@ -156,6 +197,16 @@ const reportForm = ref(emptyReport())
 const loadReports = async () => {
   try {
     const reportRecords = await getReports()
+    mergeReportTypes(reportRecords.map(report => report.report_type || report.type))
+    archivedReportIds.value = new Set()
+    const userId = props.currentUser?.id
+    if (userId !== null && userId !== undefined) {
+      try {
+        archivedReportIds.value = new Set(await getReportArchiveIds(userId))
+      } catch (error) {
+        console.error('FireNotify: unable to load Admin report archives', error)
+      }
+    }
     const peopleById = new Map(props.registeredUsers.map(person => [String(person.id), person]))
     const statusLabels = {
       PENDING: 'Pending',
@@ -176,7 +227,39 @@ const loadReports = async () => {
           name: person.name || `${person.firstName || person.first_name || ''} ${person.lastName || person.last_name || ''}`.trim() || person.username || person.email
         }))
 
-      return (report.assignments || []).map((assignment, assignmentIndex) => {
+      const assignments = report.assignments || []
+      if (!assignments.length) {
+        return [{
+          id: report.id,
+          rowId: `report-${report.id}-unassigned`,
+          reportId: report.id,
+          title: report.title,
+          type: report.report_type,
+          description: report.description,
+          submittedBy: '',
+          assignedPersonnel: [],
+          assignedById: report.assigned_by ?? report.created_by,
+          assignedBy: getAssignedByName(report),
+          assignedByName: getAssignedByName(report),
+          deadline: report.deadline,
+          submittedDate: '',
+          status: 'Unassigned',
+          submissionStatus: 'UNASSIGNED',
+          accomplishment: '',
+          remarks: '',
+          reviewComment: '',
+          reviewedBy: '',
+          reviewedAt: '',
+          attachment: '',
+          filename: '',
+          hasEvidence: false,
+          isActiveAssignment: false,
+          isPrimaryAssignment: true,
+          createdAt: report.created_at
+        }]
+      }
+
+      return assignments.map((assignment, assignmentIndex) => {
         const person = peopleById.get(String(assignment.personnel))
         const name = person?.name || `${person?.firstName || person?.first_name || ''} ${person?.lastName || person?.last_name || ''}`.trim() || assignment.personnel_name || person?.username || person?.email || 'Personnel'
         const status = statusLabels[assignment.status] || 'Pending'
@@ -476,16 +559,27 @@ const filteredReports = computed(() => {
     const matchesPeriod = selectedPeriod.value === 'All Time' ||
       (validReportDate && selectedPeriod.value === 'Weekly' && reportDate >= new Date(now.getTime() - 7 * 86400000)) ||
       (validReportDate && selectedPeriod.value === 'Monthly' && reportDate.getMonth() === now.getMonth() && reportDate.getFullYear() === now.getFullYear())
+    const isArchived = archivedReportIds.value.has(String(report.reportId || report.id))
+    const matchesArchiveView = reportView.value === 'archived' ? isArchived : !isArchived
 
     return (
       matchesSearch &&
       matchesType &&
       matchesStatus &&
       matchesPersonnel &&
-      matchesPeriod
+      matchesPeriod &&
+      matchesArchiveView
     )
   })
 })
+
+const activeReportCount = computed(() =>
+  new Set(reports.value.filter(report => !archivedReportIds.value.has(String(report.reportId || report.id))).map(report => String(report.reportId || report.id))).size
+)
+
+const archivedReportCount = computed(() =>
+  new Set(reports.value.filter(report => archivedReportIds.value.has(String(report.reportId || report.id))).map(report => String(report.reportId || report.id))).size
+)
 
 const hasFilters = computed(() =>
   searchQuery.value ||
@@ -857,6 +951,42 @@ const sendReminder = report => {
   )
 }
 
+const archiveReport = async report => {
+  const userId = props.currentUser?.id
+  if (userId === null || userId === undefined) {
+    showToast('Unable to identify the current Admin.', 'error')
+    return
+  }
+
+  const reportId = report.reportId || report.id
+  try {
+    await setReportArchive(reportId, userId, true)
+    archivedReportIds.value = new Set([...archivedReportIds.value, String(reportId)])
+    showToast('Report archived for Admin.')
+  } catch (error) {
+    showToast(error.message || 'Unable to archive report.', 'error')
+  }
+}
+
+const restoreReport = async report => {
+  const userId = props.currentUser?.id
+  if (userId === null || userId === undefined) {
+    showToast('Unable to identify the current Admin.', 'error')
+    return
+  }
+
+  const reportId = report.reportId || report.id
+  try {
+    await setReportArchive(reportId, userId, false)
+    const archivedIds = new Set(archivedReportIds.value)
+    archivedIds.delete(String(reportId))
+    archivedReportIds.value = archivedIds
+    showToast('Report restored to Admin active reports.')
+  } catch (error) {
+    showToast(error.message || 'Unable to restore report.', 'error')
+  }
+}
+
 /* =========================================================
    DELETE REPORT
 ========================================================= */
@@ -870,8 +1000,30 @@ const deleteReport = async () => {
   if (!reportToDelete.value) return
 
   const targetReport = reportToDelete.value
+  const reportId = targetReport.reportId || targetReport.id
+
+  if (reportView.value === 'active') {
+    const userId = props.currentUser?.id
+    if (userId === null || userId === undefined) {
+      showToast('Unable to identify the current Admin.', 'error')
+      return
+    }
+    try {
+      await setReportArchive(reportId, userId, true)
+      archivedReportIds.value = new Set([...archivedReportIds.value, String(reportId)])
+    } catch (error) {
+      showToast(error.message || 'Unable to archive report.', 'error')
+      return
+    }
+
+    showDeleteModal.value = false
+    reportToDelete.value = null
+    showToast('Report moved to Admin archive.')
+    return
+  }
+
   try {
-    await deleteReportFromApi(targetReport.reportId || targetReport.id)
+    await deleteReportFromApi(reportId)
     await loadReports()
   } catch (error) {
     console.error('FireNotify: admin report delete failed', error)
@@ -1004,6 +1156,7 @@ const downloadAttachment = report => {
 ========================================================= */
 
 onMounted(() => {
+  loadSavedReportTypes()
   loadReports()
 
   window.addEventListener(
@@ -1037,7 +1190,7 @@ onBeforeUnmount(() => {
          HEADER
     ====================================================== -->
 
-    <section class="fn-operations-panel">
+    <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
       <div
         class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5"
       >
@@ -1172,20 +1325,8 @@ onBeforeUnmount(() => {
             All Report Types
           </option>
 
-          <option>
-            Incident Report
-          </option>
-
-          <option>
-            Inspection Report
-          </option>
-
-          <option>
-            Accomplishment Report
-          </option>
-
-          <option>
-            Activity Report
+          <option v-for="type in reportTypes" :key="type" :value="type">
+            {{ type }}
           </option>
         </select>
 
@@ -1268,7 +1409,16 @@ onBeforeUnmount(() => {
         </div>
       </div>
 
-      <div v-if="filteredReports.length" class="fn-operations-table-wrap">
+      <div class="flex gap-2 border-b border-slate-200 px-5 pt-4">
+        <button type="button" @click="reportView = 'active'" class="border-b-2 px-4 py-3 text-sm font-bold" :class="reportView === 'active' ? 'border-[#8B1E23] text-[#8B1E23]' : 'border-transparent text-slate-500'">
+          Active Reports <span class="ml-1 text-xs">{{ activeReportCount }}</span>
+        </button>
+        <button type="button" @click="reportView = 'archived'" class="border-b-2 px-4 py-3 text-sm font-bold" :class="reportView === 'archived' ? 'border-[#8B1E23] text-[#8B1E23]' : 'border-transparent text-slate-500'">
+          Archived Reports <span class="ml-1 text-xs">{{ archivedReportCount }}</span>
+        </button>
+      </div>
+
+      <div class="fn-operations-table-wrap">
         <table class="fn-operations-table">
           <thead>
             <tr><th>Report</th><th>Assigned Personnel</th><th>Deadline</th><th>Status</th><th>Submission</th><th class="text-right">Actions</th></tr>
@@ -1301,241 +1451,33 @@ onBeforeUnmount(() => {
               </td>
               <td data-label="Actions">
                 <div class="flex flex-wrap gap-1.5 sm:justify-end">
-                  <button @click="viewReport(report)" class="fn-operations-action">View</button>
-                  <button v-if="report.submissionId && ['Submitted', 'For Review'].includes(report.status)" @click="openReview(report, 'approve')" class="fn-operations-action fn-operations-action--primary">Approve</button>
-                  <button v-if="report.submissionId && ['Submitted', 'For Review'].includes(report.status)" @click="openReview(report, 'return')" class="fn-operations-action">Return</button>
-                  <button v-if="report.submissionId && ['Submitted', 'For Review'].includes(report.status)" @click="openReview(report, 'reject')" class="fn-operations-action fn-operations-action--danger">Reject</button>
-                  <button v-if="report.status === 'Overdue'" @click="sendReminder(report)" class="fn-operations-action fn-operations-action--primary">Reminder</button>
-                  <button v-if="report.isPrimaryAssignment" @click="openEditReport(report)" class="fn-operations-action">Edit</button>
-                  <button v-if="report.isPrimaryAssignment" @click="openDeleteReport(report)" class="fn-operations-action fn-operations-action--danger">Delete</button>
+                  <template v-if="reportView === 'archived'">
+                    <button @click="viewReport(report)" class="fn-operations-action">View Report</button>
+                    <button v-if="report.isPrimaryAssignment" @click="restoreReport(report)" class="fn-operations-action">Restore</button>
+                    <button v-if="report.isPrimaryAssignment" @click="openDeleteReport(report)" class="fn-operations-action fn-operations-action--danger">Delete Permanently</button>
+                  </template>
+                  <template v-else>
+                    <button @click="viewReport(report)" class="fn-operations-action">View Report</button>
+                    <button v-if="report.isPrimaryAssignment" @click="archiveReport(report)" class="fn-operations-action">Archive</button>
+                    <button v-if="report.isPrimaryAssignment" @click="openDeleteReport(report)" class="fn-operations-action fn-operations-action--danger">Delete</button>
+                  </template>
                 </div>
+              </td>
+            </tr>
+            <tr v-if="!filteredReports.length">
+              <td colspan="6" class="py-10 text-center">
+                <p class="font-bold text-slate-700">No reports found</p>
+                <p class="mt-1 text-sm text-slate-500">Try changing your search or filters.</p>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <div
-        v-else
-        class="py-16 text-center"
-      >
-
-        <div
-          class="w-16 h-16 mx-auto rounded-full bg-slate-100 flex items-center justify-center text-2xl"
-        >
-          📄
-        </div>
-
-        <h3
-          class="text-lg font-bold text-slate-900 mt-4"
-        >
-          No reports found
-        </h3>
-
-        <p
-          class="text-sm text-slate-500 mt-1"
-        >
-          Try changing your search or filters.
-        </p>
-
-        <button
-          @click="clearFilters"
-          class="mt-4 px-5 py-2.5 rounded-lg bg-[#8B1E23] text-white font-bold"
-        >
-          Clear Filters
-        </button>
-
-      </div>
-
     </section>
 
-    <!-- =====================================================
-         ANALYTICS
-    ====================================================== -->
+   
 
-    <section
-      class="grid grid-cols-1 xl:grid-cols-2 gap-6"
-    >
-
-      <div
-        class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6"
-      >
-
-        <div
-          class="border-b border-slate-200 pb-5"
-        >
-          <h2
-            class="text-xl font-bold text-slate-900"
-          >
-            Report Analytics
-          </h2>
-
-          <p
-            class="text-sm text-slate-500 mt-1"
-          >
-            Current report processing performance
-          </p>
-        </div>
-
-        <div
-          class="mt-5 space-y-5"
-        >
-
-          <div>
-            <div
-              class="flex justify-between text-sm font-semibold text-slate-700 mb-2"
-            >
-              <span>
-                On-Time Submission
-              </span>
-
-              <span>
-                {{ onTimeSubmission }}%
-              </span>
-            </div>
-
-            <div
-              class="h-2.5 rounded-full bg-slate-100 overflow-hidden"
-            >
-              <div
-                class="h-full rounded-full bg-green-500 transition-all"
-                :style="{
-                  width: `${onTimeSubmission}%`
-                }"
-              ></div>
-            </div>
-          </div>
-
-          <div>
-            <div
-              class="flex justify-between text-sm font-semibold text-slate-700 mb-2"
-            >
-              <span>
-                Approval Rate
-              </span>
-
-              <span>
-                {{ approvalRate }}%
-              </span>
-            </div>
-
-            <div
-              class="h-2.5 rounded-full bg-slate-100 overflow-hidden"
-            >
-              <div
-                class="h-full rounded-full bg-blue-500 transition-all"
-                :style="{
-                  width: `${approvalRate}%`
-                }"
-              ></div>
-            </div>
-          </div>
-
-          <div>
-            <div
-              class="flex justify-between text-sm font-semibold text-slate-700 mb-2"
-            >
-              <span>
-                Correction / Rejection
-              </span>
-
-              <span>
-                {{ correctionRate }}%
-              </span>
-            </div>
-
-            <div
-              class="h-2.5 rounded-full bg-slate-100 overflow-hidden"
-            >
-              <div
-                class="h-full rounded-full bg-yellow-500 transition-all"
-                :style="{
-                  width: `${correctionRate}%`
-                }"
-              ></div>
-            </div>
-          </div>
-
-        </div>
-
-      </div>
-
-      <!-- FILES -->
-
-      <div
-        class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6"
-      >
-
-        <div
-          class="border-b border-slate-200 pb-5"
-        >
-          <h2
-            class="text-xl font-bold text-slate-900"
-          >
-            Recently Uploaded Files
-          </h2>
-
-          <p
-            class="text-sm text-slate-500 mt-1"
-          >
-            Latest report attachments
-          </p>
-        </div>
-
-        <div
-          class="mt-5 space-y-3"
-        >
-
-          <div
-            v-for="file in uploadedFiles"
-            :key="file.name"
-            class="flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 transition"
-          >
-
-            <div
-              class="flex items-center gap-3 min-w-0"
-            >
-
-              <div
-                class="w-10 h-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-xs font-bold text-[#8B1E23]"
-              >
-                {{ file.type }}
-              </div>
-
-              <div
-                class="min-w-0"
-              >
-
-                <p
-                  class="text-sm font-bold text-slate-900 truncate"
-                >
-                  {{ file.name }}
-                </p>
-
-                <p
-                  class="text-xs text-slate-500 mt-1"
-                >
-                  {{ file.uploadedBy }}
-                </p>
-
-              </div>
-
-            </div>
-
-            <button
-              @click="viewFile(file)"
-              class="text-sm font-bold text-[#8B1E23] hover:underline"
-            >
-              View
-            </button>
-
-          </div>
-
-        </div>
-
-      </div>
-
-    </section>
 
     <!-- =====================================================
          CREATE / EDIT REPORT MODAL
@@ -1543,48 +1485,45 @@ onBeforeUnmount(() => {
 
     <div
       v-if="showReportModal"
-      class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+      class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4"
     >
 
       <div
-        class="fn-modal-panel bg-white w-full max-w-3xl rounded-2xl shadow-xl"
+        class="fn-modal-panel w-full max-w-3xl bg-white rounded-2xl shadow-2xl overflow-hidden"
       >
 
         <div
-          class="p-6 border-b border-slate-200 flex items-center justify-between"
+          class="fn-modal-header bg-[#8B1E23] p-6 text-white"
         >
 
-          <div>
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <p class="fn-modal-header-label text-xs uppercase tracking-wider font-bold text-white/70">
+                Report Details
+              </p>
 
-            <h3
-              class="text-xl font-bold text-slate-900"
+              <h3 class="text-2xl font-bold mt-1 text-white">
+                {{ editingReport ? 'Edit Report Assignment' : 'Assign Report to Personnel' }}
+              </h3>
+
+              <p class="fn-modal-header-description text-sm text-white/80 mt-1">
+                Create a report and assign it directly to registered personnel.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              @click="showReportModal = false"
+              class="h-9 w-9 rounded-lg bg-white/10 hover:bg-white/20 text-white"
+              aria-label="Close report form"
             >
-              {{
-                editingReport
-                  ? 'Edit Report Assignment'
-                  : 'Assign Report to Personnel'
-              }}
-            </h3>
-
-            <p
-              class="text-sm text-slate-500 mt-1"
-            >
-              Create a report and assign it directly to registered personnel.
-            </p>
-
+              ✕
+            </button>
           </div>
-
-          <button
-            @click="showReportModal = false"
-            class="text-slate-400 hover:text-slate-700 text-xl"
-          >
-            ✕
-          </button>
-
         </div>
 
         <div
-          class="p-6 space-y-5"
+          class="p-6 space-y-5 max-h-[70vh] overflow-y-auto"
         >
 
           <!-- TITLE -->
@@ -1624,24 +1563,36 @@ onBeforeUnmount(() => {
                 v-model="reportForm.type"
                 class="w-full h-11 px-4 rounded-xl border border-slate-300 focus:ring-2 focus:ring-[#8B1E23] outline-none"
               >
-
-                <option>
-                  Incident Report
-                </option>
-
-                <option>
-                  Inspection Report
-                </option>
-
-                <option>
-                  Accomplishment Report
-                </option>
-
-                <option>
-                  Activity Report
+                <option v-for="type in reportTypes" :key="type" :value="type">
+                  {{ type }}
                 </option>
 
               </select>
+
+              <button
+                v-if="!showNewReportType"
+                type="button"
+                @click="showNewReportType = true"
+                class="mt-2 text-sm font-bold text-[#8B1E23] hover:underline"
+              >
+                + Create New Report Type
+              </button>
+
+              <div v-else class="mt-3 flex flex-wrap items-center gap-2">
+                <input
+                  v-model="newReportTypeName"
+                  type="text"
+                  placeholder="New Report Type"
+                  class="min-w-0 flex-1 h-10 px-3 rounded-lg border border-slate-300"
+                  @keyup.enter="createReportType"
+                />
+                <button type="button" @click="createReportType" class="px-3 py-2 rounded-lg bg-[#8B1E23] text-white text-sm font-bold">
+                  Create Type
+                </button>
+                <button type="button" @click="showNewReportType = false; newReportTypeName = ''" class="px-3 py-2 rounded-lg border border-slate-300 text-sm font-semibold">
+                  Cancel
+                </button>
+              </div>
 
             </div>
 
@@ -1848,7 +1799,7 @@ onBeforeUnmount(() => {
         </div>
 
         <div
-          class="p-6 border-t border-slate-200 flex justify-end gap-3"
+          class="px-6 py-5 bg-slate-50 border-t border-slate-200 flex justify-end gap-3"
         >
 
           <button
@@ -2222,6 +2173,22 @@ onBeforeUnmount(() => {
           </button>
 
           <button
+            v-if="['Submitted', 'For Review'].includes(selectedReport.status)"
+            @click="showDetailsModal = false; openReview(selectedReport, 'return')"
+            class="px-5 py-2.5 rounded-xl bg-amber-600 text-white font-bold"
+          >
+            Return
+          </button>
+
+          <button
+            v-if="['Submitted', 'For Review'].includes(selectedReport.status)"
+            @click="showDetailsModal = false; openReview(selectedReport, 'reject')"
+            class="px-5 py-2.5 rounded-xl bg-red-600 text-white font-bold"
+          >
+            Reject
+          </button>
+
+          <button
             @click="showDetailsModal = false"
             class="px-5 py-2.5 rounded-xl border border-slate-300 font-bold hover:bg-slate-100"
           >
@@ -2358,17 +2325,16 @@ onBeforeUnmount(() => {
         <h3
           class="text-xl font-bold text-slate-900 mt-4"
         >
-          Delete Report?
+          {{ reportView === 'active' ? 'Move Report to Archive?' : 'Delete Report Permanently?' }}
         </h3>
 
-        <p
-          class="text-sm text-slate-500 mt-2"
-        >
-          Are you sure you want to delete
-          <strong>
-            {{ reportToDelete.title }}
-          </strong>?
-          This action cannot be undone.
+        <p class="text-sm text-slate-500 mt-2">
+          <template v-if="reportView === 'active'">
+            Move <strong>{{ reportToDelete.title }}</strong> to Admin Archived Reports? You can restore it later.
+          </template>
+          <template v-else>
+            Permanently delete <strong>{{ reportToDelete.title }}</strong> and its submission records and attachments? This cannot be undone.
+          </template>
         </p>
 
         <div
@@ -2388,7 +2354,7 @@ onBeforeUnmount(() => {
             @click="deleteReport"
             class="px-5 py-2.5 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700"
           >
-            Delete
+            {{ reportView === 'active' ? 'Move to Archive' : 'Delete Permanently' }}
           </button>
 
         </div>

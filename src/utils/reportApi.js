@@ -1,4 +1,5 @@
 const API_URL = 'http://127.0.0.1:8000/api'
+const REPORT_ARCHIVES_URL = `${API_URL}/report-archives/`
 
 const readResponse = async response => {
   if (!response.ok) {
@@ -36,6 +37,28 @@ export const updateReport = async (id, report) => readResponse(await jsonRequest
 export const deleteReport = async id => readResponse(await fetch(`${API_URL}/reports/${id}/`, {
   method: 'DELETE'
 }))
+
+export const getReportArchiveIds = async userId => {
+  const ids = await readResponse(await fetch(
+    `${REPORT_ARCHIVES_URL}?user_id=${encodeURIComponent(userId)}`
+  ))
+  if (!Array.isArray(ids)) throw new Error('Invalid report archives response')
+  return ids.map(String)
+}
+
+export const setReportArchive = async (reportId, userId, archived) =>
+  readResponse(await jsonRequest(
+    `${API_URL}/reports/${reportId}/archive/`,
+    archived ? 'PUT' : 'DELETE',
+    { user_id: userId }
+  ))
+
+export const removeReportAssignment = async (submissionId, userId) =>
+  readResponse(await jsonRequest(
+    `${API_URL}/report-submissions/${submissionId}/assignment/`,
+    'DELETE',
+    { user_id: userId }
+  ))
 
 export const getReportSubmissions = async personnelId => {
   const query = personnelId ? `?personnel=${encodeURIComponent(personnelId)}` : ''

@@ -226,78 +226,6 @@
         </div>
 
 
-        <!-- SYSTEM STATUS -->
-
-        <div class="auth-status">
-
-          <div class="status-header">
-
-            <span>
-              System Status
-            </span>
-
-            <span class="status-online">
-
-              <span class="status-dot"></span>
-
-              Online
-
-            </span>
-
-          </div>
-
-
-          <div class="status-metrics">
-
-            <div class="status-metric">
-
-              <strong>
-                48
-              </strong>
-
-              <span>
-                On Duty
-              </span>
-
-            </div>
-
-
-            <div class="status-divider"></div>
-
-
-            <div class="status-metric">
-
-              <strong>
-                12
-              </strong>
-
-              <span>
-                Reports
-              </span>
-
-            </div>
-
-
-            <div class="status-divider"></div>
-
-
-            <div class="status-metric">
-
-              <strong>
-                94.5%
-              </strong>
-
-              <span>
-                Readiness
-              </span>
-
-            </div>
-
-          </div>
-
-        </div>
-
-
         <div class="brand-stripe brand-stripe-one"></div>
         <div class="brand-stripe brand-stripe-two"></div>
         <div class="brand-stripe brand-stripe-three"></div>
@@ -563,21 +491,9 @@
 
           <div class="form-field">
 
-            <div class="field-label-row">
-
-              <label>
-                Password
-              </label>
-
-              <button
-                type="button"
-                class="forgot-button"
-                @click="handleForgotPassword"
-              >
-                Forgot Password?
-              </button>
-
-            </div>
+            <label>
+              Password
+            </label>
 
 
             <div class="input-wrapper">
@@ -672,22 +588,6 @@
           </div>
 
 
-          <!-- Remember -->
-
-          <label class="remember-row">
-
-            <input
-              v-model="loginForm.remember"
-              type="checkbox"
-            />
-
-            <span>
-              Keep me logged in
-            </span>
-
-          </label>
-
-
           <!-- Sign In -->
 
           <button
@@ -737,7 +637,7 @@
           <button
             type="button"
             class="secondary-button"
-            @click="handleBfpLogin"
+            @click="switchToRegister"
           >
 
             <svg
@@ -755,7 +655,7 @@
               />
             </svg>
 
-            Login with BFP Account
+            Create Account
 
           </button>
 
@@ -901,14 +801,16 @@
                 </svg>
                 <select v-model="signupForm.rank" required>
                   <option value="">Select rank</option>
-                  <option value="FO1">FO1</option>
-                  <option value="FO2">FO2</option>
-                  <option value="FO3">FO3</option>
-                  <option value="FO4">FO4</option>
-                  <option value="SFO1">SFO1</option>
-                  <option value="SFO2">SFO2</option>
-                  <option value="SFO3">SFO3</option>
-                  <option value="SFO4">SFO4</option>
+                  <option value="FO1">FO1 - Fire Officer I</option>
+                  <option value="FO2">FO2 - Fire Officer II</option>
+                  <option value="FO3">FO3 - Fire Officer III</option>
+                  <option value="SFO1">SFO1 - Senior Fire Officer I</option>
+                  <option value="SFO2">SFO2 - Senior Fire Officer II</option>
+                  <option value="SFO3">SFO3 - Senior Fire Officer III</option>
+                  <option value="SFO4">SFO4 - Senior Fire Officer IV</option>
+                  <option value="FINSP">FINSP - Fire Inspector</option>
+                  <option value="FSINSP">FSINSP - Fire Senior Inspector</option>
+                  <option value="FCINSP">FCINSP - Fire Chief Inspector</option>
                 </select>
               </div>
             </div>
@@ -952,20 +854,6 @@
               <path d="M5 12h14"/>
             </svg>
             Create Account
-          </button>
-
-          <div class="divider">
-            <span></span>
-            <small>OR</small>
-            <span></span>
-          </div>
-
-          <button type="button" class="secondary-button" @click="handleBfpRegister">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 3l7 4v5c0 4.5-3 7.8-7 9-4-1.2-7-4.5-7-9V7l7-4z"/>
-              <path d="M9 12l2 2 4-4"/>
-            </svg>
-            Register with BFP Account
           </button>
 
         </form>
@@ -1063,8 +951,7 @@ const isLoading = ref(false)
 
 const loginForm = reactive({
   identifier: '',
-  password: '',
-  remember: false
+  password: ''
 })
 
 
@@ -1158,13 +1045,16 @@ const handleLogin = async () => {
        Send login request to Django
     ------------------------------------------- */
 
+     const csrfToken = document.cookie.split('; ').find(item => item.startsWith('csrftoken='))?.split('=')[1] || ''
     const response = await fetch(
       `${API_URL}/auth/login/`,
       {
         method: 'POST',
+        credentials: 'include',
 
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrfToken
         },
 
         body: JSON.stringify({
@@ -1209,32 +1099,16 @@ const handleLogin = async () => {
        Save logged-in user
     ------------------------------------------- */
 
-    if (loginForm.remember) {
-
-      localStorage.setItem(
-        'fireNotifyUser',
-        JSON.stringify(user)
-      )
-      localStorage.setItem(
-        'fireNotifyAuthenticated',
-        'true'
-      )
-      sessionStorage.removeItem('fireNotifyUser')
-      sessionStorage.removeItem('fireNotifyAuthenticated')
-
-    } else {
-
-      sessionStorage.setItem(
-        'fireNotifyUser',
-        JSON.stringify(user)
-      )
-      sessionStorage.setItem(
-        'fireNotifyAuthenticated',
-        'true'
-      )
-      localStorage.removeItem('fireNotifyUser')
-      localStorage.removeItem('fireNotifyAuthenticated')
-    }
+    sessionStorage.setItem(
+      'fireNotifyUser',
+      JSON.stringify(user)
+    )
+    sessionStorage.setItem(
+      'fireNotifyAuthenticated',
+      'true'
+    )
+    localStorage.removeItem('fireNotifyUser')
+    localStorage.removeItem('fireNotifyAuthenticated')
 
 
     /* -------------------------------------------
@@ -1466,37 +1340,6 @@ const handleSignup = async () => {
 }
 
 
-/* =========================================================
-   FORGOT PASSWORD
-========================================================= */
-
-const handleForgotPassword = () => {
-
-  errorMessage.value =
-    'Password recovery is not available yet. Please contact the system administrator.'
-}
-
-
-/* =========================================================
-   BFP LOGIN BUTTON
-========================================================= */
-
-const handleBfpLogin = () => {
-
-  errorMessage.value =
-    'BFP account authentication is not connected yet.'
-}
-
-
-/* =========================================================
-   BFP REGISTER BUTTON
-========================================================= */
-
-const handleBfpRegister = () => {
-
-  errorMessage.value =
-    'BFP account registration is not connected yet.'
-}
 </script>
 <style scoped>
 
@@ -1610,7 +1453,7 @@ const handleBfpRegister = () => {
 
   flex-direction: column;
 
-  justify-content: space-between;
+  justify-content: flex-start;
 }
 
 
@@ -1702,6 +1545,8 @@ const handleBfpRegister = () => {
 
   margin: 0;
 
+  color: white;
+
   font-size: 28px;
 
   line-height: 1;
@@ -1737,7 +1582,7 @@ const handleBfpRegister = () => {
 
   z-index: 5;
 
-  margin-top: 45px;
+  margin-top: 100px;
 }
 
 
@@ -1792,6 +1637,8 @@ const handleBfpRegister = () => {
 .auth-brand-title {
 
   margin-top: 25px;
+
+  color: white;
 
   font-size: clamp(
     32px,
@@ -1923,131 +1770,6 @@ const handleBfpRegister = () => {
 
 
 /* =========================================================
-   SYSTEM STATUS
-   ========================================================= */
-
-.auth-status {
-
-  position: relative;
-
-  z-index: 5;
-
-  margin-top: 35px;
-
-  padding: 19px;
-
-  border-radius: 13px;
-
-  background:
-    rgba(15, 7, 8, 0.35);
-
-  border:
-    1px solid
-    rgba(255, 255, 255, 0.18);
-
-  backdrop-filter:
-    blur(10px);
-}
-
-
-.status-header {
-
-  display: flex;
-
-  align-items: center;
-
-  justify-content: space-between;
-
-  font-size: 14px;
-
-  font-weight: 700;
-}
-
-
-.status-online {
-
-  display: flex;
-
-  align-items: center;
-
-  gap: 8px;
-
-  color: #4ade80;
-}
-
-
-.status-dot {
-
-  width: 9px;
-
-  height: 9px;
-
-  border-radius: 50%;
-
-  background: #22c55e;
-
-  box-shadow:
-    0 0 0 4px
-    rgba(34, 197, 94, 0.13);
-}
-
-
-.status-metrics {
-
-  display: grid;
-
-  grid-template-columns:
-    1fr auto 1fr auto 1fr;
-
-  margin-top: 17px;
-
-  align-items: center;
-}
-
-
-.status-metric {
-
-  text-align: center;
-}
-
-
-.status-metric strong {
-
-  display: block;
-
-  font-size: 24px;
-
-  color: #f5c542;
-
-  font-weight: 900;
-}
-
-
-.status-metric span {
-
-  display: block;
-
-  margin-top: 4px;
-
-  font-size: 11px;
-
-  color:
-    rgba(255, 255, 255, 0.62);
-}
-
-
-.status-divider {
-
-  height: 35px;
-
-  width: 1px;
-
-  background:
-    rgba(255, 255, 255, 0.15);
-}
-
-
-/* =========================================================
    DECORATIVE STRIPES
    ========================================================= */
 
@@ -2103,7 +1825,7 @@ const handleBfpRegister = () => {
 
   position: relative;
 
-  padding: 48px 52px 35px;
+  padding: 38px 44px 28px;
 
   background: #ffffff;
 
@@ -2128,7 +1850,7 @@ const handleBfpRegister = () => {
       #f5c542
     );
 
-  margin-bottom: 25px;
+  margin-bottom: 18px;
 }
 
 
@@ -2138,7 +1860,7 @@ const handleBfpRegister = () => {
 
 .form-header {
 
-  margin-bottom: 25px;
+  margin-bottom: 18px;
 }
 
 
@@ -2202,7 +1924,7 @@ const handleBfpRegister = () => {
   border-bottom:
     1px solid #dce2ea;
 
-  margin-bottom: 27px;
+  margin-bottom: 18px;
 }
 
 
@@ -2210,7 +1932,7 @@ const handleBfpRegister = () => {
 
   position: relative;
 
-  min-height: 51px;
+  min-height: 44px;
 
   display: flex;
 
@@ -2350,17 +2072,16 @@ const handleBfpRegister = () => {
 
   flex-direction: column;
 
-  gap: 20px;
+  gap: 16px;
 }
 
 
 .register-form {
 
-  gap: 17px;
+  gap: 12px;
 }
-
 .form-section-title {
-  margin-top: 6px;
+  margin-top: 2px;
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.12em;
@@ -2378,55 +2099,13 @@ const handleBfpRegister = () => {
 
   display: block;
 
-  margin-bottom: 8px;
+  margin-bottom: 5px;
 
   font-size: 13px;
 
   font-weight: 800;
 
   color: #25364f;
-}
-
-
-.field-label-row {
-
-  display: flex;
-
-  align-items: center;
-
-  justify-content: space-between;
-
-  margin-bottom: 8px;
-}
-
-
-.field-label-row label {
-
-  margin-bottom: 0;
-}
-
-
-.forgot-button {
-
-  border: none;
-
-  background: transparent;
-
-  color: #9f1d24;
-
-  font-size: 12px;
-
-  font-weight: 700;
-
-  cursor: pointer;
-
-  padding: 0;
-}
-
-
-.forgot-button:hover {
-
-  text-decoration: underline;
 }
 
 
@@ -2447,7 +2126,7 @@ const handleBfpRegister = () => {
 
   width: 100%;
 
-  height: 53px;
+  height: 47px;
 
   border-radius: 9px;
 
@@ -2588,44 +2267,6 @@ const handleBfpRegister = () => {
 
 
 /* =========================================================
-   REMEMBER ME
-   ========================================================= */
-
-.remember-row {
-
-  display: flex;
-
-  align-items: center;
-
-  gap: 9px;
-
-  margin-top: -4px;
-
-  color: #53647a;
-
-  font-size: 13px;
-
-  cursor: pointer;
-
-  user-select: none;
-}
-
-
-.remember-row input {
-
-  width: 17px;
-
-  height: 17px;
-
-  margin: 0;
-
-  accent-color: #9f1d24;
-
-  cursor: pointer;
-}
-
-
-/* =========================================================
    PRIMARY BUTTON
    ========================================================= */
 
@@ -2633,7 +2274,7 @@ const handleBfpRegister = () => {
 
   width: 100%;
 
-  height: 54px;
+  height: 48px;
 
   border: none;
 
@@ -2816,7 +2457,7 @@ const handleBfpRegister = () => {
 
   margin-top: auto;
 
-  padding-top: 25px;
+  padding-top: 18px;
 
   border-top: 1px solid #e6eaf0;
 
@@ -2894,11 +2535,16 @@ const handleBfpRegister = () => {
     padding: 35px;
   }
 
+  .auth-brand-content {
+
+    margin-top: 70px;
+  }
+
 
   .auth-form-panel {
 
     padding:
-      38px 38px 30px;
+      30px 32px 22px;
   }
 
 
@@ -2948,7 +2594,7 @@ const handleBfpRegister = () => {
 
   .auth-brand-content {
 
-    margin-top: 30px;
+    margin-top: 35px;
   }
 
 
@@ -2980,16 +2626,10 @@ const handleBfpRegister = () => {
   }
 
 
-  .auth-status {
-
-    margin-top: 25px;
-  }
-
-
   .auth-form-panel {
 
     padding:
-      32px 24px 25px;
+      28px 24px 22px;
   }
 
 
@@ -3030,12 +2670,6 @@ const handleBfpRegister = () => {
   .auth-brand-title {
 
     font-size: 27px;
-  }
-
-
-  .status-metric strong {
-
-    font-size: 20px;
   }
 
 

@@ -4,7 +4,7 @@
     <!-- ========================================================= -->
     <!-- PAGE HEADER -->
     <!-- ========================================================= -->
-    <section class="border-b border-slate-200 pb-3">
+    <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
 
       <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5">
 
@@ -369,44 +369,32 @@
 
         </div>
 
-
-        <!-- EMPTY STATE -->
-        <div
-          v-if="filteredActivities.length === 0"
-          class="py-8 text-center"
-        >
-
-          <div
-            class="mx-auto h-16 w-16 rounded-2xl bg-slate-100 flex items-center justify-center"
-          >
-            <span class="text-2xl">
-              🔎
-            </span>
-          </div>
-
-          <h4 class="mt-4 text-base font-bold text-slate-900">
-            No activities found
-          </h4>
-
-          <p class="text-sm text-slate-500 mt-1">
-            No activities match your current filters.
-          </p>
-
+        <div class="flex gap-2 border-b border-slate-200 px-5 pt-4">
           <button
-            @click="resetFilters"
-            class="mt-4 px-4 py-2 rounded-lg bg-[#8B1E23] text-white text-sm font-semibold hover:bg-[#72181D]"
+            type="button"
+            @click="activityView = 'active'"
+            class="border-b-2 px-4 py-3 text-sm font-bold transition"
+            :class="activityView === 'active' ? 'border-[#8B1E23] text-[#8B1E23]' : 'border-transparent text-slate-500 hover:text-slate-800'"
           >
-            Clear Filters
+            Active Activities
+            <span class="ml-1 text-xs">{{ activeActivityCount }}</span>
           </button>
-
+          <button
+            type="button"
+            @click="activityView = 'archived'"
+            class="border-b-2 px-4 py-3 text-sm font-bold transition"
+            :class="activityView === 'archived' ? 'border-[#8B1E23] text-[#8B1E23]' : 'border-transparent text-slate-500 hover:text-slate-800'"
+          >
+            Archived Activities
+            <span class="ml-1 text-xs">{{ archivedActivityCount }}</span>
+          </button>
         </div>
 
-
-        <div v-else class="fn-operations-table-wrap">
+        <div class="fn-operations-table-wrap">
           <table class="fn-operations-table">
             <thead>
               <tr>
-                <th>Activity</th><th>Type</th><th>Assigned Personnel</th><th>Deadline</th><th>Priority</th><th>Status</th><th class="text-right">Actions</th>
+                <th>Activity</th><th>Type</th><th>Location</th><th>Assigned Personnel</th><th>Deadline</th><th>Priority</th><th>Status</th><th class="text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -415,10 +403,10 @@
                   <div class="flex min-w-0 flex-col gap-1.5">
                     <p class="break-words text-sm font-semibold leading-5 text-slate-900">{{ activity.title }}</p>
                     <p v-if="activity.description" class="break-words whitespace-pre-wrap text-xs leading-5 text-slate-500">{{ activity.description }}</p>
-                    <p class="break-words text-xs leading-5 text-slate-500">{{ activity.location || 'No location specified' }}</p>
                   </div>
                 </td>
                 <td data-label="Type"><span class="fn-operations-badge">{{ activity.type || 'Activity' }}</span></td>
+                <td data-label="Location"><span class="block min-w-0 break-words leading-5">{{ activity.location || 'No location specified' }}</span></td>
                 <td data-label="Assigned Personnel">
                   <div class="flex items-center gap-2">
                     <span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#8B1E23] text-[10px] font-bold text-white">{{ assignedPersonnelName(activity).slice(0, 1).toUpperCase() }}</span>
@@ -445,9 +433,16 @@
                     <template v-else>
                       <button @click="openSubmissionModal(activity)" class="fn-operations-action fn-operations-action--primary">Submit</button>
                     </template>
-                    <button @click="archiveActivity(activity)" class="fn-operations-action">Archive</button>
-                    <button @click="deleteActivity(activity)" class="fn-operations-action fn-operations-action--danger">Delete</button>
+                    <button @click="activityView === 'archived' ? restoreActivity(activity) : archiveActivity(activity)" class="fn-operations-action">{{ activityView === 'archived' ? 'Restore' : 'Archive' }}</button>
+                    <button @click="requestDeleteActivity(activity)" class="fn-operations-action fn-operations-action--danger">Delete</button>
                   </div>
+                </td>
+              </tr>
+              <tr v-if="!filteredActivities.length">
+                <td colspan="8" class="py-12 text-center">
+                  <p class="font-bold text-slate-700">No activities found</p>
+                  <p class="mt-1 text-sm text-slate-500">Try changing your search or filters.</p>
+                  <button @click="resetFilters" class="mt-3 fn-operations-action">Clear Filters</button>
                 </td>
               </tr>
             </tbody>
@@ -460,253 +455,11 @@
       <!-- ======================================================= -->
       <!-- RIGHT SIDEBAR -->
       <!-- ======================================================= -->
-      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+     <!-- Changed gap-3 (12px) to gap-6 (24px) or gap-8 (32px) -->
+<div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
 
 
-        <!-- TODAY'S ACTIVITIES -->
-        <div
-          class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6"
-        >
 
-          <div class="flex items-center justify-between">
-
-            <div>
-
-              <h3 class="text-lg font-bold text-slate-900">
-                Today's Activities
-              </h3>
-
-              <p class="text-sm text-slate-500 mt-1">
-                {{ formattedToday }}
-              </p>
-
-            </div>
-
-            <div
-              class="h-10 w-10 rounded-xl bg-[#8B1E23]/10 flex items-center justify-center"
-            >
-
-              <span
-                v-html="ICONS.clock"
-                class="h-5 w-5 text-[#8B1E23]"
-              ></span>
-
-            </div>
-
-          </div>
-
-
-          <div
-            v-if="todaysActivities.length"
-            class="mt-5 space-y-4"
-          >
-
-            <div
-              v-for="item in todaysActivities"
-              :key="item.id"
-              class="flex gap-3"
-            >
-
-              <div
-                class="w-1 rounded-full"
-                :class="
-                  item.status === 'Completed'
-                    ? 'bg-green-500'
-                    : 'bg-[#8B1E23]'
-                "
-              ></div>
-
-              <div class="min-w-0">
-
-                <p class="text-sm font-bold text-slate-900">
-                  {{ item.title }}
-                </p>
-
-                <p class="text-xs text-slate-500 mt-1">
-                  {{ item.time || 'Time not specified' }}
-                  ·
-                  {{ item.location || 'No location' }}
-                </p>
-
-                <span
-                  class="inline-block mt-2 text-xs font-semibold"
-                  :class="
-                    item.status === 'Completed'
-                      ? 'text-green-700'
-                      : 'text-yellow-700'
-                  "
-                >
-                  {{ item.status }}
-                </span>
-
-              </div>
-
-            </div>
-
-          </div>
-
-
-          <div
-            v-else
-            class="mt-5 p-4 rounded-xl bg-slate-50 border border-slate-200 text-center"
-          >
-
-            <p class="text-sm text-slate-500">
-              No activities scheduled for today.
-            </p>
-
-          </div>
-
-        </div>
-
-
-        <!-- UPCOMING -->
-        <div
-          class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6"
-        >
-
-          <h3 class="text-lg font-bold text-slate-900">
-            Upcoming Activities
-          </h3>
-
-          <p class="text-sm text-slate-500 mt-1">
-            Next scheduled station activities.
-          </p>
-
-
-          <div
-            v-if="upcomingActivities.length"
-            class="mt-5 space-y-3"
-          >
-
-            <div
-              v-for="item in upcomingActivities"
-              :key="item.id"
-              class="p-4 rounded-xl bg-slate-50 border border-slate-200 hover:border-[#8B1E23]/30 transition"
-            >
-
-              <div class="flex items-start justify-between gap-3">
-
-                <div class="min-w-0">
-
-                  <p class="text-sm font-bold text-slate-900">
-                    {{ item.title }}
-                  </p>
-
-                  <p class="mt-1 flex flex-col gap-0.5 text-xs leading-5 text-slate-500">
-                    <span>{{ formatDate(item.date) }}</span>
-                    <span>{{ formatTime(item.time) }}</span>
-                  </p>
-
-                  <p class="text-xs text-slate-500 mt-1">
-                    {{ item.location || 'No location specified' }}
-                  </p>
-
-                </div>
-
-                <span class="text-xs font-bold text-[#8B1E23] shrink-0">
-                  {{ daysUntil(item.date) }}
-                </span>
-
-              </div>
-
-            </div>
-
-          </div>
-
-
-          <div
-            v-else
-            class="mt-5 p-4 rounded-xl bg-slate-50 border border-slate-200 text-center"
-          >
-
-            <p class="text-sm text-slate-500">
-              No upcoming activities.
-            </p>
-
-          </div>
-
-        </div>
-
-
-        <!-- PERFORMANCE -->
-        <div
-          class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6"
-        >
-
-          <h3 class="text-lg font-bold text-slate-900">
-            Activity Performance
-          </h3>
-
-          <p class="text-sm text-slate-500 mt-1">
-            Current station completion rate.
-          </p>
-
-
-          <div class="mt-5">
-
-            <div class="flex items-end justify-between">
-
-              <p class="text-3xl font-bold text-[#8B1E23]">
-                {{ completionRate }}%
-              </p>
-
-              <span
-                class="text-xs font-semibold"
-                :class="
-                  completionRate >= 80
-                    ? 'text-green-600'
-                    : 'text-yellow-600'
-                "
-              >
-                {{ completionMessage }}
-              </span>
-
-            </div>
-
-
-            <div class="mt-3 h-3 rounded-full bg-slate-200 overflow-hidden">
-
-              <div
-                class="h-full bg-[#8B1E23] rounded-full transition-all duration-500"
-                :style="{ width: `${completionRate}%` }"
-              ></div>
-
-            </div>
-
-
-            <div class="grid grid-cols-2 gap-4 mt-5">
-
-              <div>
-
-                <p class="text-xs text-slate-500">
-                  Completed
-                </p>
-
-                <p class="text-lg font-bold text-green-600">
-                  {{ completedActivities }}
-                </p>
-
-              </div>
-
-
-              <div>
-
-                <p class="text-xs text-slate-500">
-                  Pending
-                </p>
-
-                <p class="text-lg font-bold text-yellow-600">
-                  {{ pendingActivities }}
-                </p>
-
-              </div>
-
-            </div>
-
-          </div>
-
-        </div>
 
 
       
@@ -1122,20 +875,32 @@
 
     <div
       v-if="submissionActivity"
-      class="fixed inset-0 z-[70] bg-slate-900/50 flex items-center justify-center p-4"
+      class="fixed inset-0 z-[70] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4"
       @click.self="closeSubmissionModal"
     >
-      <div class="fn-modal-panel flex max-h-[calc(100dvh-2rem)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
-        <div class="shrink-0 px-6 py-5 border-b border-slate-200">
-          <p class="text-xs font-bold uppercase tracking-wide text-[#8B1E23]">Activity Submission</p>
-          <h3 class="text-xl font-bold text-slate-900 mt-1">{{ submissionActivity.title }}</h3>
-          <p class="text-sm text-slate-500 mt-1">Submit accomplishment for Admin verification.</p>
-          <div class="mt-3 flex flex-wrap gap-3 text-xs text-slate-500">
-            <span>Status: {{ submissionActivity.status }}</span>
+      <div class="fn-modal-panel flex max-h-[calc(100dvh-2rem)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+        <div class="fn-modal-header shrink-0 bg-[#8B1E23] p-6 text-white">
+          <div class="flex items-start justify-between gap-4">
+            <div class="min-w-0">
+              <p class="fn-modal-header-label text-xs font-bold uppercase tracking-wide">Activity Submission</p>
+              <h3 class="mt-1 break-words text-2xl font-bold">{{ submissionActivity.title }}</h3>
+              <p class="fn-modal-header-description mt-1 text-sm">Submit accomplishment for Admin verification.</p>
+              <span class="mt-3 inline-flex rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white">
+                {{ submissionActivity.status }}
+              </span>
+            </div>
+            <button
+              type="button"
+              @click="closeSubmissionModal"
+              class="h-9 w-9 shrink-0 rounded-lg bg-white/10 text-white hover:bg-white/20"
+              aria-label="Close activity submission"
+            >
+              ✕
+            </button>
           </div>
         </div>
 
-        <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain p-6 space-y-5">
+        <div class="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain p-6">
           <div>
             <label class="block text-sm font-bold text-slate-700 mb-2">
               Accomplishment / Work Summary
@@ -1164,9 +929,36 @@
           </div>
         </div>
 
-        <div class="shrink-0 px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-3">
+        <div class="flex shrink-0 justify-end gap-3 border-t border-slate-200 bg-slate-50 px-6 py-5">
           <button type="button" @click="closeSubmissionModal" class="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-bold">Cancel</button>
           <button type="button" @click="submitActivityForVerification" :disabled="!activityAccomplishment.trim()" class="px-5 py-2.5 rounded-xl bg-[#8B1E23] text-white font-bold disabled:opacity-50">Submit for Verification</button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      v-if="pendingDeleteActivity"
+      class="fixed inset-0 z-[75] flex items-center justify-center bg-slate-900/50 p-4"
+      @click.self="pendingDeleteActivity = null"
+    >
+      <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+        <p class="text-xs font-bold uppercase tracking-wide text-[#8B1E23]">Activity Action</p>
+        <h3 class="mt-2 text-xl font-bold text-slate-900">
+          {{ activityView === 'active' ? 'Move to Archive?' : 'Remove Assignment?' }}
+        </h3>
+        <p class="mt-2 text-sm text-slate-600">
+          <template v-if="activityView === 'active'">
+            Move <strong>{{ pendingDeleteActivity.title }}</strong> to your Archived Activities? Admin's activity record will remain unchanged.
+          </template>
+          <template v-else>
+            Remove <strong>{{ pendingDeleteActivity.title }}</strong> from your assignments? The shared activity, submissions, and evidence will remain intact.
+          </template>
+        </p>
+        <div class="mt-6 flex justify-end gap-3">
+          <button type="button" @click="pendingDeleteActivity = null" class="rounded-xl border border-slate-300 px-5 py-2.5 font-semibold text-slate-700">Cancel</button>
+          <button type="button" @click="deleteActivity(pendingDeleteActivity)" class="rounded-xl bg-[#8B1E23] px-5 py-2.5 font-bold text-white">
+            {{ activityView === 'active' ? 'Move to Archive' : 'Remove Assignment' }}
+          </button>
         </div>
       </div>
     </div>
@@ -1275,6 +1067,8 @@ const ACTIVITY_STORAGE_KEY = 'fireNotifyActivities'
 
 const activities = ref([])
 const serverActivities = ref([])
+const activityView = ref('active')
+const archivedActivityIds = ref(new Set())
 
 const activityStatusLabels = {
   SCHEDULED: 'Scheduled',
@@ -1298,6 +1092,9 @@ const activityAssignmentIds = activity => {
   }
 
   addId(activity?.assigned_personnel)
+  if (Array.isArray(activity?.assigned_personnel_ids)) {
+    activity.assigned_personnel_ids.forEach(addId)
+  }
   addId(activity?.assignedToId)
   addId(activity?.assigned_to)
   if (activity?.assignedTo && typeof activity.assignedTo === 'object') {
@@ -1320,7 +1117,10 @@ const isAssignedToCurrentUser = activity => {
 }
 
 const normalizeServerActivity = (activity, localActivity = null) => {
-  const assignedId = String(activity.assigned_personnel)
+  const assignedId = String(
+    activity.assigned_personnel_ids?.find(id => String(id) === String(props.currentUser?.id)) ??
+    activity.assigned_personnel
+  )
   const assignedPerson = props.registeredUsers.find(person =>
     String(person.id) === assignedId
   ) || (String(props.currentUser?.id) === assignedId ? props.currentUser : null) || { id: activity.assigned_personnel }
@@ -1367,21 +1167,12 @@ const normalizeServerActivity = (activity, localActivity = null) => {
 const loadActivities = () => {
   try {
     const parsed = JSON.parse(localStorage.getItem(ACTIVITY_STORAGE_KEY) || '[]')
-    const localActivities = Array.isArray(parsed)
-      ? parsed.filter(activity => !activity.is_archived && isAssignedToCurrentUser(activity)).map(normalizeActivity)
-      : []
-    const activitiesById = new Map(localActivities.map(activity => [String(activity.id), activity]))
-
-    serverActivities.value.forEach(activity => {
-      if (activity.is_archived) {
-        activitiesById.delete(String(activity.id))
-        return
-      }
-      const id = String(activity.id)
-      activitiesById.set(id, normalizeServerActivity(activity, activitiesById.get(id)))
-    })
-
-    activities.value = Array.from(activitiesById.values())
+    const localActivitiesById = new Map(
+      (Array.isArray(parsed) ? parsed : []).map(activity => [String(activity.id), activity])
+    )
+    activities.value = serverActivities.value.map(activity =>
+      normalizeServerActivity(activity, localActivitiesById.get(String(activity.id)))
+    )
     refreshOverdueActivities()
   } catch (error) {
     console.error('Failed to load FireNotify activities:', error)
@@ -1391,7 +1182,12 @@ const loadActivities = () => {
 
 const loadAssignedActivitiesFromApi = async () => {
   const userId = props.currentUser?.id
-  if (userId === null || userId === undefined) return
+  if (userId === null || userId === undefined) {
+    serverActivities.value = []
+    activities.value = []
+    archivedActivityIds.value = new Set()
+    return
+  }
 
   try {
     const response = await fetch('http://127.0.0.1:8000/api/activities/')
@@ -1400,16 +1196,31 @@ const loadAssignedActivitiesFromApi = async () => {
     const records = await response.json()
     if (!Array.isArray(records)) throw new Error('Invalid activities response')
 
-    const submissionsResponse = await fetch('http://127.0.0.1:8000/api/activity-submissions/')
-    if (!submissionsResponse.ok) throw new Error(`Submissions API HTTP ${submissionsResponse.status}`)
-    const submissions = await submissionsResponse.json()
-    if (!Array.isArray(submissions)) throw new Error('Invalid activity submissions response')
+    let submissions = []
+    try {
+      const submissionsResponse = await fetch('http://127.0.0.1:8000/api/activity-submissions/')
+      if (!submissionsResponse.ok) throw new Error(`HTTP ${submissionsResponse.status}`)
+      const responseData = await submissionsResponse.json()
+      if (!Array.isArray(responseData)) throw new Error('Invalid activity submissions response')
+      submissions = responseData
+    } catch (error) {
+      console.warn('Failed to load activity submissions:', error)
+    }
+
+    try {
+      const archivesResponse = await fetch(
+        `http://127.0.0.1:8000/api/activity-archives/?user_id=${encodeURIComponent(userId)}`
+      )
+      if (!archivesResponse.ok) throw new Error(`HTTP ${archivesResponse.status}`)
+      const archivedIds = await archivesResponse.json()
+      if (!Array.isArray(archivedIds)) throw new Error('Invalid activity archives response')
+      archivedActivityIds.value = new Set(archivedIds.map(String))
+    } catch (error) {
+      console.warn('Failed to load personnel activity archives:', error)
+    }
 
     serverActivities.value = records.filter(activity =>
-      !activity.is_archived &&
-      activity.assigned_personnel !== null &&
-      activity.assigned_personnel !== undefined &&
-      String(activity.assigned_personnel) === String(userId)
+      activityAssignmentIds(activity).includes(String(userId))
     ).map(activity => {
       const submission = submissions.find(item => String(item.activity) === String(activity.id))
       return {
@@ -1423,6 +1234,8 @@ const loadAssignedActivitiesFromApi = async () => {
     })
     loadActivities()
   } catch (error) {
+    serverActivities.value = []
+    activities.value = []
     console.error('Failed to load assigned activities from Django:', error)
   }
 }
@@ -1638,6 +1451,7 @@ const activityEditForm = ref({
 const newStatus = ref('Scheduled')
 const newProgress = ref(10)
 const submissionActivity = ref(null)
+const pendingDeleteActivity = ref(null)
 const activityAccomplishment = ref('')
 const activityRemarks = ref('')
 const activityEvidenceFiles = ref([])
@@ -1808,17 +1622,29 @@ const filteredActivities = computed(() => {
         typeFilter.value === 'All' ||
         activity.type === typeFilter.value
 
+      const isArchived = archivedActivityIds.value.has(String(activity.id))
+      const matchesArchiveView = activityView.value === 'archived' ? isArchived : !isArchived
+
 
       return (
         matchesSearch &&
         matchesStatus &&
-        matchesType
+        matchesType &&
+        matchesArchiveView
       )
 
     })
     .sort(sortActivities)
 
 })
+
+const activeActivityCount = computed(() =>
+  activities.value.filter(activity => !archivedActivityIds.value.has(String(activity.id))).length
+)
+
+const archivedActivityCount = computed(() =>
+  activities.value.filter(activity => archivedActivityIds.value.has(String(activity.id))).length
+)
 
 
 /* =========================================================
@@ -2261,7 +2087,12 @@ const openSubmissionModal = activity => {
 const evidenceFileUrl = file => {
   if (!file) return ''
   try {
-    return new URL(file, 'http://127.0.0.1:8000').toString()
+    const backendOrigin = 'http://127.0.0.1:8000'
+    const url = new URL(String(file), `${backendOrigin}/`)
+    if (url.origin !== backendOrigin || url.pathname.startsWith('/media/')) {
+      return url.toString()
+    }
+    return new URL(`/media/${url.pathname.replace(/^\/+/, '')}`, backendOrigin).toString()
   } catch {
     return ''
   }
@@ -2272,30 +2103,25 @@ const openActivityReview = activity => {
 }
 
 const archiveActivity = async activity => {
+  const userId = props.currentUser?.id
+  if (userId === null || userId === undefined) {
+    showToast('Unable to identify the current personnel user.')
+    return
+  }
+
   try {
     const response = await fetch(
-      `http://127.0.0.1:8000/api/activities/${activity.id}/`,
+      `http://127.0.0.1:8000/api/activities/${activity.id}/archive/`,
       {
-        method: 'PATCH',
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ is_archived: true })
+        body: JSON.stringify({ user_id: userId })
       }
     )
 
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
 
-    activity.is_archived = true
-    const stored = JSON.parse(localStorage.getItem(ACTIVITY_STORAGE_KEY) || '[]')
-    if (Array.isArray(stored)) {
-      localStorage.setItem(ACTIVITY_STORAGE_KEY, JSON.stringify(
-        stored.map(item => String(item.id) === String(activity.id)
-          ? { ...item, is_archived: true }
-          : item)
-      ))
-    }
-    activities.value = activities.value.filter(item => String(item.id) !== String(activity.id))
-    serverActivities.value = serverActivities.value.filter(item => String(item.id) !== String(activity.id))
-    saveActivities()
+    archivedActivityIds.value = new Set([...archivedActivityIds.value, String(activity.id)])
     showToast('Activity archived.')
   } catch (error) {
     console.error('Failed to archive activity:', error)
@@ -2303,26 +2129,92 @@ const archiveActivity = async activity => {
   }
 }
 
-const deleteActivity = async activity => {
+const restoreActivity = async activity => {
+  const userId = props.currentUser?.id
+  if (userId === null || userId === undefined) {
+    showToast('Unable to identify the current personnel user.')
+    return
+  }
+
   try {
     const response = await fetch(
-      `http://127.0.0.1:8000/api/activities/${activity.id}/`,
-      { method: 'DELETE' }
+      `http://127.0.0.1:8000/api/activities/${activity.id}/archive/`,
+      {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId })
+      }
     )
 
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
 
+    const archivedIds = new Set(archivedActivityIds.value)
+    archivedIds.delete(String(activity.id))
+    archivedActivityIds.value = archivedIds
+    showToast('Activity restored.')
+  } catch (error) {
+    console.error('Failed to restore activity:', error)
+    showToast('Failed to restore activity.')
+  }
+}
+
+const requestDeleteActivity = activity => {
+  pendingDeleteActivity.value = activity
+}
+
+const deleteActivity = async activity => {
+  const userId = props.currentUser?.id
+  if (userId === null || userId === undefined) {
+    showToast('Unable to identify the current personnel user.')
+    return
+  }
+
+  try {
+    if (activityView.value === 'active') {
+      const response = await fetch(
+        `http://127.0.0.1:8000/api/activities/${activity.id}/archive/`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: userId })
+        }
+      )
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`)
+
+      archivedActivityIds.value = new Set([...archivedActivityIds.value, String(activity.id)])
+      pendingDeleteActivity.value = null
+      showToast('Activity moved to your archive.')
+      return
+    }
+
+    const response = await fetch(
+      `http://127.0.0.1:8000/api/activities/${activity.id}/assignment/`,
+      {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId })
+      }
+    )
+
+    const data = await response.json().catch(() => ({}))
+    if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`)
+
     activities.value = activities.value.filter(item => String(item.id) !== String(activity.id))
     serverActivities.value = serverActivities.value.filter(item => String(item.id) !== String(activity.id))
+    const archivedIds = new Set(archivedActivityIds.value)
+    archivedIds.delete(String(activity.id))
+    archivedActivityIds.value = archivedIds
     const stored = JSON.parse(localStorage.getItem(ACTIVITY_STORAGE_KEY) || '[]')
     localStorage.setItem(ACTIVITY_STORAGE_KEY, JSON.stringify(
       (Array.isArray(stored) ? stored : []).filter(item => String(item.id) !== String(activity.id))
     ))
-    saveActivities()
-    showToast('Activity deleted.')
+    window.dispatchEvent(new CustomEvent('fireNotifyActivitiesUpdated'))
+    pendingDeleteActivity.value = null
+    showToast('Activity removed from your assignments.')
   } catch (error) {
     console.error('Failed to delete activity:', error)
-    showToast('Failed to delete activity.')
+    showToast(error.message || 'Failed to process activity action.')
   }
 }
 
@@ -2416,13 +2308,8 @@ const submitActivityForVerification = async () => {
     return
   }
 
-  const item = activities.value.find(
-    record =>
-      String(record.id) ===
-      String(submissionActivity.value.id)
-  )
-
-  if (!item) {
+  const item = submissionActivity.value
+  if (!Number.isInteger(Number(item.id)) || Number(item.id) <= 0) {
     showToast('Activity not found.')
     return
   }

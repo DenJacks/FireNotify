@@ -8,7 +8,7 @@ import {
 
 import { getTaskActivityEvidence } from '../../utils/reportFileStorage.js'
 import { resolvePersonnelName } from '../../utils/personnelName.js'
-import { createTask as createTaskInApi, deleteTask as deleteTaskFromApi, getTasks, updateTask as updateTaskInApi } from '../../utils/taskService.js'
+import { createTask as createTaskInApi, deleteTask as deleteTaskFromApi, getTaskArchiveIds, getTasks, setTaskArchive, updateTask as updateTaskInApi } from '../../utils/taskService.js'
 import '../../styles/operations.css'
 import { formatOperationDate, formatOperationTime } from '../../utils/operationsFormat.js'
 const hasTimeValue = value => /(?:T|\s)\d{1,2}:\d{2}/.test(String(value || ''))
@@ -48,6 +48,8 @@ const emit = defineEmits([
 const TASK_STORAGE_KEY = 'firenotify_tasks'
 
 const tasks = ref([])
+const taskView = ref('active')
+const archivedTaskIds = ref(new Set())
 const personnelDirectory = ref([])
 
 /* =========================================================
@@ -67,14 +69,17 @@ const showDeleteModal = ref(false)
 const showTaskModal = ref(false)
 const showAssignmentModal = ref(false)
 const showSubmissionModal = ref(false)
+const showTaskDeleteModal = ref(false)
 
 /* =========================================================
    SELECTED PERSONNEL
 ========================================================= */
 
 const selectedPersonnel = ref(null)
+const taskAssigneeId = ref('')
 const personnelToDelete = ref(null)
 const selectedTaskSubmission = ref(null)
+const selectedTaskForDelete = ref(null)
 const editingTask = ref(null)
 const submissionEvidence = ref([])
 const submissionEvidenceUrls = ref([])
@@ -99,7 +104,6 @@ const toastType = ref('success')
 
 const taskForm = ref({
   title: '',
-  subtopic: '',
   type: 'General Task',
   priority: 'Medium',
   location: '',
@@ -107,6 +111,47 @@ const taskForm = ref({
   time: '',
   description: ''
 })
+
+const TASK_TYPES_KEY = 'fireNotifyTaskTypes'
+const taskTypes = ref([
+  'General Task',
+  'Inspection',
+  'Report',
+  'Training',
+  'Documentation',
+  'Emergency Duty',
+  'Compliance'
+])
+const showNewTaskType = ref(false)
+const newTaskTypeName = ref('')
+
+const mergeTaskTypes = values => {
+  const types = [...taskTypes.value, ...values]
+    .map(value => String(value || '').trim())
+    .filter(Boolean)
+  const uniqueTypes = [...new Map(types.map(type => [type.toLowerCase(), type])).values()]
+  taskTypes.value = uniqueTypes
+  localStorage.setItem(TASK_TYPES_KEY, JSON.stringify(uniqueTypes))
+}
+
+const loadSavedTaskTypes = () => {
+  try {
+    const saved = JSON.parse(localStorage.getItem(TASK_TYPES_KEY) || '[]')
+    if (Array.isArray(saved)) mergeTaskTypes(saved)
+  } catch (error) {
+    console.warn('FireNotify: unable to load saved task types', error)
+  }
+}
+
+const createTaskType = () => {
+  const name = newTaskTypeName.value.trim()
+  if (!name) return
+  const existing = taskTypes.value.find(type => type.toLowerCase() === name.toLowerCase())
+  if (!existing) mergeTaskTypes([name])
+  taskForm.value.type = existing || name
+  newTaskTypeName.value = ''
+  showNewTaskType.value = false
+}
 
 /* =========================================================
    PERSONNEL
@@ -163,6 +208,10 @@ const personnel = computed(() => {
         user.assignment || ''
     }))
 })
+
+const taskAssignee = computed(() =>
+  personnel.value.find(person => String(person.id) === String(taskAssigneeId.value)) || null
+)
 
 /* =========================================================
    RANKS
@@ -585,6 +634,16 @@ const loadPersonnelUsers = async () => {
 const loadTasks = async () => {
   try {
     tasks.value = await getTasks()
+    mergeTaskTypes(tasks.value.map(task => task.type || task.task_type))
+    archivedTaskIds.value = new Set()
+    const userId = props.currentUser?.id
+    if (userId !== null && userId !== undefined) {
+      try {
+        archivedTaskIds.value = new Set(await getTaskArchiveIds(userId))
+      } catch (error) {
+        console.error('FireNotify: Failed to load task archives', error)
+      }
+    }
   } catch (error) {
     console.error('FireNotify: Failed to load tasks from Django', error)
     showToast('Unable to load tasks from the server.', 'error')
@@ -604,7 +663,6 @@ const saveTasks = () => window.dispatchEvent(new CustomEvent('fireNotifyTasksUpd
 const resetTaskForm = () => {
   taskForm.value = {
     title: '',
-    subtopic: '',
     type: 'General Task',
     priority: 'Medium',
     location: '',
@@ -810,13 +868,8 @@ const updateStatus = (
 ========================================================= */
 
 const openTaskModal = person => {
-
-  if (!person) {
-    return
-  }
-
-  selectedPersonnel.value =
-    person
+  selectedPersonnel.value = person || null
+  taskAssigneeId.value = person?.id ? String(person.id) : ''
 
   editingTask.value = null
 
@@ -837,10 +890,10 @@ const openEditTask = task => {
   }
 
   selectedPersonnel.value = person
+  taskAssigneeId.value = String(person.id)
   editingTask.value = task
   taskForm.value = {
     title: task.title || '',
-    subtopic: task.subtopic || '',
     type: task.type || 'General Task',
     priority: task.priority || 'Medium',
     location: task.location || '',
@@ -856,8 +909,8 @@ const openEditTask = task => {
 ========================================================= */
 
 const saveTask = async () => {
-
-  if (!selectedPersonnel.value) {
+  const person = taskAssignee.value
+  if (!person) {
 
     showToast(
       'Please select a personnel.',
@@ -891,8 +944,7 @@ const saveTask = async () => {
     return
   }
 
-  const person =
-    selectedPersonnel.value
+  selectedPersonnel.value = person
   const wasEditing = Boolean(editingTask.value)
 
   /* =====================================================
@@ -903,9 +955,6 @@ const saveTask = async () => {
 
     title:
       taskForm.value.title.trim(),
-
-    subtopic:
-      taskForm.value.subtopic.trim(),
 
     type:
       taskForm.value.type,
@@ -1033,9 +1082,71 @@ const saveTask = async () => {
    DELETE TASK
 ========================================================= */
 
-const deleteTask = async task => {
+const openTaskDeleteModal = task => {
+  selectedTaskForDelete.value = task
+  showTaskDeleteModal.value = true
+}
 
-  if (!task) {
+const closeTaskDeleteModal = () => {
+  showTaskDeleteModal.value = false
+  selectedTaskForDelete.value = null
+}
+
+const archiveTask = async task => {
+  const userId = props.currentUser?.id
+  if (userId === null || userId === undefined) {
+    showToast('Unable to identify the current Admin.', 'error')
+    return
+  }
+
+  try {
+    await setTaskArchive(task.id, userId, true)
+    archivedTaskIds.value = new Set([...archivedTaskIds.value, String(task.id)])
+    saveTasks()
+    showToast('Task archived for Admin.')
+  } catch (error) {
+    showToast(error.message || 'Unable to archive task.', 'error')
+  }
+}
+
+const restoreTask = async task => {
+  const userId = props.currentUser?.id
+  if (userId === null || userId === undefined) {
+    showToast('Unable to identify the current Admin.', 'error')
+    return
+  }
+
+  try {
+    await setTaskArchive(task.id, userId, false)
+    const archivedIds = new Set(archivedTaskIds.value)
+    archivedIds.delete(String(task.id))
+    archivedTaskIds.value = archivedIds
+    saveTasks()
+    showToast('Task restored to Admin active tasks.')
+  } catch (error) {
+    showToast(error.message || 'Unable to restore task.', 'error')
+  }
+}
+
+const deleteTask = async () => {
+  const task = selectedTaskForDelete.value
+  if (!task) return
+
+  if (taskView.value === 'active') {
+    const userId = props.currentUser?.id
+    if (userId === null || userId === undefined) {
+      showToast('Unable to identify the current Admin.', 'error')
+      return
+    }
+    try {
+      await setTaskArchive(task.id, userId, true)
+      archivedTaskIds.value = new Set([...archivedTaskIds.value, String(task.id)])
+      closeTaskDeleteModal()
+      saveTasks()
+      showToast('Task moved to Admin archive.')
+    } catch (error) {
+      showToast(error.message || 'Unable to archive task.', 'error')
+    }
     return
   }
 
@@ -1045,23 +1156,46 @@ const deleteTask = async task => {
     showToast(error.message, 'error')
     return
   }
-  tasks.value = tasks.value.filter(item => item.id !== task.id)
-
+  try {
+    await deleteTaskActivityEvidence({ recordId: task.id, recordType: 'task' })
+  } catch (error) {
+    console.warn('Unable to remove archived task evidence:', error)
+  }
+  tasks.value = tasks.value.filter(item => String(item.id) !== String(task.id))
+  closeTaskDeleteModal()
   saveTasks()
-
-  showToast(
-    'Task deleted successfully.'
-  )
+  showToast('Task permanently deleted.')
 }
 
 /* =========================================================
    ASSIGNED TASKS
 ========================================================= */
 
-const assignedTasks = computed(() => {
+const assignedTasks = computed(() => tasks.value.filter(task => {
+  const isArchived = archivedTaskIds.value.has(String(task.id))
+  return taskView.value === 'archived' ? isArchived : !isArchived
+}))
 
-  return tasks.value
+const activeTaskCount = computed(() =>
+  tasks.value.filter(task => !archivedTaskIds.value.has(String(task.id))).length
+)
+
+const taskCounts = computed(() => {
+  const activeTasks = tasks.value.filter(task => !archivedTaskIds.value.has(String(task.id)))
+  const hasStatus = statuses => activeTasks.filter(task => statuses.includes(String(task.status || '').toLowerCase())).length
+
+  return {
+    total: activeTasks.length,
+    assigned: hasStatus(['assigned', 'pending']),
+    inProgress: hasStatus(['in progress', 'ongoing']),
+    completed: hasStatus(['completed', 'complete', 'verified']),
+    overdue: hasStatus(['overdue'])
+  }
 })
+
+const archivedTaskCount = computed(() =>
+  tasks.value.filter(task => archivedTaskIds.value.has(String(task.id))).length
+)
 
 /* =========================================================
    STORAGE SYNC
@@ -1089,6 +1223,7 @@ const handleTaskUpdate = () => {
 let taskSyncInterval = null
 
 onMounted(async () => {
+  loadSavedTaskTypes()
   await loadPersonnelUsers()
   await loadTasks()
 
@@ -1153,35 +1288,29 @@ onUnmounted(() => {
           <p
             class="text-sm font-bold uppercase tracking-wide text-[#8B1E23]"
           >
-            Personnel Management
+            Operations Management
           </p>
 
           <h2
             class="text-2xl font-bold text-slate-900 mt-1"
           >
-            Station Personnel
+            Task Management
           </h2>
 
           <p
             class="text-base text-slate-500 mt-1"
           >
-            Manage registered personnel,
-            assign tasks, and monitor duty status.
+            Create tasks, assign personnel, and monitor submissions.
           </p>
 
         </div>
 
-        <div
-          class="px-5 py-3 rounded-xl bg-slate-50 border border-slate-200"
+        <button
+          @click="openTaskModal()"
+          class="px-6 py-3 rounded-xl bg-[#8B1E23] text-white font-bold hover:bg-[#72181D] transition shadow-sm"
         >
-
-          <p
-            class="text-sm font-semibold text-slate-700"
-          >
-            Personnel accounts are created through Registration.
-          </p>
-
-        </div>
+          + Create Task
+        </button>
 
       </div>
 
@@ -1193,6 +1322,7 @@ onUnmounted(() => {
     ====================================================== -->
 
     <section
+      v-if="false"
       class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"
     >
 
@@ -1280,11 +1410,35 @@ onUnmounted(() => {
     </section>
 
 
+    <section class="fn-operations-summary fn-operations-summary--five">
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <p class="text-3xl font-bold text-slate-900">{{ String(taskCounts.total).padStart(2, '0') }}</p>
+        <p class="text-sm text-slate-500 mt-1">Total Tasks</p>
+      </div>
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <p class="text-3xl font-bold text-blue-600">{{ String(taskCounts.assigned).padStart(2, '0') }}</p>
+        <p class="text-sm text-slate-500 mt-1">Assigned</p>
+      </div>
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <p class="text-3xl font-bold text-amber-600">{{ String(taskCounts.inProgress).padStart(2, '0') }}</p>
+        <p class="text-sm text-slate-500 mt-1">In Progress</p>
+      </div>
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <p class="text-3xl font-bold text-green-600">{{ String(taskCounts.completed).padStart(2, '0') }}</p>
+        <p class="text-sm text-slate-500 mt-1">Completed</p>
+      </div>
+      <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <p class="text-3xl font-bold text-[#8B1E23]">{{ String(taskCounts.overdue).padStart(2, '0') }}</p>
+        <p class="text-sm text-slate-500 mt-1">Overdue</p>
+      </div>
+    </section>
+
     <!-- =====================================================
          FILTERS
     ====================================================== -->
 
     <section
+      v-if="false"
       class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5"
     >
 
@@ -1382,6 +1536,7 @@ onUnmounted(() => {
     ====================================================== -->
 
     <section
+      v-if="false"
       class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6"
     >
 
@@ -1673,11 +1828,19 @@ onUnmounted(() => {
 
       </div>
 
+      <div class="flex gap-2 border-b border-slate-200 px-5 pt-4">
+        <button type="button" @click="taskView = 'active'" class="border-b-2 px-4 py-3 text-sm font-bold" :class="taskView === 'active' ? 'border-[#8B1E23] text-[#8B1E23]' : 'border-transparent text-slate-500'">
+          Active Tasks <span class="ml-1 text-xs">{{ activeTaskCount }}</span>
+        </button>
+        <button type="button" @click="taskView = 'archived'" class="border-b-2 px-4 py-3 text-sm font-bold" :class="taskView === 'archived' ? 'border-[#8B1E23] text-[#8B1E23]' : 'border-transparent text-slate-500'">
+          Archived Tasks <span class="ml-1 text-xs">{{ archivedTaskCount }}</span>
+        </button>
+      </div>
 
-      <div v-if="assignedTasks.length" class="fn-operations-table-wrap">
+      <div class="fn-operations-table-wrap">
         <table class="fn-operations-table">
           <thead>
-            <tr><th>Task</th><th>Assigned To</th><th>Deadline</th><th>Priority</th><th>Status</th><th class="text-right">Actions</th></tr>
+            <tr><th>Task</th><th>Assigned To</th><th>Location</th><th>Deadline</th><th>Priority</th><th>Status</th><th class="text-right">Actions</th></tr>
           </thead>
           <tbody>
             <tr v-for="task in assignedTasks" :key="task.id">
@@ -1686,259 +1849,44 @@ onUnmounted(() => {
                   <span class="break-words text-sm font-semibold leading-5 text-slate-900">{{ task.title }}</span>
                   <span v-if="task.subtopic" class="break-words text-xs leading-5 text-slate-500">{{ task.subtopic }}</span>
                   <span v-if="task.description" class="break-words whitespace-pre-wrap text-xs leading-5 text-slate-500">{{ task.description }}</span>
-                  <span v-if="task.location" class="break-words text-xs leading-5 text-slate-500">{{ task.location }}</span>
                   <span v-if="task.accomplishment || task.submissionNote" class="break-words whitespace-pre-wrap pt-1 text-xs leading-5 text-slate-600">Submission: {{ task.accomplishment || task.submissionNote }}</span>
                   <span v-if="task.submittedAt" class="flex flex-col gap-0.5 pt-1 text-xs leading-5 text-slate-500"><span>Submitted</span><span>{{ formatOperationDate(task.submittedAt) }}</span><span v-if="hasTimeValue(task.submittedAt)">{{ formatOperationTime(task.submittedAt) }}</span></span>
                 </div>
               </td>
               <td data-label="Assigned To"><span class="block min-w-0 break-words leading-5">{{ assignedPersonnelName(task) }}</span></td>
+              <td data-label="Location"><span class="block min-w-0 break-words leading-5">{{ task.location || 'Not specified' }}</span></td>
               <td data-label="Schedule"><div class="flex flex-col gap-0.5"><span class="leading-5">{{ formatOperationDate(task.dueDate) }}</span><span class="text-xs leading-5 text-slate-500">{{ formatOperationTime(task.time) }}</span></div></td>
               <td data-label="Priority"><span class="fn-operations-badge">{{ (task.priority || 'Medium').toUpperCase() }}</span></td>
               <td data-label="Status"><span class="fn-operations-badge" :class="getTaskStatusClass(task.status)">{{ task.status }}</span></td>
               <td data-label="Actions">
                 <div class="flex flex-wrap gap-1.5 sm:justify-end">
-                  <button @click="openEditTask(task)" class="fn-operations-action">Edit</button>
-                  <button v-if="task.status === 'For Verification' || task.status === 'Submitted'" @click="openTaskSubmission(task)" class="fn-operations-action">View Submission</button>
-                  <button @click="deleteTask(task)" class="fn-operations-action fn-operations-action--danger">Delete</button>
+                  <template v-if="taskView === 'archived'">
+                    <button v-if="['For Verification', 'Submitted', 'Verified', 'Returned'].includes(task.status)" @click="openTaskSubmission(task)" class="fn-operations-action">View Submission</button>
+                    <button @click="restoreTask(task)" class="fn-operations-action">Restore</button>
+                    <button @click="openTaskDeleteModal(task)" class="fn-operations-action fn-operations-action--danger">Delete Permanently</button>
+                  </template>
+                  <template v-else>
+                    <button v-if="!['For Verification', 'Submitted', 'Verified', 'Returned'].includes(task.status)" @click="openEditTask(task)" class="fn-operations-action">Edit</button>
+                    <button v-if="['For Verification', 'Submitted', 'Verified', 'Returned'].includes(task.status)" @click="openTaskSubmission(task)" class="fn-operations-action">View Submission</button>
+                    <button @click="archiveTask(task)" class="fn-operations-action">Archive</button>
+                    <button @click="openTaskDeleteModal(task)" class="fn-operations-action fn-operations-action--danger">Delete</button>
+                  </template>
                 </div>
+              </td>
+            </tr>
+            <tr v-if="!assignedTasks.length">
+              <td colspan="7" class="py-12 text-center">
+                <p class="font-bold text-slate-700">No tasks found</p>
+                <p class="mt-1 text-sm text-slate-500">Assign a task to personnel or change your filters.</p>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
 
-
-      <div
-        v-else
-        class="py-12 text-center"
-      >
-
-        <div class="text-4xl mb-3">
-          📋
-        </div>
-
-        <p
-          class="font-bold text-slate-700"
-        >
-          No tasks assigned yet
-        </p>
-
-        <p
-          class="text-sm text-slate-500 mt-1"
-        >
-          Click "Assign Task" beside a personnel.
-        </p>
-
-      </div>
-
     </section>
 
 
-    <!-- =====================================================
-         TEAM AVAILABILITY
-    ====================================================== -->
-
-    <section
-      class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6"
-    >
-
-      <div
-        class="border-b border-slate-200 pb-5"
-      >
-
-        <h2
-          class="text-xl font-bold text-slate-900"
-        >
-          Team Availability
-        </h2>
-
-        <p
-          class="text-sm text-slate-500 mt-1"
-        >
-          Current staffing by shift
-        </p>
-
-      </div>
-
-
-      <div class="mt-5 space-y-4">
-
-        <div
-          v-for="item in shiftSummary"
-          :key="item.shift"
-          class="p-4 rounded-xl border border-slate-200 bg-slate-50"
-        >
-
-          <div
-            class="flex justify-between items-center gap-4"
-          >
-
-            <div>
-
-              <p
-                class="text-sm font-bold text-slate-900"
-              >
-                {{ item.shift }} Shift
-              </p>
-
-              <p
-                class="text-xs text-slate-500 mt-1"
-              >
-                {{ item.onDuty }}
-                of
-                {{ item.total }}
-                personnel on duty
-              </p>
-
-            </div>
-
-
-            <span
-              class="text-sm font-bold"
-              :class="{
-                'text-green-600':
-                  item.status === 'Fully Staffed',
-
-                'text-blue-600':
-                  item.status === 'On Schedule',
-
-                'text-yellow-600':
-                  item.status === 'Low Coverage'
-              }"
-            >
-              {{ item.status }}
-            </span>
-
-          </div>
-
-
-          <div
-            class="mt-3 h-2 rounded-full bg-slate-200 overflow-hidden"
-          >
-
-            <div
-              class="h-full rounded-full bg-[#8B1E23] transition-all duration-500"
-              :style="{
-                width: `${item.coverage}%`
-              }"
-            ></div>
-
-          </div>
-
-
-          <div
-            class="flex justify-between mt-2 text-xs text-slate-500"
-          >
-
-            <span>
-              Coverage
-            </span>
-
-            <span
-              class="font-bold text-slate-700"
-            >
-              {{ item.coverage }}%
-            </span>
-
-          </div>
-
-        </div>
-
-      </div>
-
-    </section>
-
-
-    <!-- =====================================================
-         PERSONNEL NOTES
-    ====================================================== -->
-
-    <section
-      class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6"
-    >
-
-      <div
-        class="border-b border-slate-200 pb-5"
-      >
-
-        <h2
-          class="text-xl font-bold text-slate-900"
-        >
-          Personnel Notes
-        </h2>
-
-        <p
-          class="text-sm text-slate-500 mt-1"
-        >
-          Admin reminders and coordination updates
-        </p>
-
-      </div>
-
-
-      <div
-        class="mt-5 grid grid-cols-1 md:grid-cols-3 gap-4"
-      >
-
-        <div
-          class="p-4 rounded-xl border border-emerald-200 bg-emerald-50"
-        >
-
-          <p
-            class="text-sm font-bold text-slate-900"
-          >
-            Training Readiness
-          </p>
-
-          <p
-            class="text-sm text-slate-600 mt-1"
-          >
-            All new trainees have completed orientation and are scheduled for field drills next week.
-          </p>
-
-        </div>
-
-
-        <div
-          class="p-4 rounded-xl border border-orange-200 bg-orange-50"
-        >
-
-          <p
-            class="text-sm font-bold text-slate-900"
-          >
-            Coverage Alert
-          </p>
-
-          <p
-            class="text-sm text-slate-600 mt-1"
-          >
-            Night shift should be reviewed regularly to maintain emergency response coverage.
-          </p>
-
-        </div>
-
-
-        <div
-          class="p-4 rounded-xl border border-indigo-200 bg-indigo-50"
-        >
-
-          <p
-            class="text-sm font-bold text-slate-900"
-          >
-            Leave Management
-          </p>
-
-          <p
-            class="text-sm text-slate-600 mt-1"
-          >
-            Review approved leave requests and ensure backup personnel are assigned.
-          </p>
-
-        </div>
-
-      </div>
-
-    </section>
 
 
     <!-- =====================================================
@@ -1957,7 +1905,7 @@ onUnmounted(() => {
         <!-- HEADER -->
 
         <div
-          class="bg-[#8B1E23] p-6 text-white"
+          class="fn-modal-header bg-[#8B1E23] p-6 text-white"
         >
 
           <div
@@ -2167,7 +2115,7 @@ onUnmounted(() => {
     ====================================================== -->
 
     <div
-      v-if="showTaskModal && selectedPersonnel"
+      v-if="showTaskModal"
       class="fixed inset-0 z-[55] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4"
     >
 
@@ -2188,23 +2136,21 @@ onUnmounted(() => {
             <div>
 
               <p
-                class="text-xs uppercase tracking-wider font-bold text-white/70"
+                class="fn-modal-header-label text-xs uppercase tracking-wider font-bold text-white/70"
               >
-                Personnel Task Assignment
+                Task Details
               </p>
 
               <h2
-                class="text-2xl font-bold mt-1"
+                class="text-2xl font-bold mt-1 text-white"
               >
-                {{ editingTask ? 'Edit Task' : 'Assign Task' }}
+                {{ editingTask ? 'Edit Task' : 'Create Task' }}
               </h2>
 
-              <p
-                class="text-sm text-white/80 mt-1"
-              >
-                Assigned to
-                {{ fullName(selectedPersonnel) }}
+              <p v-if="taskAssignee" class="fn-modal-header-description text-sm text-white/80 mt-1">
+                Assigned to {{ fullName(taskAssignee) }}
               </p>
+              <p v-else class="fn-modal-header-description text-sm text-white/80 mt-1">Select personnel to assign this task.</p>
 
             </div>
 
@@ -2227,6 +2173,19 @@ onUnmounted(() => {
           class="p-6 space-y-5 max-h-[70vh] overflow-y-auto"
         >
 
+          <div>
+            <label class="block text-sm font-bold text-slate-700 mb-2">Assign To *</label>
+            <select
+              v-model="taskAssigneeId"
+              class="w-full h-12 px-4 rounded-xl border border-slate-300 bg-white"
+            >
+              <option value="">Select personnel</option>
+              <option v-for="person in personnel" :key="person.id" :value="String(person.id)">
+                {{ fullName(person) }} · {{ person.rank }}
+              </option>
+            </select>
+          </div>
+
           <!-- TITLE -->
 
           <div>
@@ -2241,26 +2200,6 @@ onUnmounted(() => {
               v-model="taskForm.title"
               type="text"
               placeholder="Example: Conduct Fire Safety Inspection"
-              class="w-full h-12 px-4 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-[#8B1E23]"
-            />
-
-          </div>
-
-
-          <!-- SUBTOPIC -->
-
-          <div>
-
-            <label
-              class="block text-sm font-bold text-slate-700 mb-2"
-            >
-              Sub-topic
-            </label>
-
-            <input
-              v-model="taskForm.subtopic"
-              type="text"
-              placeholder="Example: Building Inspection"
               class="w-full h-12 px-4 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-[#8B1E23]"
             />
 
@@ -2285,36 +2224,36 @@ onUnmounted(() => {
                 v-model="taskForm.type"
                 class="w-full h-12 px-4 rounded-xl border border-slate-300 bg-white"
               >
-
-                <option>
-                  General Task
-                </option>
-
-                <option>
-                  Inspection
-                </option>
-
-                <option>
-                  Report
-                </option>
-
-                <option>
-                  Training
-                </option>
-
-                <option>
-                  Documentation
-                </option>
-
-                <option>
-                  Emergency Duty
-                </option>
-
-                <option>
-                  Compliance
+                <option v-for="type in taskTypes" :key="type" :value="type">
+                  {{ type }}
                 </option>
 
               </select>
+
+              <button
+                v-if="!showNewTaskType"
+                type="button"
+                @click="showNewTaskType = true"
+                class="mt-2 text-sm font-bold text-[#8B1E23] hover:underline"
+              >
+                + Create New Task Type
+              </button>
+
+              <div v-else class="mt-3 flex flex-wrap items-center gap-2">
+                <input
+                  v-model="newTaskTypeName"
+                  type="text"
+                  placeholder="New Task Type"
+                  class="min-w-0 flex-1 h-10 px-3 rounded-lg border border-slate-300"
+                  @keyup.enter="createTaskType"
+                />
+                <button type="button" @click="createTaskType" class="px-3 py-2 rounded-lg bg-[#8B1E23] text-white text-sm font-bold">
+                  Create Type
+                </button>
+                <button type="button" @click="showNewTaskType = false; newTaskTypeName = ''" class="px-3 py-2 rounded-lg border border-slate-300 text-sm font-semibold">
+                  Cancel
+                </button>
+              </div>
 
             </div>
 
@@ -2453,7 +2392,7 @@ onUnmounted(() => {
             @click="saveTask"
             class="px-5 py-2.5 rounded-xl bg-[#8B1E23] text-white font-bold hover:bg-[#72181D]"
           >
-            {{ editingTask ? 'Save Changes' : 'Assign Task' }}
+            {{ editingTask ? 'Save Changes' : 'Create Task' }}
           </button>
 
         </div>
@@ -2608,6 +2547,33 @@ onUnmounted(() => {
 
     </div>
 
+
+    <div
+      v-if="showTaskDeleteModal && selectedTaskForDelete"
+      class="fixed inset-0 z-[64] flex items-center justify-center bg-slate-900/50 p-4"
+      @click.self="closeTaskDeleteModal"
+    >
+      <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+        <p class="text-xs font-bold uppercase tracking-wide text-[#8B1E23]">Task Action</p>
+        <h3 class="mt-2 text-xl font-bold text-slate-900">
+          {{ taskView === 'active' ? 'Move Task to Archive?' : 'Delete Task Permanently?' }}
+        </h3>
+        <p class="mt-2 text-sm text-slate-600">
+          <template v-if="taskView === 'active'">
+            Move <strong>{{ selectedTaskForDelete.title }}</strong> to Admin Archived Tasks? You can restore it later.
+          </template>
+          <template v-else>
+            Permanently delete <strong>{{ selectedTaskForDelete.title }}</strong>? This cannot be undone.
+          </template>
+        </p>
+        <div class="mt-6 flex justify-end gap-3">
+          <button type="button" @click="closeTaskDeleteModal" class="rounded-xl border border-slate-300 px-5 py-2.5 font-semibold text-slate-700">Cancel</button>
+          <button type="button" @click="deleteTask" class="rounded-xl bg-[#8B1E23] px-5 py-2.5 font-bold text-white">
+            {{ taskView === 'active' ? 'Move to Archive' : 'Delete Permanently' }}
+          </button>
+        </div>
+      </div>
+    </div>
 
     <div
       v-if="showSubmissionModal && selectedTaskSubmission"

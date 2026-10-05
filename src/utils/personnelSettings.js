@@ -3,7 +3,6 @@ export const SETTINGS_UPDATED_EVENT = 'fireNotifyPersonnelSettingsUpdated'
 
 export const DEFAULT_PERSONNEL_SETTINGS = {
   theme: 'light',
-  density: 'comfortable',
   fontSize: 'medium',
   reduceMotion: false,
   highContrast: false,
@@ -51,7 +50,6 @@ export const applyPersonnelSettings = settings => {
     : settings.theme
 
   root.dataset.personnelTheme = resolvedTheme
-  root.dataset.personnelDensity = settings.density
   root.dataset.personnelFontSize = settings.fontSize
   root.classList.toggle('fn-reduce-motion', settings.reduceMotion)
   root.classList.toggle('fn-high-contrast', settings.highContrast)

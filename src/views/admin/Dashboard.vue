@@ -60,21 +60,10 @@ const selectedType = ref('')
 
 const readArray = key => {
   try {
-    const value = JSON.parse(
-      localStorage.getItem(key) || '[]'
-    )
-
-    return Array.isArray(value)
-      ? value
-      : []
-
+    const value = JSON.parse(localStorage.getItem(key) || '[]')
+    return Array.isArray(value) ? value : []
   } catch (error) {
-
-    console.warn(
-      `FireNotify: unable to read ${key}`,
-      error
-    )
-
+    console.warn(`FireNotify: unable to read ${key}`, error)
     return []
   }
 }
@@ -85,7 +74,6 @@ const readArray = key => {
    ========================================================= */
 
 const readNotifications = () => {
-
   const possibleKeys = [
     'firenotify_notifications',
     'fireNotifyNotifications',
@@ -94,20 +82,11 @@ const readNotifications = () => {
   ]
 
   for (const key of possibleKeys) {
-
     const value = readArray(key)
-
-    if (value.length) {
-      return value
-    }
+    if (value.length) return value
   }
 
-
-  /*
-   * Fallback:
-   * Find any localStorage key containing
-   * "notification".
-   */
+  /* Find any localStorage key containing "notification". */
 
   for (
     let index = 0;
@@ -2167,66 +2146,31 @@ onBeforeUnmount(() => {
 
       <div
         v-if="personnel.length"
-        class="grid grid-cols-1
-               md:grid-cols-2
-               xl:grid-cols-3 gap-3 mt-5"
+        class="mt-5 overflow-x-auto"
       >
-
-        <div
-          v-for="person in personnel"
-          :key="
-            person.id ||
-            person.identifier
-          "
-          class="p-4 rounded-xl
-                 border border-slate-200
-                 flex items-center gap-3"
-        >
-
-          <div
-            class="h-11 w-11 rounded-full
-                   bg-[#8B1E23] text-white
-                   flex items-center
-                   justify-center font-bold"
-          >
-            {{
-              nameOf(person)
-                .slice(0, 1)
-                .toUpperCase()
-            }}
-          </div>
-
-
-          <div
-            class="min-w-0 flex-1"
-          >
-
-            <p
-              class="font-bold
-                     text-slate-900 truncate"
-            >
-              {{ nameOf(person) }}
-            </p>
-
-            <p
-              class="text-xs
-                     text-slate-500"
-            >
-              {{ person.rank || 'FO1' }}
-              ·
-              {{ person.status || 'Active' }}
-            </p>
-
-          </div>
-
-
-          <span
-            class="h-2.5 w-2.5
-                   rounded-full bg-green-500"
-          ></span>
-
-        </div>
-
+        <table class="w-full text-left">
+          <thead>
+            <tr class="border-b border-slate-200 text-xs font-bold uppercase tracking-wide text-slate-400">
+              <th class="pb-3 pr-5">Personnel</th>
+              <th class="pb-3 pr-5">Rank</th>
+              <th class="pb-3">Duty Status</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            <tr v-for="person in personnel" :key="person.id || person.identifier">
+              <td class="py-4 pr-5">
+                <div class="flex items-center gap-3">
+                  <div class="h-10 w-10 flex-shrink-0 rounded-full bg-[#8B1E23] text-white flex items-center justify-center text-sm font-bold">
+                    {{ nameOf(person).slice(0, 1).toUpperCase() }}
+                  </div>
+                  <span class="font-semibold text-slate-900">{{ nameOf(person) }}</span>
+                </div>
+              </td>
+              <td class="py-4 pr-5 text-sm font-semibold text-slate-700">{{ person.rank || 'No rank' }}</td>
+              <td class="py-4 text-sm text-slate-600">{{ person.status || 'Active' }}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
 

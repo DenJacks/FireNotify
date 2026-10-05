@@ -106,9 +106,18 @@
                     "
                   ></span>
 
-                  <span class="text-base font-semibold truncate">
-                    {{ item.name }}
-                  </span>
+                  <div class="min-w-0">
+                    <span class="block text-base font-semibold truncate">
+                      {{ item.name }}
+                    </span>
+
+                    <span
+                      v-if="activeMenu !== item.name && item.context"
+                      class="block text-xs text-slate-400 truncate"
+                    >
+                      {{ item.context }}
+                    </span>
+                  </div>
 
                 </div>
 
@@ -169,9 +178,18 @@
                   "
                 ></span>
 
-                <span class="text-base font-semibold truncate">
-                  {{ item.name }}
-                </span>
+                <div class="min-w-0">
+                  <span class="block text-base font-semibold truncate">
+                    {{ item.name }}
+                  </span>
+
+                  <span
+                    v-if="activeMenu !== item.name && item.context"
+                    class="block text-xs text-slate-400 truncate"
+                  >
+                    {{ item.context }}
+                  </span>
+                </div>
 
               </button>
 
@@ -801,36 +819,42 @@ const menuBarItems = computed(() => [
 
   {
     name: 'Dashboard',
-    icon: 'dashboard'
+    icon: 'dashboard',
+    context: 'Admin overview'
+  },
+
+  {
+    name: 'Account Approvals',
+    icon: 'personnel',
+    context: 'Review personnel accounts',
+    badge: sidebarCounts.pendingApprovals
   },
 
   {
     name: 'Personnel Activity Mgmt.',
     icon: 'activity',
+    context: 'Manage station activities',
     badge: sidebarCounts.activities
   },
 
   {
     name: 'Personnel Task Mgmt.',
     icon: 'personnel',
+    context: 'Assign and track tasks',
     badge: sidebarCounts.tasks
-  },
-
-  {
-    name: 'Account Approvals',
-    icon: 'personnel',
-    badge: sidebarCounts.pendingApprovals
   },
 
   {
     name: 'Report Mgmt.',
     icon: 'report',
+    context: 'Review submitted reports',
     badge: sidebarCounts.reports
   },
 
   {
     name: 'Notifications',
     icon: 'notifications',
+    context: 'System alerts and updates',
     badge: sidebarCounts.notifications
   },
 
@@ -845,7 +869,8 @@ const capstoneItems = [
 
   {
     name: 'Audit & Escalations',
-    icon: 'shield'
+    icon: 'shield',
+    context: 'Review system activity'
   }
 
 ]

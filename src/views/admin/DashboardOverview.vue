@@ -43,6 +43,13 @@ const isOverdue = item => {
 }
 const titleOf = item => item?.title || item?.name || item?.report_title || item?.type || 'Untitled item'
 const pendingPersonnel = computed(() => props.personnel.filter(user => normalize(user?.status) === 'pending'))
+const personnelStatus = person => {
+  const status = normalize(person?.status)
+  if (['approved', 'active', 'on duty'].includes(status)) return 'Active'
+  if (status === 'pending') return 'Pending Approval'
+  if (status) return status.replace(/\b\w/g, character => character.toUpperCase())
+  return person?.is_active === false ? 'Inactive' : 'Active'
+}
 
 const urgentItems = computed(() => {
   const items = []
@@ -186,7 +193,7 @@ onUnmounted(() => {
 
 <template>
   <div class="min-w-0 space-y-4 text-slate-800">
-    <header class="flex flex-col justify-between gap-4 border-b border-[#6a3630]/20 pb-4 sm:flex-row sm:items-center">
+    <header class="flex flex-col justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:flex-row sm:items-center">
       <div class="min-w-0">
         <p class="text-xs font-semibold uppercase tracking-wider text-[#8B1E23]">FireNotify <span class="px-1 text-[#D8B65A]">/</span> Administration</p>
         <h1 class="mt-1 text-2xl font-bold leading-tight text-[#331817]">Welcome back, {{ currentUser?.name || currentUser?.first_name || 'Admin' }}</h1>
@@ -243,6 +250,37 @@ onUnmounted(() => {
           <span class="rounded-full px-2 py-1 text-xs font-bold tabular-nums" :class="overdueDeadlines + overdueReports.length ? 'bg-red-50 text-red-800' : 'bg-emerald-50 text-emerald-800'">{{ overdueDeadlines + overdueReports.length }}</span>
         </div>
       </div>
+    </section>
+
+    <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+      <header class="flex items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 py-3.5 sm:px-5">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wider text-[#8B1E23]">Personnel Management</p>
+          <h2 class="mt-0.5 text-base font-bold text-[#331817]">Registered Personnel</h2>
+        </div>
+        <span class="text-xs font-semibold text-slate-500">{{ props.personnel.length }} personnel</span>
+      </header>
+      <div v-if="props.personnel.length" class="overflow-x-auto px-4 sm:px-5">
+        <table class="w-full text-left">
+          <thead>
+            <tr class="border-b border-slate-200 text-xs font-bold uppercase tracking-wide text-slate-400">
+              <th class="py-3 pr-5">Personnel</th>
+              <th class="py-3 pr-5">Rank</th>
+              <th class="py-3">Duty Status</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            <tr v-for="person in props.personnel" :key="person.id || person.identifier">
+              <td class="py-3 pr-5 text-sm font-semibold text-slate-900">
+                {{ person.name || `${person.first_name || person.firstName || ''} ${person.last_name || person.lastName || ''}`.trim() || person.username || 'Unnamed Personnel' }}
+              </td>
+              <td class="py-3 pr-5 text-sm text-slate-700">{{ person.rank || 'No rank' }}</td>
+              <td class="py-3 text-sm text-slate-600">{{ personnelStatus(person) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p v-else class="px-4 py-5 text-sm text-slate-500 sm:px-5">No registered personnel found.</p>
     </section>
 
     <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">

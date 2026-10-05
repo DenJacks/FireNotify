@@ -29,6 +29,10 @@ body,
   color: var(--fn-text);
 }
 
+.font-sans {
+	font-family: var(--fn-font);
+}
+
 /* Better text rendering */
 html {
   -webkit-font-smoothing: antialiased;
@@ -50,6 +54,23 @@ h5,
 h6 {
   color: var(--fn-heading);
   letter-spacing: -0.015em;
+}
+
+.fn-modal-header {
+  color: #fff;
+}
+
+.fn-modal-header h2,
+.fn-modal-header h3 {
+  color: #fff;
+}
+
+.fn-modal-header .fn-modal-header-label {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.fn-modal-header .fn-modal-header-description {
+  color: rgba(255, 255, 255, 0.8);
 }
 
 /* Normal text */
@@ -156,8 +177,6 @@ select {
 :root .personnel-portal .text-2xl { font-size: calc(1.5rem * var(--fn-font-scale, 1)) !important; }
 :root .personnel-portal .text-3xl { font-size: calc(1.875rem * var(--fn-font-scale, 1)) !important; }
 :root .personnel-portal .text-4xl { font-size: calc(2.25rem * var(--fn-font-scale, 1)) !important; }
-:root[data-personnel-density='compact'] .personnel-portal .p-6 { padding: 1rem !important; }
-:root[data-personnel-density='compact'] .personnel-portal .space-y-6 > :not([hidden]) ~ :not([hidden]) { margin-top: 1rem; }
 :root.fn-larger-targets .personnel-portal button,
 :root.fn-larger-targets .personnel-portal select,
 :root.fn-larger-targets .personnel-portal input { min-height: 2.75rem; }

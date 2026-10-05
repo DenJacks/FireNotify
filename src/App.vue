@@ -843,10 +843,10 @@ const handleUserUpdate =
 
 
           const sameEmail =
-            user.identifier
+            (user.identifier || user.email)
               ?.trim()
               .toLowerCase() ===
-            updatedUser.identifier
+            (updatedUser.identifier || updatedUser.email)
               ?.trim()
               .toLowerCase()
 

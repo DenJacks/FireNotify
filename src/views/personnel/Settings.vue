@@ -19,7 +19,7 @@
           </h2>
 
           <p class="text-sm text-slate-500 mt-1">
-            Manage your account, notifications, security, and portal preferences.
+            Manage your profile, security, and portal appearance.
           </p>
         </div>
 
@@ -120,118 +120,36 @@
                 Rank
               </label>
 
-              <input
+              <select
                 v-model="form.rank"
-                @input="markUnsaved"
-                type="text"
-                placeholder="e.g. FO3"
-                class="w-full mt-2 px-4 py-3 rounded-xl border border-slate-300 text-sm outline-none transition focus:border-[#8B1E23] focus:ring-2 focus:ring-[#8B1E23]/10"
-              />
+                @change="markUnsaved"
+                required
+                class="w-full mt-2 px-4 py-3 rounded-xl border border-slate-300 bg-white text-sm outline-none transition focus:border-[#8B1E23] focus:ring-2 focus:ring-[#8B1E23]/10"
+              >
+                <option value="" disabled>Select rank</option>
+                <option v-for="rank in rankOptions" :key="rank.code" :value="rank.code">{{ rank.code }} - {{ rank.title }}</option>
+              </select>
             </div>
 
 
-            <!-- Position -->
-            <div>
-              <label class="text-sm font-semibold text-slate-700">
-                Position
-              </label>
-
-              <input
-                v-model="form.position"
-                @input="markUnsaved"
-                type="text"
-                placeholder="Enter position"
-                class="w-full mt-2 px-4 py-3 rounded-xl border border-slate-300 text-sm outline-none transition focus:border-[#8B1E23] focus:ring-2 focus:ring-[#8B1E23]/10"
-              />
-            </div>
-
-
-            <!-- Station -->
-            <div class="sm:col-span-2">
-              <label class="text-sm font-semibold text-slate-700">
-                Station
-              </label>
-
-              <input
-                v-model="form.station"
-                @input="markUnsaved"
-                type="text"
-                placeholder="Enter station"
-                class="w-full mt-2 px-4 py-3 rounded-xl border border-slate-300 text-sm outline-none transition focus:border-[#8B1E23] focus:ring-2 focus:ring-[#8B1E23]/10"
-              />
-            </div>
+           
 
           </div>
 
 
-          <div class="mt-5 flex justify-end">
-
+          <div class="mt-5 flex justify-end gap-3">
+            <button
+              @click="resetChanges"
+              class="px-5 py-3 rounded-xl border border-slate-300 bg-white text-sm font-semibold text-slate-700 hover:bg-slate-100 transition"
+            >
+              Reset Profile
+            </button>
             <button
               @click="saveProfile"
               class="px-5 py-3 rounded-xl bg-[#8B1E23] text-white text-sm font-bold hover:bg-[#72181D] transition"
             >
               Save Profile
             </button>
-
-          </div>
-
-        </section>
-
-
-        <!-- ================================================= -->
-        <!-- NOTIFICATION PREFERENCES -->
-        <!-- ================================================= -->
-
-        <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
-
-          <div class="border-b border-slate-200 pb-4">
-
-            <h3 class="text-lg font-bold text-slate-900">
-              Notification Preferences
-            </h3>
-
-            <p class="text-sm text-slate-500 mt-1">
-              Choose which alerts you receive in the portal.
-            </p>
-
-          </div>
-
-
-          <div class="mt-5 divide-y divide-slate-100">
-
-            <div
-              v-for="item in notificationPreferences"
-              :key="item.key"
-              class="flex items-center justify-between gap-5 py-4 first:pt-0 last:pb-0"
-            >
-
-              <div>
-                <p class="text-sm font-semibold text-slate-800">
-                  {{ item.title }}
-                </p>
-
-                <p class="text-xs text-slate-500 mt-1">
-                  {{ item.description }}
-                </p>
-              </div>
-
-
-              <button
-                type="button"
-                @click="item.enabled = !item.enabled; markUnsaved()"
-                :aria-pressed="item.enabled"
-                class="relative flex-shrink-0 w-12 h-7 rounded-full transition"
-                :class="item.enabled ? 'bg-[#8B1E23]' : 'bg-slate-300'"
-              >
-
-                <span
-                  class="absolute top-1 h-5 w-5 rounded-full bg-white shadow transition"
-                  :class="item.enabled ? 'left-6' : 'left-1'"
-                ></span>
-
-              </button>
-
-            </div>
 
           </div>
 
@@ -283,28 +201,6 @@
             </div>
 
 
-            <div
-              class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 rounded-xl bg-green-50 border border-green-100"
-            >
-
-              <div>
-                <p class="text-sm font-semibold text-slate-800">
-                  Two-factor authentication
-                </p>
-
-                <p class="text-xs text-green-700 mt-1">
-                  Your account is protected with 2FA.
-                </p>
-              </div>
-
-              <span
-                class="px-3 py-1.5 rounded-full bg-green-100 text-green-700 text-xs font-bold"
-              >
-                Enabled
-              </span>
-
-            </div>
-
           </div>
 
         </section>
@@ -317,153 +213,6 @@
       <!-- =================================================== -->
 
       <div class="space-y-6">
-
-        <!-- PORTAL PREFERENCES -->
-
-        <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
-
-          <h3 class="text-lg font-bold text-slate-900">
-            Portal Preferences
-          </h3>
-
-          <p class="text-sm text-slate-500 mt-1">
-            Customize your portal experience.
-          </p>
-
-
-          <div class="mt-5 space-y-5">
-
-            <div>
-              <label class="text-sm font-semibold text-slate-700">
-                Language
-              </label>
-
-              <select
-                v-model="preferences.language"
-                @change="markUnsaved"
-                class="w-full mt-2 px-4 py-3 rounded-xl border border-slate-300 bg-white text-sm outline-none focus:border-[#8B1E23] focus:ring-2 focus:ring-[#8B1E23]/10"
-              >
-                <option>English</option>
-                <option>Filipino</option>
-              </select>
-            </div>
-
-
-            <div>
-              <label class="text-sm font-semibold text-slate-700">
-                Time Zone
-              </label>
-
-              <select
-                v-model="preferences.timezone"
-                @change="markUnsaved"
-                class="w-full mt-2 px-4 py-3 rounded-xl border border-slate-300 bg-white text-sm outline-none focus:border-[#8B1E23] focus:ring-2 focus:ring-[#8B1E23]/10"
-              >
-                <option>Asia/Manila (UTC+8)</option>
-                <option>UTC</option>
-              </select>
-            </div>
-
-
-            <div>
-              <label class="text-sm font-semibold text-slate-700">
-                Default Landing Page
-              </label>
-
-              <select
-                v-model="preferences.landingPage"
-                @change="markUnsaved"
-                class="w-full mt-2 px-4 py-3 rounded-xl border border-slate-300 bg-white text-sm outline-none focus:border-[#8B1E23] focus:ring-2 focus:ring-[#8B1E23]/10"
-              >
-                <option>Dashboard</option>
-                <option>Tasks</option>
-                <option>Activities</option>
-                <option>Reports</option>
-                <option>Notifications</option>
-              </select>
-            </div>
-
-          </div>
-
-        </section>
-
-
-        <!-- DISPLAY -->
-
-        <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
-
-          <h3 class="text-lg font-bold text-slate-900">
-            Display
-          </h3>
-
-          <p class="text-sm text-slate-500 mt-1">
-            Adjust how the portal looks on your device.
-          </p>
-
-
-          <div class="mt-5 space-y-5">
-
-            <div class="flex items-center justify-between gap-5">
-
-              <div>
-                <p class="text-sm font-semibold text-slate-800">
-                  Compact sidebar
-                </p>
-
-                <p class="text-xs text-slate-500 mt-1">
-                  Use a smaller navigation layout.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                @click="display.compactSidebar = !display.compactSidebar; markUnsaved()"
-                class="relative flex-shrink-0 w-12 h-7 rounded-full transition"
-                :class="display.compactSidebar ? 'bg-[#8B1E23]' : 'bg-slate-300'"
-              >
-
-                <span
-                  class="absolute top-1 h-5 w-5 rounded-full bg-white shadow transition"
-                  :class="display.compactSidebar ? 'left-6' : 'left-1'"
-                ></span>
-
-              </button>
-
-            </div>
-
-
-            <div class="flex items-center justify-between gap-5">
-
-              <div>
-                <p class="text-sm font-semibold text-slate-800">
-                  Reduced motion
-                </p>
-
-                <p class="text-xs text-slate-500 mt-1">
-                  Minimize interface transitions.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                @click="display.reducedMotion = !display.reducedMotion; markUnsaved()"
-                class="relative flex-shrink-0 w-12 h-7 rounded-full transition"
-                :class="display.reducedMotion ? 'bg-[#8B1E23]' : 'bg-slate-300'"
-              >
-
-                <span
-                  class="absolute top-1 h-5 w-5 rounded-full bg-white shadow transition"
-                  :class="display.reducedMotion ? 'left-6' : 'left-1'"
-                ></span>
-
-              </button>
-
-            </div>
-
-          </div>
-
-        </section>
-
 
         <!-- ACCOUNT SUMMARY -->
 
@@ -485,8 +234,6 @@
 
               <p class="text-xs text-white/70 mt-1">
                 {{ form.rank || 'No rank' }}
-                •
-                {{ form.position || 'No position' }}
               </p>
 
             </div>
@@ -494,17 +241,7 @@
           </div>
 
 
-          <div class="mt-5 pt-5 border-t border-white/10">
-
-            <p class="text-xs text-white/60">
-              Assigned Station
-            </p>
-
-            <p class="text-sm font-semibold mt-1">
-              {{ form.station || 'No station assigned' }}
-            </p>
-
-          </div>
+        
 
         </section>
 
@@ -517,84 +254,45 @@
     <!-- SETTINGS CENTER -->
     <!-- ===================================================== -->
     <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
-        <h3 class="text-lg font-bold text-slate-900">Appearance</h3>
-        <p class="text-sm text-slate-500 mt-1">Personalize the entire Personnel Portal.</p>
-        <div class="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <label class="text-sm font-semibold text-slate-700">Theme<select :value="portalSettings.theme" @change="persistPortalSetting('theme', $event.target.value)" class="w-full mt-2 px-3 py-2.5 rounded-xl border border-slate-300 bg-white"><option value="light">Light</option><option value="dark">Dark</option><option value="system">System Default</option></select></label>
-          <label class="text-sm font-semibold text-slate-700">Density<select :value="portalSettings.density" @change="persistPortalSetting('density', $event.target.value)" class="w-full mt-2 px-3 py-2.5 rounded-xl border border-slate-300 bg-white"><option value="comfortable">Comfortable</option><option value="compact">Compact</option></select></label>
-          <label class="text-sm font-semibold text-slate-700">Font Size<select :value="portalSettings.fontSize" @change="persistPortalSetting('fontSize', $event.target.value)" class="w-full mt-2 px-3 py-2.5 rounded-xl border border-slate-300 bg-white"><option value="small">Small · Compact text</option><option value="medium">Medium · Default text</option><option value="large">Large · Larger text</option><option value="xlarge">Extra Large · Maximum readable text</option></select></label>
+      <div class="lg:col-span-2">
+        <h3 class="text-xl font-bold text-slate-900">Preferences & Resources</h3>
+        <p class="text-sm text-slate-500 mt-1">Configure the portal, manage your data, and find support.</p>
+      </div>
+
+      <section class="lg:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 border-b border-slate-200 pb-4">
+          <div>
+            <h3 class="text-lg font-bold text-slate-900">Appearance</h3>
+            <p class="text-sm text-slate-500 mt-1">Choose how the Personnel Portal looks.</p>
+          </div>
+          <span v-if="appearanceHasChanges" class="text-sm font-semibold text-amber-700">Unsaved appearance changes</span>
         </div>
-      </section>
-
-      <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
-        <h3 class="text-lg font-bold text-slate-900">Accessibility</h3>
-        <p class="text-sm text-slate-500 mt-1">Improve readability and interaction comfort.</p>
-        <div class="mt-4 space-y-3">
-          <label v-for="item in [['largeText', 'Large Text'], ['highContrast', 'High Contrast'], ['reduceMotion', 'Reduce Motion'], ['largerTargets', 'Larger Click Targets']]" :key="item[0]" class="flex items-center justify-between gap-4 p-3 rounded-xl bg-slate-50 border border-slate-200"><span class="text-sm font-semibold text-slate-700">{{ item[1] }}</span><input type="checkbox" :checked="portalSettings[item[0]]" @change="persistPortalSetting(item[0], $event.target.checked)" class="h-5 w-5 accent-[#8B1E23]" /></label>
+        <div class="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <label class="text-sm font-semibold text-slate-700">Theme
+            <select v-model="appearanceDraft.theme" class="w-full mt-2 px-3 py-2.5 rounded-xl border border-slate-300 bg-white">
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+              <option value="system">System Default</option>
+            </select>
+          </label>
+          <label class="text-sm font-semibold text-slate-700">Font Size
+            <select v-model="appearanceDraft.fontSize" class="w-full mt-2 px-3 py-2.5 rounded-xl border border-slate-300 bg-white">
+              <option value="small">Small</option>
+              <option value="medium">Medium</option>
+              <option value="large">Large</option>
+              <option value="xlarge">Extra Large</option>
+            </select>
+          </label>
         </div>
-      </section>
-
-      <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
-        <h3 class="text-lg font-bold text-slate-900">Notification Preferences</h3>
-        <p class="text-sm text-slate-500 mt-1">Choose which live alerts appear for your account.</p>
-        <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3"><label v-for="item in settingOptions" :key="item[0]" class="flex items-center justify-between gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200"><span class="text-sm font-semibold text-slate-700">{{ item[1] }}</span><input type="checkbox" :checked="portalSettings[item[0]]" @change="persistPortalSetting(item[0], $event.target.checked)" class="h-5 w-5 accent-[#8B1E23]" /></label></div>
-      </section>
-
-      <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
-        <h3 class="text-lg font-bold text-slate-900">Data & Storage</h3>
-        <p class="text-sm text-slate-500 mt-1">Manage preferences without deleting operational records.</p>
-        <div class="mt-5 flex flex-wrap gap-3"><button @click="resetPreferenceGroup(['theme', 'density', 'fontSize'])" class="px-4 py-2.5 rounded-xl border border-slate-300 text-sm font-bold">Reset Appearance</button><button @click="resetPreferenceGroup(['largeText', 'highContrast', 'reduceMotion', 'largerTargets'])" class="px-4 py-2.5 rounded-xl border border-slate-300 text-sm font-bold">Reset Accessibility</button><button @click="resetPreferenceGroup(settingOptions.map(item => item[0]))" class="px-4 py-2.5 rounded-xl border border-slate-300 text-sm font-bold">Reset Notifications</button><button @click="resetAllPreferences" class="px-4 py-2.5 rounded-xl border border-red-200 text-[#8B1E23] text-sm font-bold">Reset All Preferences</button><button @click="exportMyData" class="px-4 py-2.5 rounded-xl bg-[#8B1E23] text-white text-sm font-bold">Export My Data</button></div>
-      </section>
-
-      <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 lg:col-span-2">
-        <h3 class="text-lg font-bold text-slate-900">Help & Support</h3><p class="text-sm text-slate-500 mt-1">Use the existing Personnel Support Center for help and problem reports.</p><div class="mt-4 flex flex-wrap gap-3"><button @click="emit('open-support')" class="px-4 py-2.5 rounded-xl bg-[#8B1E23] text-white text-sm font-bold">Support Center</button><button @click="emit('open-support')" class="px-4 py-2.5 rounded-xl border border-slate-300 text-sm font-bold">Report a Problem</button></div>
+        <div class="mt-5 flex justify-end">
+          <button @click="saveAppearance" :disabled="!appearanceHasChanges" class="px-5 py-2.5 rounded-xl bg-[#8B1E23] text-white text-sm font-bold hover:bg-[#72181D] transition disabled:cursor-not-allowed disabled:opacity-50">
+            Save Appearance
+          </button>
+        </div>
       </section>
 
       <section class="bg-[#8B1E23] rounded-2xl shadow-sm p-6 text-white lg:col-span-2"><p class="text-xs uppercase tracking-wide text-red-100">About FireNotify</p><h3 class="text-2xl font-bold mt-1">FIRENOTIFY</h3><p class="text-sm text-red-100 mt-1">Personnel Portal</p><div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-5 pt-4 border-t border-white/20 text-sm"><div><p class="text-red-100">Version</p><p class="font-bold mt-1">{{ appVersion }}</p></div><div><p class="text-red-100">Environment</p><p class="font-bold mt-1">Frontend</p></div><div><p class="text-red-100">Technology</p><p class="font-bold mt-1">Vue + Vite</p></div></div></section>
     </section>
-
-    <!-- ===================================================== -->
-    <!-- SAVE CHANGES -->
-    <!-- ===================================================== -->
-
-    <section
-      class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white border border-slate-200 rounded-2xl shadow-sm p-6"
-    >
-
-      <div>
-
-        <h3 class="text-lg font-bold text-slate-900">
-          Save your changes
-        </h3>
-
-        <p class="text-sm text-slate-500 mt-1">
-          Profile and preference updates apply to this account.
-        </p>
-
-      </div>
-
-
-      <div class="flex gap-3">
-
-        <button
-          @click="resetChanges"
-          class="px-5 py-3 rounded-xl border border-slate-300 bg-white text-sm font-semibold text-slate-700 hover:bg-slate-100 transition"
-        >
-          Reset
-        </button>
-
-        <button
-          @click="saveAllChanges"
-          class="px-5 py-3 rounded-xl bg-[#8B1E23] text-white text-sm font-bold hover:bg-[#72181D] transition"
-        >
-          Save Changes
-        </button>
-
-      </div>
-
-    </section>
-
 
     <!-- ===================================================== -->
     <!-- CHANGE PASSWORD MODAL -->
@@ -771,12 +469,23 @@
 import { computed, onMounted, ref } from 'vue'
 import packageInfo from '../../../package.json'
 import {
-  DEFAULT_PERSONNEL_SETTINGS,
   getPersonnelSettings,
-  resetPersonnelSettings,
-  savePersonnelSettings,
-  SETTINGS_UPDATED_EVENT
+  savePersonnelSettings
 } from '../../utils/personnelSettings.js'
+
+const API_URL = 'http://127.0.0.1:8000/api'
+const rankOptions = [
+  { code: 'FO1', title: 'Fire Officer I' },
+  { code: 'FO2', title: 'Fire Officer II' },
+  { code: 'FO3', title: 'Fire Officer III' },
+  { code: 'SFO1', title: 'Senior Fire Officer I' },
+  { code: 'SFO2', title: 'Senior Fire Officer II' },
+  { code: 'SFO3', title: 'Senior Fire Officer III' },
+  { code: 'SFO4', title: 'Senior Fire Officer IV' },
+  { code: 'FINSP', title: 'Fire Inspector' },
+  { code: 'FSINSP', title: 'Fire Senior Inspector' },
+  { code: 'FCINSP', title: 'Fire Chief Inspector' }
+]
 
 
 // ============================================================
@@ -819,61 +528,7 @@ const form = ref({
   firstName: '',
   lastName: '',
   rank: '',
-  position: '',
-  station: ''
-})
 
-
-// ============================================================
-// NOTIFICATIONS
-// ============================================================
-
-const notificationPreferences = ref([
-  {
-    key: 'taskReminders',
-    title: 'Task reminders',
-    description: 'Receive alerts for assigned tasks and deadlines.',
-    enabled: true
-  },
-  {
-    key: 'reportNotifications',
-    title: 'Report notifications',
-    description: 'Be notified when reports are submitted or returned.',
-    enabled: true
-  },
-  {
-    key: 'activityReminders',
-    title: 'Activity reminders',
-    description: 'Receive reminders for scheduled station activities.',
-    enabled: true
-  },
-  {
-    key: 'emailNotifications',
-    title: 'Email notifications',
-    description: 'Send important updates to your registered email.',
-    enabled: false
-  }
-])
-
-
-// ============================================================
-// PORTAL PREFERENCES
-// ============================================================
-
-const preferences = ref({
-  language: 'English',
-  timezone: 'Asia/Manila (UTC+8)',
-  landingPage: 'Dashboard'
-})
-
-
-// ============================================================
-// DISPLAY
-// ============================================================
-
-const display = ref({
-  compactSidebar: false,
-  reducedMotion: false
 })
 
 
@@ -901,34 +556,22 @@ const passwordForm = ref({
 const toastMessage = ref('')
 const hasUnsavedChanges = ref(false)
 const portalSettings = ref(getPersonnelSettings())
+const appearanceDraft = ref({
+  theme: portalSettings.value.theme,
+  fontSize: portalSettings.value.fontSize
+})
 const appVersion = packageInfo.version || 'Not available'
 
 let toastTimer = null
 
-const settingOptions = [
-  ['taskNotifications', 'Task Notifications'],
-  ['activityNotifications', 'Activity Notifications'],
-  ['reportNotifications', 'Report Notifications'],
-  ['deadlineReminders', 'Deadline Reminders'],
-  ['supportNotifications', 'Support Notifications'],
-  ['systemNotifications', 'System Notifications'],
-  ['notificationSound', 'Notification Sound'],
-  ['showNotificationBadge', 'Show Notification Badge']
-]
+const appearanceHasChanges = computed(() =>
+  appearanceDraft.value.theme !== portalSettings.value.theme
+  || appearanceDraft.value.fontSize !== portalSettings.value.fontSize
+)
 
-const persistPortalSetting = (key, value) => {
-  portalSettings.value = savePersonnelSettings({ [key]: value })
-  showToast('Settings saved.')
-}
-
-const resetPreferenceGroup = keys => {
-  portalSettings.value = resetPersonnelSettings(keys)
-  showToast('Preferences reset.')
-}
-
-const resetAllPreferences = () => {
-  portalSettings.value = resetPersonnelSettings()
-  showToast('All preferences reset.')
+const saveAppearance = () => {
+  portalSettings.value = savePersonnelSettings(appearanceDraft.value)
+  showToast('Appearance saved.')
 }
 
 const exportMyData = () => {
@@ -995,9 +638,6 @@ const initializeUser = () => {
   form.value.rank =
     props.currentUser.rank || ''
 
-  form.value.position =
-    props.currentUser.position || ''
-
   form.value.station =
     props.currentUser.station || ''
 }
@@ -1007,90 +647,12 @@ const initializeUser = () => {
 // LOAD SAVED SETTINGS
 // ============================================================
 
-const loadSettings = () => {
-
-  const saved = localStorage.getItem(
-    getUserStorageKey()
-  )
-
-  if (!saved) {
-    return
-  }
-
+const loadSavedProfile = () => {
   try {
-
-    const settings = JSON.parse(saved)
-
-    if (settings.form) {
-      form.value = {
-        ...form.value,
-        ...settings.form
-      }
-    }
-
-    if (settings.notificationPreferences) {
-      notificationPreferences.value =
-        settings.notificationPreferences
-    }
-
-    if (settings.preferences) {
-      preferences.value = {
-        ...preferences.value,
-        ...settings.preferences
-      }
-    }
-
-    if (settings.display) {
-      display.value = {
-        ...display.value,
-        ...settings.display
-      }
-    }
-
+    const saved = JSON.parse(localStorage.getItem(getUserStorageKey()) || '{}')
+    if (saved.form) form.value = { ...form.value, ...saved.form }
   } catch (error) {
-
-    console.error(
-      'Failed to load personnel settings:',
-      error
-    )
-
-  }
-}
-
-
-// ============================================================
-// CREATE UPDATED USER
-// ============================================================
-
-const createUpdatedUser = () => {
-
-  const firstName =
-    form.value.firstName.trim()
-
-  const lastName =
-    form.value.lastName.trim()
-
-  const name =
-    `${firstName} ${lastName}`.trim()
-
-  return {
-    ...props.currentUser,
-
-    firstName,
-    lastName,
-
-    // Important:
-    // Dashboard uses this property.
-    name,
-
-    rank:
-      form.value.rank.trim(),
-
-    position:
-      form.value.position.trim(),
-
-    station:
-      form.value.station.trim()
+    console.error('Failed to load personnel profile settings:', error)
   }
 }
 
@@ -1101,31 +663,13 @@ const createUpdatedUser = () => {
 
 const saveSettings = () => {
 
-  const settings = {
-
-    form: {
-      firstName: form.value.firstName.trim(),
-      lastName: form.value.lastName.trim(),
-      rank: form.value.rank.trim(),
-      position: form.value.position.trim(),
-      station: form.value.station.trim()
-    },
-
-    notificationPreferences:
-      notificationPreferences.value,
-
-    preferences:
-      preferences.value,
-
-    display:
-      display.value
-
+  const profile = {
+    firstName: form.value.firstName.trim(),
+    lastName: form.value.lastName.trim(),
+    rank: form.value.rank.trim(),
+    station: form.value.station.trim()
   }
-
-  localStorage.setItem(
-    getUserStorageKey(),
-    JSON.stringify(settings)
-  )
+  localStorage.setItem(getUserStorageKey(), JSON.stringify({ form: profile }))
 }
 
 
@@ -1133,182 +677,74 @@ const saveSettings = () => {
 // SAVE PROFILE
 // ============================================================
 
-const saveProfile = () => {
-
-  const firstName =
-    form.value.firstName.trim()
-
-  const lastName =
-    form.value.lastName.trim()
+const saveProfile = async () => {
+  const firstName = form.value.firstName.trim()
+  const lastName = form.value.lastName.trim()
 
   if (!firstName || !lastName) {
-
-    showToast(
-      'Please enter your first and last name.'
-    )
-
+    showToast('Please enter your first and last name.')
     return
   }
 
-
-  /*
-   * Save personnel settings
-   */
-
-  saveSettings()
-
-
-  /*
-   * Create updated user
-   */
-
-  const updatedUser = {
-
-    ...props.currentUser,
-
-    firstName,
-
-    lastName,
-
-    name:
-      `${firstName} ${lastName}`.trim(),
-
-    rank:
-      form.value.rank.trim(),
-
-    position:
-      form.value.position.trim(),
-
-    station:
-      form.value.station.trim()
-
+  if (!rankOptions.some(rank => rank.code === form.value.rank)) {
+    showToast('Please select a valid personnel rank.')
+    return
   }
 
+  const userId = props.currentUser?.id
+  if (!userId) {
+    showToast('Unable to identify your personnel account.')
+    return
+  }
 
-  /*
-   * Send updated user to PersonnelDashboard
-   * then App.vue
-   */
+  try {
+    const csrfToken = document.cookie.split('; ').find(item => item.startsWith('csrftoken='))?.split('=')[1] || ''
+    const response = await fetch(`${API_URL}/users/${userId}/profile/`, {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrfToken
+      },
+      body: JSON.stringify({
+        first_name: firstName,
+        last_name: lastName,
+        rank: form.value.rank
+      })
+    })
+    const data = await response.json().catch(() => ({}))
 
-  emit(
-    'update-user',
-    updatedUser
-  )
+    if (!response.ok) {
+      throw new Error(data.error || 'Unable to update personnel rank.')
+    }
 
-
-  /*
-   * Clear unsaved status
-   */
-
-  hasUnsavedChanges.value = false
-
-
-  /*
-   * Show confirmation
-   */
-
-  showToast(
-    'Profile updated successfully!'
-  )
+    form.value.rank = data.user.rank
+    saveSettings()
+    emit('update-user', {
+      ...props.currentUser,
+      firstName: data.user.first_name,
+      lastName: data.user.last_name,
+      name: `${data.user.first_name} ${data.user.last_name}`.trim(),
+      rank: data.user.rank,
+      station: form.value.station || ''
+    })
+    hasUnsavedChanges.value = false
+    showToast('Profile updated successfully.')
+  } catch (error) {
+    showToast(error.message || 'Unable to update personnel rank.')
+  }
 }
 
 
 // ============================================================
-// SAVE ALL
-// ============================================================
-
-const saveAllChanges = () => {
-
-  if (
-    !form.value.firstName.trim() ||
-    !form.value.lastName.trim()
-  ) {
-
-    showToast(
-      'Please complete your profile information.'
-    )
-
-    return
-  }
-
-
-  saveSettings()
-
-
-  const updatedUser =
-    createUpdatedUser()
-
-
-  emit(
-    'update-user',
-    updatedUser
-  )
-
-
-  hasUnsavedChanges.value = false
-
-
-  showToast(
-    'All settings saved successfully.'
-  )
-}
-
-
 // ============================================================
 // RESET
 // ============================================================
 
 const resetChanges = () => {
-
   initializeUser()
-
-  notificationPreferences.value = [
-    {
-      key: 'taskReminders',
-      title: 'Task reminders',
-      description: 'Receive alerts for assigned tasks and deadlines.',
-      enabled: true
-    },
-    {
-      key: 'reportNotifications',
-      title: 'Report notifications',
-      description: 'Be notified when reports are submitted or returned.',
-      enabled: true
-    },
-    {
-      key: 'activityReminders',
-      title: 'Activity reminders',
-      description: 'Receive reminders for scheduled station activities.',
-      enabled: true
-    },
-    {
-      key: 'emailNotifications',
-      title: 'Email notifications',
-      description: 'Send important updates to your registered email.',
-      enabled: false
-    }
-  ]
-
-
-  preferences.value = {
-    language: 'English',
-    timezone: 'Asia/Manila (UTC+8)',
-    landingPage: 'Dashboard'
-  }
-
-
-  display.value = {
-    compactSidebar: false,
-    reducedMotion: false
-  }
-
-
   hasUnsavedChanges.value = false
-
-
-  showToast(
-    'Settings have been reset.'
-  )
+  showToast('Profile changes discarded.')
 }
 
 
@@ -1459,8 +895,7 @@ const markUnsaved = () => {
 onMounted(() => {
 
   initializeUser()
-
-  loadSettings()
+  loadSavedProfile()
 
   hasUnsavedChanges.value = false
 

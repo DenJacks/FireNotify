@@ -4,19 +4,29 @@ from .views import (
     UserListView,
     PendingPersonnelApprovalsView,
     PersonnelApprovalActionView,
+    PersonnelProfileUpdateView,
     RegisterView,
     LoginView,
     ActivityListCreateView,
     ActivityDetailView,
+    ActivityArchiveListView,
+    ActivityArchiveDetailView,
+    ActivityAssignmentRemovalView,
     ActivitySubmissionListCreateView,
     ActivitySubmissionDetailView,
     TaskListCreateView,
     TaskDetailView,
+    TaskArchiveListView,
+    TaskArchiveDetailView,
+    TaskAssignmentRemovalView,
     NotificationListView,
     NotificationDetailView,
     MarkAllNotificationsReadView,
     ReportListCreateView,
     ReportDetailView,
+    ReportArchiveListView,
+    ReportArchiveDetailView,
+    ReportAssignmentRemovalView,
     ReportSubmissionListView,
     ReportSubmissionDetailView,
 )
@@ -44,6 +54,12 @@ urlpatterns = [
         "users/<int:pk>/approval/",
         PersonnelApprovalActionView.as_view(),
         name="personnel-approval"
+    ),
+
+    path(
+        "users/<int:pk>/profile/",
+        PersonnelProfileUpdateView.as_view(),
+        name="personnel-profile-update"
     ),
 
     # =====================================================
@@ -78,6 +94,24 @@ urlpatterns = [
         name="activity-detail"
     ),
 
+    path(
+        "activity-archives/",
+        ActivityArchiveListView.as_view(),
+        name="activity-archive-list",
+    ),
+
+    path(
+        "activities/<int:activity_id>/archive/",
+        ActivityArchiveDetailView.as_view(),
+        name="activity-archive-detail",
+    ),
+
+    path(
+        "activities/<int:activity_id>/assignment/",
+        ActivityAssignmentRemovalView.as_view(),
+        name="activity-assignment-removal",
+    ),
+
     # =====================================================
     # ACTIVITY SUBMISSIONS
     # =====================================================
@@ -104,6 +138,24 @@ urlpatterns = [
         "tasks/<int:pk>/",
         TaskDetailView.as_view(),
         name="task-detail"
+    ),
+
+    path(
+        "task-archives/",
+        TaskArchiveListView.as_view(),
+        name="task-archive-list",
+    ),
+
+    path(
+        "tasks/<int:task_id>/archive/",
+        TaskArchiveDetailView.as_view(),
+        name="task-archive-detail",
+    ),
+
+    path(
+        "tasks/<int:task_id>/assignment/",
+        TaskAssignmentRemovalView.as_view(),
+        name="task-assignment-removal",
     ),
 
     path(
@@ -134,6 +186,24 @@ urlpatterns = [
         "reports/<int:pk>/",
         ReportDetailView.as_view(),
         name="report-detail"
+    ),
+
+    path(
+        "report-archives/",
+        ReportArchiveListView.as_view(),
+        name="report-archive-list",
+    ),
+
+    path(
+        "reports/<int:report_id>/archive/",
+        ReportArchiveDetailView.as_view(),
+        name="report-archive-detail",
+    ),
+
+    path(
+        "report-submissions/<int:submission_id>/assignment/",
+        ReportAssignmentRemovalView.as_view(),
+        name="report-assignment-removal",
     ),
 
     path(

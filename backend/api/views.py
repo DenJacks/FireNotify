@@ -9,17 +9,24 @@ import re
 from django.contrib.auth import authenticate, login
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.validators import validate_email
+from django.db import transaction
+from django.utils.decorators import method_decorator
 from django.utils import timezone
+from django.views.decorators.csrf import ensure_csrf_cookie
 
 from users.models import User
 
 from .models import (
     Activity,
+    ActivityAssignment,
+    ActivityArchive,
     ActivitySubmission,
     SubmissionEvidence,
     Task,
     Notification,
+    TaskArchive,
     Report,
+    ReportArchive,
     ReportSubmission,
 )
 
@@ -125,6 +132,30 @@ class PersonnelApprovalActionView(APIView):
         return Response({"message": message, "user": UserSerializer(user).data}, status=status.HTTP_200_OK)
 
 
+class PersonnelProfileUpdateView(APIView):
+    def patch(self, request, pk):
+        if not request.user.is_authenticated:
+            return Response({"error": "Authentication required."}, status=status.HTTP_401_UNAUTHORIZED)
+
+        if request.user.pk != pk or str(request.user.role).upper() != "PERSONNEL":
+            return Response({"error": "You can only update your own personnel profile."}, status=status.HTTP_403_FORBIDDEN)
+
+        first_name = str(request.data.get("first_name", "")).strip()
+        last_name = str(request.data.get("last_name", "")).strip()
+        if not is_valid_person_name(first_name) or not is_valid_person_name(last_name):
+            return Response({"error": "Please enter valid first and last names."}, status=status.HTTP_400_BAD_REQUEST)
+
+        rank = str(request.data.get("rank", "")).strip().upper()
+        if rank not in dict(User.RANK_CHOICES):
+            return Response({"error": "Please select a valid personnel rank."}, status=status.HTTP_400_BAD_REQUEST)
+
+        request.user.first_name = first_name
+        request.user.last_name = last_name
+        request.user.rank = rank
+        request.user.save(update_fields=["first_name", "last_name", "rank"])
+        return Response({"message": "Personnel profile updated.", "user": UserSerializer(request.user).data}, status=status.HTTP_200_OK)
+
+
 # =========================================================
 # REGISTER
 # =========================================================
@@ -209,6 +240,7 @@ class RegisterView(APIView):
 # LOGIN
 # =========================================================
 
+@method_decorator(ensure_csrf_cookie, name="dispatch")
 class LoginView(APIView):
 
     def post(self, request):
@@ -258,13 +290,16 @@ class ActivityListCreateView(
     generics.ListCreateAPIView
 ):
 
-    queryset = Activity.objects.all().order_by("-created_at")
+    queryset = Activity.objects.prefetch_related("personnel_assignments__personnel").order_by("-created_at")
     serializer_class = ActivitySerializer
 
     def perform_create(self, serializer):
         activity = serializer.save(status="SCHEDULED")
-        assigned = activity.assigned_personnel
-        if assigned:
+        assignments = list(activity.personnel_assignments.select_related("personnel"))
+        assigned_users = [item.personnel for item in assignments]
+        if not assigned_users and activity.assigned_personnel:
+            assigned_users = [activity.assigned_personnel]
+        for assigned in assigned_users:
             create_notification(
                 assigned,
                 "New activity assigned",
@@ -288,22 +323,133 @@ class ActivityDetailView(
     generics.RetrieveUpdateDestroyAPIView
 ):
 
-    queryset = Activity.objects.all()
+    queryset = Activity.objects.prefetch_related("personnel_assignments__personnel")
     serializer_class = ActivitySerializer
 
     def perform_update(self, serializer):
-        previous_assignee_id = self.get_object().assigned_personnel_id
+        previous_activity = self.get_object()
+        previous_assignee_ids = set(
+            ActivityAssignment.objects.filter(activity=previous_activity).values_list("personnel_id", flat=True)
+        )
+        if not previous_assignee_ids and previous_activity.assigned_personnel_id:
+            previous_assignee_ids.add(previous_activity.assigned_personnel_id)
         activity = serializer.save()
-        if activity.assigned_personnel and activity.assigned_personnel_id != previous_assignee_id:
+        assignments = list(activity.personnel_assignments.select_related("personnel"))
+        assigned_users = [item.personnel for item in assignments]
+        if not assigned_users and activity.assigned_personnel:
+            assigned_users = [activity.assigned_personnel]
+        for assigned in assigned_users:
+            if assigned.pk in previous_assignee_ids:
+                continue
             create_notification(
-                activity.assigned_personnel,
+                assigned,
                 "New activity assigned",
                 f"{activity.title} has been assigned to you.",
                 "Activity Reminders",
                 "Activity",
                 activity.pk,
-                f"activity-assigned-{activity.pk}-{activity.assigned_personnel_id}",
+                f"activity-assigned-{activity.pk}-{assigned.pk}",
             )
+
+
+class ActivityArchiveListView(APIView):
+    def get(self, request):
+        user_id = request.query_params.get("user_id")
+        if not user_id:
+            return Response({"error": "User ID is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(pk=user_id)
+        except (User.DoesNotExist, ValueError, TypeError):
+            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        if user.role not in {"ADMIN", "PERSONNEL"}:
+            return Response({"error": "User cannot archive activities."}, status=status.HTTP_403_FORBIDDEN)
+
+        activity_ids = ActivityArchive.objects.filter(user=user).values_list("activity_id", flat=True)
+        return Response(list(activity_ids), status=status.HTTP_200_OK)
+
+
+class ActivityArchiveDetailView(APIView):
+    def _get_archive_context(self, request, activity_id):
+        user_id = request.data.get("user_id")
+        if not user_id:
+            return None, None, Response({"error": "User ID is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(pk=user_id)
+        except (User.DoesNotExist, ValueError, TypeError):
+            return None, None, Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        if user.role not in {"ADMIN", "PERSONNEL"}:
+            return None, None, Response({"error": "User cannot archive activities."}, status=status.HTTP_403_FORBIDDEN)
+
+        try:
+            activity = Activity.objects.get(pk=activity_id)
+        except Activity.DoesNotExist:
+            return None, None, Response({"error": "Activity not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        if user.role == "PERSONNEL" and (
+            activity.assigned_personnel_id != user.pk and
+            not ActivityAssignment.objects.filter(activity=activity, personnel=user).exists()
+        ):
+            return None, None, Response({"error": "Activity is not assigned to this personnel user."}, status=status.HTTP_403_FORBIDDEN)
+
+        return activity, user, None
+
+    def put(self, request, activity_id):
+        activity, user, error_response = self._get_archive_context(request, activity_id)
+        if error_response is not None:
+            return error_response
+
+        ActivityArchive.objects.get_or_create(activity=activity, user=user)
+        return Response({"activity": activity.pk, "archived": True}, status=status.HTTP_200_OK)
+
+    def delete(self, request, activity_id):
+        activity, user, error_response = self._get_archive_context(request, activity_id)
+        if error_response is not None:
+            return error_response
+
+        ActivityArchive.objects.filter(activity=activity, user=user).delete()
+        return Response({"activity": activity.pk, "archived": False}, status=status.HTTP_200_OK)
+
+
+class ActivityAssignmentRemovalView(APIView):
+    def delete(self, request, activity_id):
+        user_id = request.data.get("user_id")
+        if not user_id:
+            return Response({"error": "User ID is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(pk=user_id)
+        except (User.DoesNotExist, ValueError, TypeError):
+            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        if user.role != "PERSONNEL":
+            return Response({"error": "Only Personnel can remove their own assignment."}, status=status.HTTP_403_FORBIDDEN)
+
+        try:
+            activity = Activity.objects.get(pk=activity_id)
+        except Activity.DoesNotExist:
+            return Response({"error": "Activity not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        assignment = ActivityAssignment.objects.filter(activity=activity, personnel=user).first()
+        is_primary_assignee = activity.assigned_personnel_id == user.pk
+        if assignment is None and not is_primary_assignee:
+            return Response({"error": "Activity is not assigned to this Personnel user."}, status=status.HTTP_403_FORBIDDEN)
+
+        with transaction.atomic():
+            if assignment is not None:
+                assignment.delete()
+
+            if is_primary_assignee:
+                remaining_assignment = ActivityAssignment.objects.filter(activity=activity).order_by("id").first()
+                activity.assigned_personnel = remaining_assignment.personnel if remaining_assignment else None
+                activity.save(update_fields=["assigned_personnel", "updated_at"])
+
+            ActivityArchive.objects.filter(activity=activity, user=user).delete()
+
+        return Response({"activity": activity.pk, "assignment_removed": True}, status=status.HTTP_200_OK)
 
 
 # =========================================================
@@ -559,6 +705,93 @@ class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
             )
 
 
+class TaskArchiveListView(APIView):
+    def get(self, request):
+        user_id = request.query_params.get("user_id")
+        if not user_id:
+            return Response({"error": "User ID is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(pk=user_id)
+        except (User.DoesNotExist, ValueError, TypeError):
+            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        if user.role not in {"ADMIN", "PERSONNEL"}:
+            return Response({"error": "User cannot archive tasks."}, status=status.HTTP_403_FORBIDDEN)
+
+        task_ids = TaskArchive.objects.filter(user=user).values_list("task_id", flat=True)
+        return Response(list(task_ids), status=status.HTTP_200_OK)
+
+
+class TaskArchiveDetailView(APIView):
+    def _get_archive_context(self, request, task_id):
+        user_id = request.data.get("user_id")
+        if not user_id:
+            return None, None, Response({"error": "User ID is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(pk=user_id)
+        except (User.DoesNotExist, ValueError, TypeError):
+            return None, None, Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        if user.role not in {"ADMIN", "PERSONNEL"}:
+            return None, None, Response({"error": "User cannot archive tasks."}, status=status.HTTP_403_FORBIDDEN)
+
+        try:
+            task = Task.objects.get(pk=task_id)
+        except Task.DoesNotExist:
+            return None, None, Response({"error": "Task not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        if user.role == "PERSONNEL" and task.assigned_to_id != user.pk:
+            return None, None, Response({"error": "Task is not assigned to this Personnel user."}, status=status.HTTP_403_FORBIDDEN)
+
+        return task, user, None
+
+    def put(self, request, task_id):
+        task, user, error_response = self._get_archive_context(request, task_id)
+        if error_response is not None:
+            return error_response
+
+        TaskArchive.objects.get_or_create(task=task, user=user)
+        return Response({"task": task.pk, "archived": True}, status=status.HTTP_200_OK)
+
+    def delete(self, request, task_id):
+        task, user, error_response = self._get_archive_context(request, task_id)
+        if error_response is not None:
+            return error_response
+
+        TaskArchive.objects.filter(task=task, user=user).delete()
+        return Response({"task": task.pk, "archived": False}, status=status.HTTP_200_OK)
+
+
+class TaskAssignmentRemovalView(APIView):
+    def delete(self, request, task_id):
+        user_id = request.data.get("user_id")
+        if not user_id:
+            return Response({"error": "User ID is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(pk=user_id)
+        except (User.DoesNotExist, ValueError, TypeError):
+            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        if user.role != "PERSONNEL":
+            return Response({"error": "Only Personnel can remove their own task assignment."}, status=status.HTTP_403_FORBIDDEN)
+
+        try:
+            task = Task.objects.get(pk=task_id)
+        except Task.DoesNotExist:
+            return Response({"error": "Task not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        if task.assigned_to_id != user.pk:
+            return Response({"error": "Task is not assigned to this Personnel user."}, status=status.HTTP_403_FORBIDDEN)
+
+        task.assigned_to = None
+        task.save(update_fields=["assigned_to", "updated_at"])
+        TaskArchive.objects.filter(task=task, user=user).delete()
+        return Response({"task": task.pk, "assignment_removed": True}, status=status.HTTP_200_OK)
+
+
 class NotificationListView(generics.ListAPIView):
     serializer_class = NotificationSerializer
 
@@ -678,6 +911,95 @@ class ReportDetailView(generics.RetrieveUpdateDestroyAPIView):
             if assignment.attachment:
                 assignment.attachment.delete(save=False)
         instance.delete()
+
+
+class ReportArchiveListView(APIView):
+    def get(self, request):
+        user_id = request.query_params.get("user_id")
+        if not user_id:
+            return Response({"error": "User ID is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(pk=user_id)
+        except (User.DoesNotExist, ValueError, TypeError):
+            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        if user.role not in {"ADMIN", "PERSONNEL"}:
+            return Response({"error": "User cannot archive reports."}, status=status.HTTP_403_FORBIDDEN)
+
+        report_ids = ReportArchive.objects.filter(user=user).values_list("report_id", flat=True)
+        return Response(list(report_ids), status=status.HTTP_200_OK)
+
+
+class ReportArchiveDetailView(APIView):
+    def _get_archive_context(self, request, report_id):
+        user_id = request.data.get("user_id")
+        if not user_id:
+            return None, None, Response({"error": "User ID is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(pk=user_id)
+        except (User.DoesNotExist, ValueError, TypeError):
+            return None, None, Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        if user.role not in {"ADMIN", "PERSONNEL"}:
+            return None, None, Response({"error": "User cannot archive reports."}, status=status.HTTP_403_FORBIDDEN)
+
+        try:
+            report = Report.objects.get(pk=report_id)
+        except Report.DoesNotExist:
+            return None, None, Response({"error": "Report not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        if user.role == "PERSONNEL" and not ReportSubmission.objects.filter(
+            report=report,
+            personnel=user,
+            is_active=True,
+        ).exists():
+            return None, None, Response({"error": "Report is not assigned to this Personnel user."}, status=status.HTTP_403_FORBIDDEN)
+
+        return report, user, None
+
+    def put(self, request, report_id):
+        report, user, error_response = self._get_archive_context(request, report_id)
+        if error_response is not None:
+            return error_response
+
+        ReportArchive.objects.get_or_create(report=report, user=user)
+        return Response({"report": report.pk, "archived": True}, status=status.HTTP_200_OK)
+
+    def delete(self, request, report_id):
+        report, user, error_response = self._get_archive_context(request, report_id)
+        if error_response is not None:
+            return error_response
+
+        ReportArchive.objects.filter(report=report, user=user).delete()
+        return Response({"report": report.pk, "archived": False}, status=status.HTTP_200_OK)
+
+
+class ReportAssignmentRemovalView(APIView):
+    def delete(self, request, submission_id):
+        user_id = request.data.get("user_id")
+        if not user_id:
+            return Response({"error": "User ID is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(pk=user_id, role__iexact="PERSONNEL")
+        except (User.DoesNotExist, ValueError, TypeError):
+            return Response({"error": "Personnel user not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            assignment = ReportSubmission.objects.get(
+                pk=submission_id,
+                personnel=user,
+                is_active=True,
+            )
+        except ReportSubmission.DoesNotExist:
+            return Response({"error": "Active report assignment not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        assignment.is_active = False
+        assignment.save(update_fields=["is_active", "updated_at"])
+        ReportArchive.objects.filter(report=assignment.report, user=user).delete()
+        return Response({"report": assignment.report_id, "assignment_removed": True}, status=status.HTTP_200_OK)
 
 
 class ReportSubmissionListView(generics.ListAPIView):

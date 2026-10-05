@@ -131,7 +131,7 @@ onUnmounted(() => {
 
 <template>
   <div class="min-w-0 space-y-4 text-slate-800">
-    <header class="flex flex-col justify-between gap-4 border-b border-[#8B1E23]/20 pb-4 sm:flex-row sm:items-center">
+    <header class="flex flex-col justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:flex-row sm:items-center">
       <div class="min-w-0">
         <p class="text-xs font-semibold uppercase tracking-wider text-[#8B1E23]">FireNotify <span class="px-1 text-[#D5A91F]">/</span> Personnel Operations</p>
         <h1 class="mt-1 text-2xl font-bold leading-tight text-slate-900">Welcome back, {{ userName }}</h1>
@@ -166,16 +166,38 @@ onUnmounted(() => {
 
     <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
       <header class="flex flex-col justify-between gap-3 border-b border-slate-200 bg-[#FBF9F5] px-4 py-3.5 sm:flex-row sm:items-center sm:px-5">
-        <div><p class="text-xs font-semibold uppercase tracking-wider text-[#8B1E23]">Personal readiness</p><h2 class="mt-0.5 text-base font-bold text-[#331817]">My Readiness &amp; Compliance</h2></div>
-        <div class="flex items-center gap-2 text-sm"><span class="text-slate-600">My Status</span><span class="rounded-full px-2.5 py-1 text-xs font-semibold" :class="userDutyStatus === 'On Duty' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-900'">{{ userDutyStatus }}</span><span class="text-xs text-slate-500">{{ userRank }}</span></div>
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wider text-[#8B1E23]">Personal readiness</p>
+          <h2 class="mt-0.5 text-base font-bold text-[#331817]">My Readiness &amp; Compliance</h2>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="text-xs font-medium text-slate-500">My status</span>
+          <span class="rounded-full px-2.5 py-1 text-xs font-semibold" :class="userDutyStatus === 'On Duty' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-900'">{{ userDutyStatus }}</span>
+          <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">{{ userRank }}</span>
+          <span
+            v-if="currentUser?.status"
+            class="rounded-full px-2.5 py-1 text-xs font-semibold"
+            :class="normalize(currentUser.status) === 'approved' ? 'bg-blue-50 text-blue-700' : 'bg-slate-100 text-slate-600'"
+          >
+            {{ currentUser.status }}
+          </span>
+        </div>
       </header>
-      <div class="grid gap-x-6 gap-y-4 p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-3">
+      <div class="grid gap-4 p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-4">
         <div v-for="metric in [
           { label: 'Activity compliance', value: activityCompliance, tone: 'bg-[#8B1E23]' },
           { label: 'Report compliance', value: reportCompliance, tone: 'bg-amber-600' },
           { label: 'Task completion', value: completionPercentage, tone: 'bg-blue-700' }
         ]" :key="metric.label" class="space-y-1.5"><div class="flex items-center justify-between gap-2"><span class="text-xs font-medium text-slate-700">{{ metric.label }}</span><span class="text-xs font-bold tabular-nums text-slate-900">{{ metric.value }}%</span></div><div class="h-1.5 overflow-hidden rounded-full bg-slate-100"><div class="h-full rounded-full" :class="metric.tone" :style="{ width: `${metric.value}%` }"></div></div></div>
-        <div class="flex items-center justify-between gap-2 border-t border-slate-200 pt-3 sm:col-span-2 xl:col-span-1 xl:border-l xl:border-t-0 xl:pl-5 xl:pt-0"><span class="text-xs font-semibold text-slate-700">Overdue items</span><span class="rounded-full px-2 py-1 text-xs font-bold tabular-nums" :class="overdueActivities + overdueTasks ? 'bg-red-50 text-red-800' : 'bg-emerald-50 text-emerald-800'">{{ overdueActivities + overdueTasks }}</span><span class="text-xs text-slate-500">{{ userRank }} · {{ currentUser?.status || 'Active' }}</span></div>
+        <div class="flex items-center justify-between gap-3 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
+          <span class="text-xs font-semibold text-slate-700">Overdue items</span>
+          <span
+            class="rounded-full px-2.5 py-1 text-xs font-bold tabular-nums"
+            :class="overdueActivities + overdueTasks ? 'bg-red-50 text-red-800' : 'bg-emerald-50 text-emerald-800'"
+          >
+            {{ overdueActivities + overdueTasks }}
+          </span>
+        </div>
       </div>
     </section>
 

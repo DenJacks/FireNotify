@@ -9,14 +9,16 @@ class User(AbstractUser):
     )
 
     RANK_CHOICES = (
-        ("FO1", "FO1"),
-        ("FO2", "FO2"),
-        ("FO3", "FO3"),
-        ("FO4", "FO4"),
-        ("SFO1", "SFO1"),
-        ("SFO2", "SFO2"),
-        ("SFO3", "SFO3"),
-        ("SFO4", "SFO4"),
+        ("FO1", "Fire Officer I"),
+        ("FO2", "Fire Officer II"),
+        ("FO3", "Fire Officer III"),
+        ("SFO1", "Senior Fire Officer I"),
+        ("SFO2", "Senior Fire Officer II"),
+        ("SFO3", "Senior Fire Officer III"),
+        ("SFO4", "Senior Fire Officer IV"),
+        ("FINSP", "Fire Inspector"),
+        ("FSINSP", "Fire Senior Inspector"),
+        ("FCINSP", "Fire Chief Inspector"),
     )
 
     ACCOUNT_STATUS_CHOICES = (

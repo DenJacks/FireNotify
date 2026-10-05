@@ -4,7 +4,7 @@
     <!-- ========================================================= -->
     <!-- HEADER -->
     <!-- ========================================================= -->
-    <section class="border-b border-slate-200 pb-3">
+    <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
 
       <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
 
@@ -298,29 +298,16 @@
 
         </div>
 
-
-        <!-- EMPTY -->
-        <div
-          v-if="filteredReports.length === 0"
-          class="py-8 text-center"
-        >
-
-          <div class="h-14 w-14 mx-auto rounded-2xl bg-slate-100 flex items-center justify-center">
-            📄
-          </div>
-
-          <h4 class="mt-4 font-bold text-slate-900">
-            No assigned reports
-          </h4>
-
-          <p class="text-sm text-slate-500 mt-1">
-            Reports assigned to your account will appear here.
-          </p>
-
+        <div class="flex gap-2 border-b border-slate-200 px-5 pt-4">
+          <button type="button" @click="reportView = 'active'" class="border-b-2 px-4 py-3 text-sm font-bold" :class="reportView === 'active' ? 'border-[#8B1E23] text-[#8B1E23]' : 'border-transparent text-slate-500'">
+            Active Reports <span class="ml-1 text-xs">{{ activeReportCount }}</span>
+          </button>
+          <button type="button" @click="reportView = 'archived'" class="border-b-2 px-4 py-3 text-sm font-bold" :class="reportView === 'archived' ? 'border-[#8B1E23] text-[#8B1E23]' : 'border-transparent text-slate-500'">
+            Archived Reports <span class="ml-1 text-xs">{{ archivedReportCount }}</span>
+          </button>
         </div>
 
-
-        <div v-else class="fn-operations-table-wrap">
+        <div class="fn-operations-table-wrap">
           <table class="fn-operations-table">
             <thead>
               <tr><th>Report</th><th>Assigned To</th><th>Deadline</th><th>Status</th><th class="text-right">Actions</th></tr>
@@ -330,9 +317,10 @@
                 <td data-label="Report">
                   <div class="flex min-w-0 flex-col gap-1.5">
                     <p class="break-words text-sm font-semibold leading-5 text-slate-900">{{ report.title }}</p>
-                    <p class="break-words text-xs leading-5 text-slate-500">{{ report.type || report.activity || 'Report' }}</p>
+                    <p class="break-words text-xs leading-5 text-slate-500"><span class="font-semibold">Report Type:</span> {{ report.type || report.activity || 'Report' }}</p>
                     <p v-if="report.location" class="break-words text-xs leading-5 text-slate-500">Location: {{ report.location }}</p>
-                    <p v-if="report.description" class="break-words whitespace-pre-wrap text-xs leading-5 text-slate-500">{{ report.description }}</p>
+                    <p v-if="report.description" class="break-words whitespace-pre-wrap text-xs leading-5 text-slate-500"><span class="font-semibold">Description/Details:</span> {{ report.description }}</p>
+                    <p v-if="report.content" class="break-words whitespace-pre-wrap text-xs leading-5 text-slate-600"><span class="font-semibold">Submission:</span> {{ report.content }}</p>
                     <p v-if="report.remarks" class="break-words whitespace-pre-wrap text-xs leading-5 text-amber-800">Remarks: {{ report.remarks }}</p>
                   </div>
                 </td>
@@ -346,12 +334,27 @@
                 <td data-label="Status"><span class="fn-operations-badge" :class="statusClass(report.status)">{{ report.status }}</span></td>
                 <td data-label="Actions">
                   <div class="flex flex-wrap gap-1.5 sm:justify-end">
-                    <button v-if="!report.recordType && report.status === 'Pending' && !report.assignedById" @click="startReport(report)" class="fn-operations-action fn-operations-action--primary">Start</button>
-                    <button v-if="['Pending', 'Pending Submission', 'Not Submitted', 'In Progress', 'Returned'].includes(report.status)" @click="submitReport(report)" class="fn-operations-action fn-operations-action--primary">{{ report.status === 'Returned' ? 'Revise' : report.recordType === 'assignedReport' ? 'Open' : 'Submit' }}</button>
-                    <button v-if="report.status === 'Draft'" @click="editReport(report)" class="fn-operations-action fn-operations-action--primary">Edit Draft</button>
-                    <button v-if="['Submitted', 'For Review', 'Approved', 'Rejected'].includes(report.status)" @click="viewReport(report)" class="fn-operations-action">View</button>
-                    <button v-if="report.status === 'Draft'" @click="deleteDraft(report)" class="fn-operations-action fn-operations-action--danger">Delete</button>
+                    <template v-if="reportView === 'archived' && report.recordType === 'assignedReport'">
+                      <button @click="viewReport(report)" class="fn-operations-action">View</button>
+                      <button @click="restoreReport(report)" class="fn-operations-action">Restore</button>
+                      <button @click="requestReportAction(report)" class="fn-operations-action fn-operations-action--danger">Delete</button>
+                    </template>
+                    <template v-else>
+                      <button v-if="!report.recordType && report.status === 'Pending' && !report.assignedById" @click="startReport(report)" class="fn-operations-action fn-operations-action--primary">Start</button>
+                      <button v-if="['Pending', 'Pending Submission', 'Not Submitted', 'In Progress', 'Returned'].includes(report.status)" @click="submitReport(report)" class="fn-operations-action fn-operations-action--primary">{{ report.status === 'Returned' ? 'Revise' : report.recordType === 'assignedReport' ? 'Open' : 'Submit' }}</button>
+                      <button v-if="report.status === 'Draft'" @click="editReport(report)" class="fn-operations-action fn-operations-action--primary">Edit Draft</button>
+                      <button v-if="['Submitted', 'For Review', 'Approved', 'Rejected'].includes(report.status)" @click="viewReport(report)" class="fn-operations-action">View</button>
+                      <button v-if="report.status === 'Draft'" @click="deleteDraft(report)" class="fn-operations-action fn-operations-action--danger">Delete</button>
+                      <button v-if="report.recordType === 'assignedReport'" @click="archiveReport(report)" class="fn-operations-action">Archive</button>
+                      <button v-if="report.recordType === 'assignedReport'" @click="requestReportAction(report)" class="fn-operations-action fn-operations-action--danger">Delete</button>
+                    </template>
                   </div>
+                </td>
+              </tr>
+              <tr v-if="!filteredReports.length">
+                <td colspan="5" class="py-10 text-center">
+                  <p class="font-bold text-slate-700">No reports found</p>
+                  <p class="mt-1 text-sm text-slate-500">Reports assigned to your account will appear here.</p>
                 </td>
               </tr>
             </tbody>
@@ -367,163 +370,7 @@
       <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
 
 
-        <!-- COMPLETION -->
-        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
-
-          <h3 class="text-lg font-bold text-slate-900">
-            Report Completion
-          </h3>
-
-          <p class="text-sm text-slate-500 mt-1">
-            Your report submission progress.
-          </p>
-
-
-          <div class="mt-5">
-
-            <div class="flex items-end justify-between">
-
-              <p class="text-3xl font-bold text-[#8B1E23]">
-                {{ completionRate }}%
-              </p>
-
-              <span
-                class="text-xs font-semibold"
-                :class="
-                  completionRate >= 80
-                    ? 'text-green-600'
-                    : 'text-yellow-600'
-                "
-              >
-                {{ completionMessage }}
-              </span>
-
-            </div>
-
-
-            <div class="mt-3 h-3 rounded-full bg-slate-200 overflow-hidden">
-
-              <div
-                class="h-full bg-[#8B1E23] rounded-full transition-all duration-500"
-                :style="{ width: `${completionRate}%` }"
-              ></div>
-
-            </div>
-
-
-            <div class="grid grid-cols-2 gap-4 mt-5">
-
-              <div>
-
-                <p class="text-xs text-slate-500">
-                  Submitted
-                </p>
-
-                <p class="text-lg font-bold text-green-600">
-                  {{ submittedReports }}
-                </p>
-
-              </div>
-
-
-              <div>
-
-                <p class="text-xs text-slate-500">
-                  Pending
-                </p>
-
-                <p class="text-lg font-bold text-yellow-600">
-                  {{ pendingReports }}
-                </p>
-
-              </div>
-
-            </div>
-
-          </div>
-
-        </div>
-
-
-        <!-- DEADLINES -->
-        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
-
-          <h3 class="text-lg font-bold text-slate-900">
-            Report Deadlines
-          </h3>
-
-          <p class="text-sm text-slate-500 mt-1">
-            Upcoming submission deadlines.
-          </p>
-
-
-          <div class="mt-5 space-y-3">
-
-            <div
-              v-for="deadline in deadlines"
-              :key="deadline.id"
-              class="p-4 rounded-xl border"
-              :class="
-                deadline.urgent
-                  ? 'bg-yellow-50 border-yellow-200'
-                  : 'bg-slate-50 border-slate-200'
-              "
-            >
-
-              <div class="flex items-start justify-between gap-3">
-
-                <div>
-
-                  <p class="text-sm font-bold text-slate-900">
-                    {{ deadline.title }}
-                  </p>
-
-                  <p class="text-xs text-slate-500 mt-1">
-                    {{ deadline.date }}
-                  </p>
-
-                </div>
-
-                <span
-                  class="text-xs font-bold"
-                  :class="
-                    deadline.urgent
-                      ? 'text-yellow-700'
-                      : 'text-slate-500'
-                  "
-                >
-                  {{ deadline.label }}
-                </span>
-
-              </div>
-
-            </div>
-
-          </div>
-
-        </div>
-
-
-        <!-- CURRENT USER -->
-        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
-
-          <h3 class="text-lg font-bold text-slate-900">
-            Current Account
-          </h3>
-
-          <div class="mt-5 p-4 rounded-xl bg-slate-50 border border-slate-200">
-
-            <p class="text-sm font-bold text-slate-900">
-              {{ currentUserName }}
-            </p>
-
-            <p class="text-xs text-slate-500 mt-1">
-              {{ currentUserRole }}
-            </p>
-
-          </div>
-
-        </div>
+      
 
       </div>
 
@@ -871,33 +718,66 @@
     </div>
 
 
+    <div
+      v-if="pendingReportAction"
+      class="fixed inset-0 z-[75] flex items-center justify-center bg-slate-900/50 p-4"
+      @click.self="pendingReportAction = null"
+    >
+      <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+        <p class="text-xs font-bold uppercase tracking-wide text-[#8B1E23]">Report Action</p>
+        <h3 class="mt-2 text-xl font-bold text-slate-900">
+          {{ reportView === 'active' ? 'Move Report to Archive?' : 'Remove Report Assignment?' }}
+        </h3>
+        <p class="mt-2 text-sm text-slate-600">
+          <template v-if="reportView === 'active'">
+            Move <strong>{{ pendingReportAction.title }}</strong> to your Archived Reports? Admin's report will remain unchanged.
+          </template>
+          <template v-else>
+            Remove <strong>{{ pendingReportAction.title }}</strong> from your assignments? Its submission and attachment history will remain intact.
+          </template>
+        </p>
+        <div class="mt-6 flex justify-end gap-3">
+          <button type="button" @click="pendingReportAction = null" class="rounded-xl border border-slate-300 px-5 py-2.5 font-semibold text-slate-700">Cancel</button>
+          <button type="button" :disabled="reportActionPending" @click="confirmReportAction" class="rounded-xl bg-[#8B1E23] px-5 py-2.5 font-bold text-white disabled:cursor-wait disabled:opacity-60">
+            {{ reportActionPending ? 'Saving...' : reportView === 'active' ? 'Move to Archive' : 'Remove Assignment' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- ========================================================= -->
     <!-- REPORT SUBMISSION MODAL -->
     <!-- ========================================================= -->
     <div
       v-if="showSubmissionModal && submissionReport"
-      class="fixed inset-0 z-[70] bg-slate-900/50 flex items-center justify-center p-4"
+      class="fixed inset-0 z-[70] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4"
       @click.self="closeSubmitReportModal"
     >
-      <div class="w-full max-w-lg bg-white rounded-2xl shadow-xl overflow-hidden">
-        <div class="px-6 py-5 border-b border-slate-200 flex items-center justify-between">
-          <div>
-            <p class="text-xs font-bold text-[#8B1E23] uppercase">Assigned Report</p>
-            <h3 class="text-xl font-bold text-slate-900 mt-1">{{ submissionReport.status === 'Returned' ? 'Revise Report' : 'Open Report' }}</h3>
-            <p class="text-sm text-slate-500 mt-1">{{ submissionReport.title }}</p>
+      <div class="fn-modal-panel flex max-h-[calc(100dvh-2rem)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+        <div class="fn-modal-header shrink-0 bg-[#8B1E23] p-6 text-white">
+          <div class="flex items-start justify-between gap-4">
+            <div class="min-w-0">
+              <p class="fn-modal-header-label text-xs font-bold uppercase tracking-wide">Assigned Report</p>
+              <h3 class="mt-1 text-2xl font-bold text-white">{{ submissionReport.status === 'Returned' ? 'Revise Report' : 'Open Report' }}</h3>
+              <p class="fn-modal-header-description mt-1 break-words text-sm">{{ submissionReport.title }}</p>
+              <span class="mt-3 inline-flex rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white">
+                {{ submissionReport.status }}
+              </span>
+            </div>
+            <button
+              type="button"
+              @click="closeSubmitReportModal"
+              class="h-9 w-9 shrink-0 rounded-lg bg-white/10 text-white hover:bg-white/20"
+              aria-label="Close report submission"
+            >
+              ✕
+            </button>
           </div>
-          <button
-            @click="closeSubmitReportModal"
-            class="h-10 w-10 rounded-xl hover:bg-slate-100 text-slate-500 text-xl"
-          >
-            ×
-          </button>
         </div>
 
-        <div class="p-6 space-y-5">
+        <div class="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain p-6">
           <div class="grid grid-cols-2 gap-3 p-4 rounded-xl bg-slate-50 border border-slate-200 text-sm">
             <div><p class="text-xs text-slate-500">Report Type</p><p class="font-semibold text-slate-800 mt-1">{{ submissionReport.type || 'Report' }}</p></div>
-            <div><p class="text-xs text-slate-500">Status</p><p class="font-semibold text-slate-800 mt-1">{{ submissionReport.status }}</p></div>
             <div><p class="text-xs text-slate-500">Assigned By</p><p class="font-semibold text-slate-800 mt-1">{{ submissionReport.assignedBy || 'Admin' }}</p></div>
             <div><p class="text-xs text-slate-500">Deadline</p><p class="font-semibold text-slate-800 mt-1">{{ formatDate(submissionReport.deadline) }}</p></div>
             <p v-if="submissionReport.description" class="col-span-2 text-slate-600 whitespace-pre-line">{{ submissionReport.description }}</p>
@@ -933,7 +813,9 @@
             </div>
           </div>
 
-          <div class="flex flex-col sm:flex-row justify-end gap-3 pt-2">
+        </div>
+
+        <div class="flex shrink-0 flex-col justify-end gap-3 border-t border-slate-200 bg-slate-50 px-6 py-5 sm:flex-row">
             <button
               type="button"
               @click="closeSubmitReportModal"
@@ -950,7 +832,6 @@
             >
               {{ submissionReport.status === 'Returned' ? 'Resubmit for Review' : 'Submit for Review' }}
             </button>
-          </div>
         </div>
       </div>
     </div>
@@ -1004,7 +885,7 @@ import {
   deleteReportFile
 } from '../../utils/reportFileStorage.js'
 import { resolvePersonnelName } from '../../utils/personnelName.js'
-import { getPersonnelReportSubmissions, updateReportSubmission } from '../../utils/reportApi.js'
+import { getPersonnelReportSubmissions, getReportArchiveIds, removeReportAssignment, setReportArchive, updateReportSubmission } from '../../utils/reportApi.js'
 
 
 /* =========================================================
@@ -1150,6 +1031,7 @@ const loadReports = async () => {
   if (!user) {
 
     reports.value = []
+    archivedReportIds.value = new Set()
 
     return
 
@@ -1182,6 +1064,12 @@ const loadReports = async () => {
 
   try {
     const assignments = await getPersonnelReportSubmissions(user.id)
+    try {
+      archivedReportIds.value = new Set(await getReportArchiveIds(user.id))
+    } catch (error) {
+      archivedReportIds.value = new Set()
+      console.warn('FireNotify: unable to load personnel report archives', error)
+    }
     const statusLabels = {
       PENDING: 'Pending',
       IN_PROGRESS: 'In Progress',
@@ -1281,6 +1169,8 @@ onUnmounted(() => {
 const searchQuery = ref('')
 
 const statusFilter = ref('All')
+const reportView = ref('active')
+const archivedReportIds = ref(new Set())
 
 
 /* =========================================================
@@ -1289,6 +1179,8 @@ const statusFilter = ref('All')
 
 const showFormModal = ref(false)
 const showSubmissionModal = ref(false)
+const reportActionPending = ref(false)
+const pendingReportAction = ref(null)
 
 const showViewModal = ref(false)
 
@@ -1440,15 +1332,32 @@ const filteredReports = computed(() => {
       statusFilter.value === 'All' ||
       report.status === statusFilter.value
 
+    const isAssignedReport = report.recordType === 'assignedReport'
+    const isArchived = isAssignedReport && archivedReportIds.value.has(String(report.reportId))
+    const matchesArchiveView = reportView.value === 'archived' ? isArchived : !isArchived
+
 
     return (
       matchesSearch &&
-      matchesStatus
+      matchesStatus &&
+      matchesArchiveView
     )
 
   })
 
 })
+
+const activeReportCount = computed(() =>
+  reports.value.filter(report =>
+    report.recordType !== 'assignedReport' || !archivedReportIds.value.has(String(report.reportId))
+  ).length
+)
+
+const archivedReportCount = computed(() =>
+  new Set(reports.value
+    .filter(report => report.recordType === 'assignedReport' && archivedReportIds.value.has(String(report.reportId)))
+    .map(report => String(report.reportId))).size
+)
 
 
 /* =========================================================
@@ -2268,6 +2177,82 @@ const startReport = (report) => {
 const submitReport = (report) => {
 
   openSubmitReport(report)
+}
+
+const archiveReport = async report => {
+  const user = getCurrentUser()
+  const userId = user?.id || user?.userId
+  if (userId === null || userId === undefined) {
+    showToast('Unable to identify the current Personnel user.')
+    return
+  }
+
+  try {
+    await setReportArchive(report.reportId, userId, true)
+    archivedReportIds.value = new Set([...archivedReportIds.value, String(report.reportId)])
+    window.dispatchEvent(new CustomEvent('fireNotifyReportsUpdated'))
+    showToast('Report archived for Personnel.')
+  } catch (error) {
+    showToast(error.message || 'Unable to archive report.')
+  }
+}
+
+const restoreReport = async report => {
+  const user = getCurrentUser()
+  const userId = user?.id || user?.userId
+  if (userId === null || userId === undefined) {
+    showToast('Unable to identify the current Personnel user.')
+    return
+  }
+
+  try {
+    await setReportArchive(report.reportId, userId, false)
+    const archivedIds = new Set(archivedReportIds.value)
+    archivedIds.delete(String(report.reportId))
+    archivedReportIds.value = archivedIds
+    window.dispatchEvent(new CustomEvent('fireNotifyReportsUpdated'))
+    showToast('Report restored to your active reports.')
+  } catch (error) {
+    showToast(error.message || 'Unable to restore report.')
+  }
+}
+
+const requestReportAction = report => {
+  pendingReportAction.value = report
+}
+
+const confirmReportAction = async () => {
+  const report = pendingReportAction.value
+  if (!report || reportActionPending.value) return
+
+  const user = getCurrentUser()
+  const userId = user?.id || user?.userId
+  if (userId === null || userId === undefined) {
+    showToast('Unable to identify the current Personnel user.')
+    return
+  }
+
+  reportActionPending.value = true
+  try {
+    if (reportView.value === 'active') {
+      await setReportArchive(report.reportId, userId, true)
+      archivedReportIds.value = new Set([...archivedReportIds.value, String(report.reportId)])
+      showToast('Report moved to your archive.')
+    } else {
+      await removeReportAssignment(report.submissionId, userId)
+      reports.value = reports.value.filter(item => String(item.submissionId || item.rowId || item.id) !== String(report.submissionId))
+      const archivedIds = new Set(archivedReportIds.value)
+      archivedIds.delete(String(report.reportId))
+      archivedReportIds.value = archivedIds
+      showToast('Report removed from your assignments.')
+    }
+    pendingReportAction.value = null
+    window.dispatchEvent(new CustomEvent('fireNotifyReportsUpdated'))
+  } catch (error) {
+    showToast(error.message || 'Unable to process report action.')
+  } finally {
+    reportActionPending.value = false
+  }
 }
 
 

@@ -61,10 +61,6 @@ class Activity(models.Model):
         default="SCHEDULED"
     )
 
-    is_archived = models.BooleanField(
-        default=False
-    )
-
     created_by = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
@@ -83,6 +79,49 @@ class Activity(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class ActivityArchive(models.Model):
+    activity = models.ForeignKey(
+        Activity,
+        on_delete=models.CASCADE,
+        related_name="archive_entries",
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="activity_archives",
+    )
+    archived_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["activity", "user"], name="unique_activity_archive_per_user")
+        ]
+
+    def __str__(self):
+        return f"{self.activity.title} archived by {self.user}"
+
+
+class ActivityAssignment(models.Model):
+    activity = models.ForeignKey(
+        Activity,
+        on_delete=models.CASCADE,
+        related_name="personnel_assignments",
+    )
+    personnel = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="activity_assignments",
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["activity", "personnel"], name="unique_activity_personnel_assignment")
+        ]
+
+    def __str__(self):
+        return f"{self.activity.title} assigned to {self.personnel}"
 
 
 class ActivitySubmission(models.Model):
@@ -200,6 +239,28 @@ class Task(models.Model):
         return self.title
 
 
+class TaskArchive(models.Model):
+    task = models.ForeignKey(
+        Task,
+        on_delete=models.CASCADE,
+        related_name="archive_entries",
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="task_archives",
+    )
+    archived_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["task", "user"], name="unique_task_archive_per_user")
+        ]
+
+    def __str__(self):
+        return f"{self.task.title} archived by {self.user}"
+
+
 class Notification(models.Model):
     recipient = models.ForeignKey(
         User,
@@ -242,6 +303,28 @@ class Report(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class ReportArchive(models.Model):
+    report = models.ForeignKey(
+        Report,
+        on_delete=models.CASCADE,
+        related_name="archive_entries",
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="report_archives",
+    )
+    archived_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["report", "user"], name="unique_report_archive_per_user")
+        ]
+
+    def __str__(self):
+        return f"{self.report.title} archived by {self.user}"
 
 
 class ReportSubmission(models.Model):

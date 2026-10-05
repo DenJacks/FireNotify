@@ -12,7 +12,8 @@ const STORAGE_KEYS = {
   tasks: 'firenotify_tasks',
   activities: 'fireNotifyActivities',
   reports: 'firenotify_reports',
-  escalationMeta: 'fireNotifyEscalationMetadata'
+  escalationMeta: 'fireNotifyEscalationMetadata',
+  auditEvents: 'fireNotifyAuditEvents'
 }
 
 const UPDATE_EVENTS = [
@@ -26,6 +27,7 @@ const UPDATE_EVENTS = [
 
 const records = ref([])
 const escalationMetadata = ref({})
+const savedAuditEvents = ref([])
 const searchQuery = ref('')
 const issueFilter = ref('All')
 const sourceFilter = ref('All')
@@ -137,8 +139,8 @@ const pendingVerificationCount = computed(() => escalationRecords.value.filter(i
 const overdueCount = computed(() => escalationRecords.value.filter(item => item.issue === 'Overdue').length)
 const returnedCount = computed(() => escalationRecords.value.filter(item => item.issue === 'Returned / Needs Revision').length)
 
-const auditEvents = computed(() => sourceRecords.value
-  .flatMap(record => {
+const auditEvents = computed(() => [
+  ...sourceRecords.value.flatMap(record => {
     const events = []
     const add = (event, timestamp, status = record.status || record.submissionStatus) => {
       if (timestamp) {
@@ -167,8 +169,9 @@ const auditEvents = computed(() => sourceRecords.value
     }
 
     return events
-  })
-  .sort((left, right) => (parseDate(right.timestamp)?.getTime() || 0) - (parseDate(left.timestamp)?.getTime() || 0)))
+  }),
+  ...savedAuditEvents.value
+].sort((left, right) => (parseDate(right.timestamp)?.getTime() || 0) - (parseDate(left.timestamp)?.getTime() || 0)))
 
 const formatDateTime = value => {
   const date = parseDate(value)
@@ -200,6 +203,7 @@ const priorityClass = priority => ({
 
 const loadData = () => {
   escalationMetadata.value = readObject(STORAGE_KEYS.escalationMeta)
+  savedAuditEvents.value = readArray(STORAGE_KEYS.auditEvents)
   buildSourceRecords()
 }
 
@@ -213,12 +217,41 @@ const showNotification = message => {
 }
 
 const setEscalationStatus = (record, status) => {
+  const reason = window.prompt(`Add a reason for marking this escalation ${status.toLowerCase().replace('_', ' ')}:`)
+  if (reason === null) return
+  if (!reason.trim()) {
+    showNotification('Please provide a reason before updating this escalation.')
+    return
+  }
+
+  const nextStatus = status === 'UNDER REVIEW' ? 'ESCALATED' : status
+  const timestamp = new Date().toISOString()
+  const actor = props.currentUser?.name
+    || [props.currentUser?.first_name, props.currentUser?.last_name].filter(Boolean).join(' ')
+    || props.currentUser?.email
+    || 'Administrator'
+  const event = {
+    id: `escalation:${record.key}:${Date.now()}`,
+    timestamp,
+    event: `Escalation ${nextStatus.toLowerCase().replace('_', ' ')} by ${actor}: ${reason.trim()}`,
+    record: record.title,
+    sourceType: record.sourceType,
+    sourceId: record.id,
+    personnel: record.personnel,
+    status: nextStatus,
+    actor,
+    reason: reason.trim()
+  }
+
   escalationMetadata.value = {
     ...escalationMetadata.value,
-    [record.key]: { ...(escalationMetadata.value[record.key] || {}), status }
+    [record.key]: { ...(escalationMetadata.value[record.key] || {}), status: nextStatus, updatedAt: timestamp }
   }
+  savedAuditEvents.value = [event, ...savedAuditEvents.value]
+  selectedRecord.value = { ...record, escalationStatus: nextStatus }
   saveMetadata()
-  showNotification(`Escalation marked ${status.toLowerCase()}.`)
+  localStorage.setItem(STORAGE_KEYS.auditEvents, JSON.stringify(savedAuditEvents.value))
+  showNotification(`Escalation marked ${nextStatus.toLowerCase()}.`)
 }
 
 const refresh = () => loadData()

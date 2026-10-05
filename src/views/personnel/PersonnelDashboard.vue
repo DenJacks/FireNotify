@@ -253,9 +253,18 @@
                   class="h-5 w-5 shrink-0 text-current"
                 ></span>
 
-                <span class="text-base font-semibold truncate">
-                  {{ item.name }}
-                </span>
+                <div class="min-w-0">
+                  <span class="block text-base font-semibold truncate">
+                    {{ item.name }}
+                  </span>
+
+                  <span
+                    v-if="activeTab !== item.name && item.context"
+                    class="block text-xs text-slate-400 truncate"
+                  >
+                    {{ item.context }}
+                  </span>
+                </div>
 
               </button>
 
@@ -722,15 +731,15 @@ const fieldItems = [
     badge: null
   },
   {
-    name: 'Tasks',
-    icon: 'tasks',
-    context: 'Assigned activities',
-    badge: null
-  },
-  {
     name: 'Activities',
     icon: 'activities',
     context: 'View station activities',
+    badge: null
+  },
+  {
+    name: 'Tasks',
+    icon: 'tasks',
+    context: 'Assigned activities',
     badge: null
   },
   {
@@ -749,11 +758,13 @@ const fieldItems = [
 const toolItems = [
   {
     name: 'Support',
-    icon: 'support'
+    icon: 'support',
+    context: 'Get help and guidance'
   },
   {
     name: 'Settings',
-    icon: 'settings'
+    icon: 'settings',
+    context: 'Manage your preferences'
   }
 ]
 
@@ -764,6 +775,9 @@ const toolItems = [
 const activityCount = ref(0)
 
 onMounted(() => {
+  initializePersonnelSettings()
+  window.addEventListener(SETTINGS_UPDATED_EVENT, applySettingsEvent)
+
   /* Initial counts */
   refreshSidebarCounts()
 
@@ -783,6 +797,8 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  window.removeEventListener(SETTINGS_UPDATED_EVENT, applySettingsEvent)
+
   UPDATE_EVENTS.forEach(eventName => {
     window.removeEventListener(
       eventName,

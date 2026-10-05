@@ -8,7 +8,7 @@
           <div class="flex items-center gap-3">
             <div class="h-11 w-11 rounded-xl bg-red-50 flex items-center justify-center">
               <span
-                v-html="ICONS.siren"
+                v-html="ICONS.notifications"
                 class="h-6 w-6 text-[#8B1E23]"
               ></span>
             </div>
@@ -54,7 +54,7 @@
 
           <div class="h-11 w-11 rounded-full bg-red-100 flex items-center justify-center">
             <span
-              v-html="ICONS.siren"
+              v-html="ICONS.notifications"
               class="h-5 w-5 text-[#8B1E23]"
             ></span>
           </div>
@@ -117,7 +117,7 @@
 
           <div class="h-11 w-11 rounded-full bg-green-100 flex items-center justify-center">
             <span
-              v-html="ICONS.check"
+              v-html="ICONS.settings"
               class="h-5 w-5 text-green-600"
             ></span>
           </div>
@@ -369,163 +369,9 @@
       <!-- RIGHT SIDEBAR -->
       <div class="space-y-6">
 
-        <!-- SETTINGS -->
-        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
-
-          <h3 class="text-lg font-bold text-slate-900">
-            Notification Settings
-          </h3>
-
-          <p class="text-sm text-slate-500 mt-1">
-            Choose how you receive important alerts.
-          </p>
+        
 
 
-          <div class="mt-5 space-y-5">
-
-            <div
-              v-for="setting in notificationSettings"
-              :key="setting.key"
-              class="flex items-center justify-between gap-4"
-            >
-
-              <div>
-                <p class="text-sm font-semibold text-slate-800">
-                  {{ setting.title }}
-                </p>
-
-                <p class="text-xs text-slate-500 mt-0.5">
-                  {{ setting.description }}
-                </p>
-              </div>
-
-              <button
-                @click="setting.enabled = !setting.enabled"
-                :aria-pressed="setting.enabled"
-                :class="[
-                  'relative w-11 h-6 rounded-full transition shrink-0',
-                  setting.enabled
-                    ? 'bg-[#8B1E23]'
-                    : 'bg-slate-300'
-                ]"
-              >
-                <span
-                  :class="[
-                    'absolute top-1 h-4 w-4 rounded-full bg-white shadow transition',
-                    setting.enabled
-                      ? 'left-6'
-                      : 'left-1'
-                  ]"
-                ></span>
-              </button>
-
-            </div>
-
-          </div>
-
-        </div>
-
-
-        <!-- UPCOMING DEADLINES -->
-        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
-
-          <div class="flex items-center justify-between">
-            <div>
-              <h3 class="text-lg font-bold text-slate-900">
-                Upcoming Deadlines
-              </h3>
-
-              <p class="text-xs text-slate-500 mt-1">
-                Reports requiring attention
-              </p>
-            </div>
-
-            <span
-              class="px-2.5 py-1 rounded-full bg-red-50
-                     text-[#8B1E23] text-xs font-bold"
-            >
-              {{ deadlines.length }}
-            </span>
-          </div>
-
-
-          <div class="mt-4 space-y-3">
-
-            <div
-              v-for="deadline in deadlines"
-              :key="deadline.id"
-              :class="[
-                'p-4 rounded-xl border',
-                deadline.urgent
-                  ? 'bg-red-50 border-red-100'
-                  : 'bg-slate-50 border-slate-200'
-              ]"
-            >
-
-              <div class="flex items-start justify-between gap-3">
-
-                <div>
-                  <p class="text-sm font-bold text-slate-900">
-                    {{ deadline.title }}
-                  </p>
-
-                  <p
-                    class="text-xs font-semibold mt-1"
-                    :class="
-                      deadline.urgent
-                        ? 'text-red-600'
-                        : 'text-slate-500'
-                    "
-                  >
-                    {{ deadline.due }}
-                  </p>
-                </div>
-
-                <span
-                  v-if="deadline.urgent"
-                  class="text-[10px] font-bold text-red-600"
-                >
-                  URGENT
-                </span>
-
-              </div>
-
-            </div>
-
-          </div>
-        </div>
-
-
-        <!-- QUICK SUMMARY -->
-        <div class="bg-[#8B1E23] rounded-2xl shadow-sm p-6 text-white">
-
-          <p class="text-sm text-red-100">
-            Notification Summary
-          </p>
-
-          <p class="text-3xl font-bold mt-1">
-            {{ notifications.length }}
-          </p>
-
-          <p class="text-sm text-red-100 mt-1">
-            Total notifications
-          </p>
-
-          <div class="mt-5 pt-4 border-t border-white/20">
-
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-red-100">
-                Requiring attention
-              </span>
-
-              <span class="font-bold">
-                {{ unreadCount }}
-              </span>
-            </div>
-
-          </div>
-
-        </div>
 
       </div>
 

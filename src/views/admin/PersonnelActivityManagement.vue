@@ -241,6 +241,10 @@
               </th>
 
               <th class="pb-4 pr-5">
+                Location
+              </th>
+
+              <th class="pb-4 pr-5">
                 Assigned Personnel
               </th>
 
@@ -275,7 +279,6 @@
                 <div class="flex min-w-0 flex-col gap-1">
                   <p class="break-words text-sm font-bold leading-5 text-slate-900">{{ activity.name }}</p>
                   <p v-if="activity.description" class="break-words whitespace-pre-wrap text-xs leading-5 text-slate-500">{{ activity.description }}</p>
-                  <p v-if="activity.location" class="break-words text-xs leading-5 text-slate-500">{{ activity.location }}</p>
                 </div>
               </td>
 
@@ -288,6 +291,10 @@
                   {{ activity.type }}
                 </span>
 
+              </td>
+
+              <td data-label="Location" class="min-w-[150px]">
+                <span class="break-words text-sm leading-5 text-slate-700">{{ activity.location || 'Not specified' }}</span>
               </td>
 
               <td data-label="Assigned Personnel" class="min-w-[220px]">
@@ -398,18 +405,12 @@
                     </button>
                   </template>
 
-                  <template v-else-if="activity.status === 'Verified'">
+                  <template v-else-if="isVerifiedActivity(activity)">
                     <button
                       @click="openActivitySubmission(activity)"
                       class="fn-operations-action"
                     >
                       View Submission
-                    </button>
-                    <button
-                      @click="archiveActivity(activity)"
-                      class="fn-operations-action"
-                    >
-                      Archive
                     </button>
                   </template>
 
@@ -436,6 +437,14 @@
                       Edit
                     </button>
                   </template>
+
+                  <button
+                    v-if="activityView === 'active'"
+                    @click="archiveActivity(activity)"
+                    class="fn-operations-action"
+                  >
+                    Archive
+                  </button>
 
                   <button
                     v-if="activityView === 'active'"
@@ -479,315 +488,12 @@
     </section>
 
 
-    <!-- =====================================================
-         PLANNED ACTIVITIES + WORKLOAD
-    ====================================================== -->
+   
 
-    <section
-      class="grid grid-cols-1 xl:grid-cols-2 gap-6"
-    >
 
-      <!-- Planned -->
 
-      <div
-        class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6"
-      >
 
-        <div
-          class="flex items-center justify-between border-b border-slate-200 pb-5"
-        >
-
-          <div>
-            <h2 class="text-xl font-bold text-slate-900">
-              Planned Activities
-            </h2>
-
-            <p class="text-sm text-slate-500 mt-1">
-              Upcoming station schedule
-            </p>
-          </div>
-
-          <span
-            class="px-3 py-1.5 rounded-full bg-blue-50 text-blue-700 text-xs font-bold"
-          >
-            {{ plannedActivities.length }}
-            ITEMS
-          </span>
-
-        </div>
-
-        <div class="mt-5 space-y-4">
-
-          <div
-            v-for="activity in plannedActivities"
-            :key="activity.id"
-            class="p-4 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white transition"
-          >
-
-            <div class="flex justify-between gap-4">
-
-              <div>
-
-                <p class="font-bold text-slate-900">
-                  {{ activity.name }}
-                </p>
-
-                <p class="text-xs text-slate-500 mt-1">
-                  {{ formatDate(activity.schedule) }}
-                  •
-                  {{ formatTime(activity.time) }}
-                </p>
-
-                <p class="text-xs text-slate-400 mt-1">
-                  {{ activity.location }}
-                </p>
-
-                <p
-                  v-if="activity.assignedPersonnel?.length"
-                  class="text-xs text-slate-500 mt-2"
-                >
-                  Assigned:
-                  <span class="font-semibold">
-                    {{ assignedPersonnelName(activity.assignedPersonnel) }}
-                  </span>
-                </p>
-
-              </div>
-
-              <span
-                :class="getStatusClass(activity.status)"
-                class="h-fit px-2.5 py-1 rounded-full text-xs font-bold whitespace-nowrap"
-              >
-                {{ activity.status }}
-              </span>
-
-            </div>
-
-          </div>
-
-          <div
-            v-if="!plannedActivities.length"
-            class="py-8 text-center"
-          >
-            <p class="font-semibold text-slate-600">
-              No upcoming activities
-            </p>
-
-            <p class="text-sm text-slate-400 mt-1">
-              Create or schedule an activity to see it here.
-            </p>
-          </div>
-
-        </div>
-
-      </div>
-
-
-      <!-- Workload -->
-
-      <div
-        class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6"
-      >
-
-        <div class="border-b border-slate-200 pb-5">
-
-          <h2 class="text-xl font-bold text-slate-900">
-            Workload Summary
-          </h2>
-
-          <p class="text-sm text-slate-500 mt-1">
-            Activity allocation by type
-          </p>
-
-        </div>
-
-        <div class="mt-5 space-y-5">
-
-          <div
-            v-for="item in workload"
-            :key="item.type"
-          >
-
-            <div
-              class="flex justify-between text-sm font-semibold text-slate-700 mb-2"
-            >
-              <span>
-                {{ item.type }}
-              </span>
-
-              <span>
-                {{ item.percentage }}%
-              </span>
-            </div>
-
-            <div
-              class="h-2.5 rounded-full bg-slate-100 overflow-hidden"
-            >
-
-              <div
-                class="h-full rounded-full bg-[#8B1E23] transition-all duration-500"
-                :style="{
-                  width: `${item.percentage}%`
-                }"
-              ></div>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </div>
-
-    </section>
-
-
-    <!-- =====================================================
-         QUICK STATUS
-    ====================================================== -->
-
-    <section
-      class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6"
-    >
-
-      <div class="border-b border-slate-200 pb-5">
-
-        <h2 class="text-xl font-bold text-slate-900">
-          Activity Status Overview
-        </h2>
-
-        <p class="text-sm text-slate-500 mt-1">
-          Current operational activity distribution
-        </p>
-
-      </div>
-
-      <div
-        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-5"
-      >
-
-        <div
-          class="p-4 rounded-xl bg-blue-50 border border-blue-100"
-        >
-          <p class="text-2xl font-bold text-blue-700">
-            {{ scheduledCount }}
-          </p>
-
-          <p
-            class="text-sm text-blue-700 mt-1 font-semibold"
-          >
-            Scheduled Activities
-          </p>
-        </div>
-
-        <div
-          class="p-4 rounded-xl bg-indigo-50 border border-indigo-100"
-        >
-          <p class="text-2xl font-bold text-indigo-700">
-            {{ ongoingCount }}
-          </p>
-
-          <p
-            class="text-sm text-indigo-700 mt-1 font-semibold"
-          >
-            Ongoing Activities
-          </p>
-        </div>
-
-        <div
-          class="p-4 rounded-xl bg-green-50 border border-green-100"
-        >
-          <p class="text-2xl font-bold text-green-700">
-            {{ completedCount }}
-          </p>
-
-          <p
-            class="text-sm text-green-700 mt-1 font-semibold"
-          >
-            Completed Activities
-          </p>
-        </div>
-
-        <div
-          class="p-4 rounded-xl bg-red-50 border border-red-100"
-        >
-          <p class="text-2xl font-bold text-[#8B1E23]">
-            {{ delayedCount }}
-          </p>
-
-          <p
-            class="text-sm text-[#8B1E23] mt-1 font-semibold"
-          >
-            Delayed Activities
-          </p>
-        </div>
-
-      </div>
-
-    </section>
-
-
-    <!-- =====================================================
-         ACTIVITY NOTES
-    ====================================================== -->
-
-    <section
-      class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6"
-    >
-
-      <div class="border-b border-slate-200 pb-5">
-
-        <h2 class="text-xl font-bold text-slate-900">
-          Activity Notes
-        </h2>
-
-        <p class="text-sm text-slate-500 mt-1">
-          Important operational reminders
-        </p>
-
-      </div>
-
-      <div class="mt-5 space-y-4">
-
-        <div
-          class="p-4 rounded-xl border border-lime-200 bg-lime-50"
-        >
-          <p class="text-sm font-bold text-slate-900">
-            Reminder
-          </p>
-
-          <p class="text-sm text-slate-600 mt-1">
-            All inspection teams must bring updated checklist forms before deployment.
-          </p>
-        </div>
-
-        <div
-          class="p-4 rounded-xl border border-amber-200 bg-amber-50"
-        >
-          <p class="text-sm font-bold text-slate-900">
-            Coordination
-          </p>
-
-          <p class="text-sm text-slate-600 mt-1">
-            Coordinate with the barangay office for drill participation and crowd control support.
-          </p>
-        </div>
-
-        <div
-          class="p-4 rounded-xl border border-sky-200 bg-sky-50"
-        >
-          <p class="text-sm font-bold text-slate-900">
-            Escalation
-          </p>
-
-          <p class="text-sm text-slate-600 mt-1">
-            Any delay in scheduled drills must be logged and escalated to the operations section chief.
-          </p>
-        </div>
-
-      </div>
-
-    </section>
+   
 
 
     <!-- =====================================================
@@ -796,31 +502,43 @@
 
     <div
       v-if="showActivityModal"
-      class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+      class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4"
     >
 
       <div
-        class="fn-modal-panel bg-white w-full max-w-2xl rounded-2xl shadow-xl"
+        class="fn-modal-panel w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden"
       >
 
-        <div class="p-6 border-b border-slate-200">
+        <div class="fn-modal-header bg-[#8B1E23] p-6 text-white">
 
-          <h2 class="text-xl font-bold text-slate-900">
-            {{
-              editingActivity
-                ? 'Edit Activity'
-                : 'Create New Activity'
-            }}
-          </h2>
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <p class="fn-modal-header-label text-xs uppercase tracking-wider font-bold text-white/70">
+                Activity Details
+              </p>
 
-          <p class="text-sm text-slate-500 mt-1">
-            Enter the activity details and assign personnel below.
-          </p>
+              <h2 class="text-2xl font-bold mt-1 text-white">
+                {{ editingActivity ? 'Edit Activity' : 'Create New Activity' }}
+              </h2>
 
+              <p class="fn-modal-header-description text-sm text-white/80 mt-1">
+                Enter the activity details and assign personnel below.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              @click="showActivityModal = false"
+              class="h-9 w-9 rounded-lg bg-white/10 hover:bg-white/20 text-white"
+              aria-label="Close activity form"
+            >
+              ✕
+            </button>
+          </div>
         </div>
 
 
-        <div class="p-6 space-y-5">
+        <div class="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
 
           <!-- Activity Name -->
 
@@ -1167,7 +885,7 @@
         <!-- Modal Footer -->
 
         <div
-          class="p-6 border-t border-slate-200 flex justify-end gap-3"
+          class="px-6 py-5 bg-slate-50 border-t border-slate-200 flex justify-end gap-3"
         >
 
           <button
@@ -1533,18 +1251,16 @@
         <h2
           class="text-xl font-bold text-slate-900 mt-4"
         >
-          Delete Activity?
+          {{ activityView === 'archived' ? 'Delete Activity Permanently?' : 'Move Activity to Archive?' }}
         </h2>
 
-        <p
-          class="text-sm text-slate-500 mt-2"
-        >
-          Are you sure you want to delete
-          <strong>
-            {{ selectedActivity.name }}
-          </strong>
-          ?
-          This action cannot be undone.
+        <p class="text-sm text-slate-500 mt-2">
+          <template v-if="activityView === 'archived'">
+            Permanently delete <strong>{{ selectedActivity.name }}</strong> and its submission history and evidence? This cannot be undone.
+          </template>
+          <template v-else>
+            Move <strong>{{ selectedActivity.name }}</strong> to Admin Archived Activities? You can restore it later.
+          </template>
         </p>
 
         <div
@@ -1564,7 +1280,7 @@
             @click="deleteActivity"
             class="px-5 py-2.5 rounded-xl bg-[#8B1E23] text-white font-bold hover:bg-[#72181D]"
           >
-            Delete Activity
+            {{ activityView === 'archived' ? 'Delete Permanently' : 'Move to Archive' }}
           </button>
 
         </div>
@@ -1625,11 +1341,9 @@
       class="overflow-hidden rounded-xl border border-slate-200 bg-slate-50"
     >
       <img
-        :src="photo.file"
+        :src="evidenceFileUrl(photo.file)"
         alt="Submitted evidence photo"
         class="h-40 w-full object-cover"
-        @error="console.error('EVIDENCE IMAGE ERROR:', photo.file)"
-        @load="console.log('EVIDENCE IMAGE LOADED:', photo.file)"
       />
 
       <p class="px-3 py-2 text-xs text-slate-500">
@@ -1776,6 +1490,7 @@ const selectedPriority =
   ref('All Priorities')
 
 const activityView = ref('active')
+const archivedActivityIds = ref(new Set())
 
 
 const showActivityModal =
@@ -2622,6 +2337,22 @@ const syncActivitiesFromStorage =
       )
     }
 
+    const userId = props.currentUser?.id
+    archivedActivityIds.value = new Set()
+    if (userId !== null && userId !== undefined) {
+      const archiveResponse = await fetch(
+        `http://127.0.0.1:8000/api/activity-archives/?user_id=${encodeURIComponent(userId)}`
+      )
+      if (!archiveResponse.ok) {
+        throw new Error(`Activity archives API HTTP ${archiveResponse.status}`)
+      }
+      const archivedIds = await archiveResponse.json()
+      if (!Array.isArray(archivedIds)) {
+        throw new Error('Invalid activity archives response')
+      }
+      archivedActivityIds.value = new Set(archivedIds.map(String))
+    }
+
     mergeActivityTypes(activitiesData.map(activity => activity.activity_type))
 
 
@@ -2708,15 +2439,15 @@ const syncActivitiesFromStorage =
           activity.activity_time || '',
 
         assignedPersonnel:
-          activity.assigned_personnel
-            ? [
-                personnel.value.find(
-                  person =>
-                    person.id ===
-                    activity.assigned_personnel
-                )
-              ].filter(Boolean)
-            : [],
+          (activity.assigned_personnel_ids?.length
+            ? activity.assigned_personnel_ids
+            : activity.assigned_personnel
+              ? [activity.assigned_personnel]
+              : [])
+            .map(assignedId =>
+              personnel.value.find(person => String(person.id) === String(assignedId))
+            )
+            .filter(Boolean),
 
         personnel:
           activity.assigned_personnel
@@ -2852,7 +2583,7 @@ const filteredActivities =
     return activities.value.filter(
       activity => {
 
-        const isArchived = activity.is_archived === true
+        const isArchived = archivedActivityIds.value.has(String(activity.id))
         if (activityView.value === 'archived' ? !isArchived : isArchived) return false
 
         const assignedNames =
@@ -2927,11 +2658,11 @@ const filteredActivities =
   })
 
 const activeActivityCount = computed(() =>
-  activities.value.filter(activity => activity.is_archived !== true).length
+  activities.value.filter(activity => !archivedActivityIds.value.has(String(activity.id))).length
 )
 
 const archivedActivityCount = computed(() =>
-  activities.value.filter(activity => activity.is_archived === true).length
+  activities.value.filter(activity => archivedActivityIds.value.has(String(activity.id))).length
 )
 
 
@@ -3482,6 +3213,9 @@ const saveActivity =
             assigned_personnel:
               assignedPersonnel[0]?.id || null,
 
+            assigned_personnel_ids:
+              assignedPersonnel.map(person => person.id),
+
           })
         }
       )
@@ -3615,6 +3349,9 @@ const saveActivity =
           assigned_personnel:
             assignedPersonnel[0]?.id || null,
 
+          assigned_personnel_ids:
+            assignedPersonnel.map(person => person.id),
+
           status: 'SCHEDULED',
 
           created_by:
@@ -3734,8 +3471,32 @@ const deleteActivity = async () => {
   if (!selectedActivity.value) return
 
   const activityId = selectedActivity.value.id
+  const userId = props.currentUser?.id
 
   try {
+    if (activityView.value === 'active') {
+      if (userId === null || userId === undefined) {
+        throw new Error('Unable to identify the current Admin.')
+      }
+
+      const response = await fetch(
+        `http://127.0.0.1:8000/api/activities/${activityId}/archive/`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: userId })
+        }
+      )
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`)
+
+      archivedActivityIds.value = new Set([...archivedActivityIds.value, String(activityId)])
+      showDeleteModal.value = false
+      selectedActivity.value = null
+      showToast('Activity moved to Admin archive.')
+      return
+    }
+
     const response = await fetch(
   `http://127.0.0.1:8000/api/activities/${activityId}/`,
   {
@@ -3758,7 +3519,7 @@ const deleteActivity = async () => {
     selectedActivity.value = null
 
     showToast(
-      'Activity deleted successfully.'
+      'Activity permanently deleted.'
     )
 
   } catch (error) {
@@ -3767,24 +3528,26 @@ const deleteActivity = async () => {
       error
     )
 
-    showToast(
-      'Failed to delete activity.',
-      'error'
-    )
+    showToast(error.message || 'Failed to delete activity.', 'error')
   }
 }
 
 const archiveActivity = async activity => {
+  const userId = props.currentUser?.id
+  if (userId === null || userId === undefined) {
+    showToast('Unable to identify the current Admin.', 'error')
+    return
+  }
+
   try {
     const response = await fetch(
-      `http://127.0.0.1:8000/api/activities/${activity.id}/`,
+      `http://127.0.0.1:8000/api/activities/${activity.id}/archive/`,
       {
-          
-        method: 'PATCH',
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ is_archived: true })
+        body: JSON.stringify({ user_id: userId })
       }
     )
 
@@ -3792,8 +3555,7 @@ const archiveActivity = async activity => {
       throw new Error(`HTTP ${response.status}`)
     }
 
-    activity.is_archived = true
-    saveActivities(false)
+    archivedActivityIds.value = new Set([...archivedActivityIds.value, String(activity.id)])
     showToast('Activity archived successfully.')
   } catch (error) {
     console.error('Failed to archive activity:', error)
@@ -3802,15 +3564,21 @@ const archiveActivity = async activity => {
 }
 
 const restoreActivity = async activity => {
+  const userId = props.currentUser?.id
+  if (userId === null || userId === undefined) {
+    showToast('Unable to identify the current Admin.', 'error')
+    return
+  }
+
   try {
     const response = await fetch(
-      `http://127.0.0.1:8000/api/activities/${activity.id}/`,
+      `http://127.0.0.1:8000/api/activities/${activity.id}/archive/`,
       {
-        method: 'PATCH',
+        method: 'DELETE',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ is_archived: false })
+        body: JSON.stringify({ user_id: userId })
       }
     )
 
@@ -3818,8 +3586,9 @@ const restoreActivity = async activity => {
       throw new Error(`HTTP ${response.status}`)
     }
 
-    activity.is_archived = false
-    saveActivities(false)
+    const archivedIds = new Set(archivedActivityIds.value)
+    archivedIds.delete(String(activity.id))
+    archivedActivityIds.value = archivedIds
     showToast('Activity restored successfully.')
   } catch (error) {
     console.error('Failed to restore activity:', error)
@@ -3889,6 +3658,23 @@ const openActivitySubmission = async activity => {
   submissionEvidenceUrls.value = submissionEvidence.value.map(item => URL.createObjectURL(item.file))
   showSubmissionModal.value = true
 }
+
+const evidenceFileUrl = file => {
+  if (!file) return ''
+  try {
+    const backendOrigin = 'http://127.0.0.1:8000'
+    const url = new URL(String(file), `${backendOrigin}/`)
+    if (url.origin !== backendOrigin || url.pathname.startsWith('/media/')) {
+      return url.toString()
+    }
+    return new URL(`/media/${url.pathname.replace(/^\/+/, '')}`, backendOrigin).toString()
+  } catch {
+    return ''
+  }
+}
+
+const isVerifiedActivity = activity =>
+  String(activity.status || '').trim().toUpperCase() === 'VERIFIED'
 
 const verifyActivity = async activity => {
   if (!activity?.id) return

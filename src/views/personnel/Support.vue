@@ -7,6 +7,7 @@ import {
   deleteSupportTicket,
   getTicketsForUser,
   markTicketRead,
+  submitTicketFeedback,
   SUPPORT_UPDATED_EVENT
 } from '../../utils/supportTicketService.js'
 
@@ -28,6 +29,8 @@ const faqSearch = ref('')
 const openFaq = ref(null)
 const openGuide = ref(null)
 const reply = ref('')
+const feedbackRating = ref(0)
+const feedbackComment = ref('')
 const attachment = ref(null)
 const relatedModule = ref('')
 const relatedRecord = ref('')
@@ -100,6 +103,14 @@ const submitTicket = () => {
 const viewTicket = ticket => { selectedTicket.value = ticket; detailsOpen.value = true; markTicketRead({ ticketId: ticket.id, user: props.currentUser }); loadTickets() }
 const sendReply = () => { if (!selectedTicket.value || !reply.value.trim()) return; addTicketReply({ ticketId: selectedTicket.value.id, user: props.currentUser, message: reply.value }); reply.value = ''; loadTickets(); selectedTicket.value = tickets.value.find(item => item.id === selectedTicket.value.id); showToast('Reply sent.') }
 const confirmResolution = () => { if (!selectedTicket.value) return; confirmTicketResolution({ ticketId: selectedTicket.value.id, user: props.currentUser }); loadTickets(); selectedTicket.value = tickets.value.find(item => item.id === selectedTicket.value.id); showToast('Resolution confirmed.') }
+const sendTicketFeedback = () => {
+  if (!selectedTicket.value || !feedbackRating.value) return
+  const updatedTicket = submitTicketFeedback({ ticketId: selectedTicket.value.id, user: props.currentUser, rating: feedbackRating.value, comment: feedbackComment.value })
+  if (!updatedTicket) { showToast('Could not save feedback for this ticket.'); return }
+  loadTickets()
+  selectedTicket.value = tickets.value.find(item => item.id === selectedTicket.value.id)
+  showToast('Thanks for your feedback.')
+}
 const cancelTicket = ticket => { if (deleteSupportTicket({ ticketId: ticket.id, user: props.currentUser })) { loadTickets(); detailsOpen.value = false; showToast('Support ticket deleted.') } }
 const formatDate = value => value ? new Date(value).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }) : 'Not recorded'
 const statusClass = status => ({ Open: 'bg-blue-50 text-blue-700', 'In Review': 'bg-yellow-50 text-yellow-700', 'Waiting for Personnel': 'bg-orange-50 text-orange-700', Resolved: 'bg-green-50 text-green-700', Closed: 'bg-slate-100 text-slate-600' }[status] || 'bg-slate-100 text-slate-600')
@@ -126,7 +137,54 @@ onBeforeUnmount(() => { window.removeEventListener(SUPPORT_UPDATED_EVENT, loadTi
 
     <div v-if="formOpen" class="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4" @click.self="formOpen = false"><form @submit.prevent="submitTicket" class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 space-y-4"><div class="flex justify-between"><div><p class="text-xs font-bold text-[#8B1E23] uppercase">Support Request</p><h3 class="text-xl font-bold text-slate-900 mt-1">Create Support Ticket</h3></div><button type="button" @click="formOpen = false" class="text-xl text-slate-400">×</button></div><p v-if="formError" class="p-3 rounded-xl bg-red-50 text-red-700 text-sm">{{ formError }}</p><input v-model="form.subject" required placeholder="Subject" class="w-full px-4 py-3 rounded-xl border border-slate-300" /><div class="grid grid-cols-2 gap-3"><select v-model="form.category" required class="px-4 py-3 rounded-xl border border-slate-300"><option value="">Category</option><option v-for="item in categories" :key="item">{{ item }}</option></select><select v-model="form.priority" required class="px-4 py-3 rounded-xl border border-slate-300"><option v-for="item in priorities.slice(1)" :key="item">{{ item }}</option></select></div><div class="grid grid-cols-2 gap-3"><input v-model="relatedModule" placeholder="Related module (optional)" class="px-4 py-3 rounded-xl border border-slate-300" /><input v-model="relatedRecord" placeholder="Reference ID (optional)" class="px-4 py-3 rounded-xl border border-slate-300" /></div><textarea v-model="form.description" required rows="5" placeholder="Describe your concern..." class="w-full px-4 py-3 rounded-xl border border-slate-300 resize-none"></textarea><input type="file" @change="handleAttachment" accept="image/*,.pdf,.doc,.docx,.ppt,.pptx,.txt" class="w-full text-sm" /><p v-if="attachment" class="text-xs text-slate-500">{{ attachment.name }} · {{ Math.round(attachment.size / 1024) }} KB <button type="button" @click="attachment = null" class="text-red-700 font-bold ml-2">Remove</button></p><div class="flex justify-end gap-3"><button type="button" @click="formOpen = false" class="px-4 py-2.5 rounded-xl border border-slate-300 font-bold">Cancel</button><button type="submit" class="px-4 py-2.5 rounded-xl bg-[#8B1E23] text-white font-bold">Submit Ticket</button></div></form></div>
 
-    <div v-if="detailsOpen && selectedTicket" class="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4" @click.self="detailsOpen = false"><div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"><div class="p-6 border-b border-slate-200 flex justify-between"><div><p class="text-xs font-bold text-[#8B1E23]">{{ selectedTicket.ticketNumber }}</p><h3 class="text-xl font-bold text-slate-900 mt-1">{{ selectedTicket.subject }}</h3></div><button @click="detailsOpen = false" class="text-xl text-slate-400">×</button></div><div class="p-6 space-y-5"><div class="flex flex-wrap gap-2"><span class="px-3 py-1 rounded-full text-xs font-bold" :class="statusClass(selectedTicket.status)">{{ selectedTicket.status }}</span><span class="px-3 py-1 rounded-full text-xs font-bold" :class="priorityClass(selectedTicket.priority)">{{ selectedTicket.priority }}</span><span class="px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold">{{ selectedTicket.category }}</span></div><p class="text-sm text-slate-600 whitespace-pre-line">{{ selectedTicket.description }}</p><p class="text-xs text-slate-500">Created {{ formatDate(selectedTicket.createdAt) }} · Updated {{ formatDate(selectedTicket.updatedAt) }}<span v-if="selectedTicket.module"> · {{ selectedTicket.module }}</span></p><div class="border-t border-slate-200 pt-4"><h4 class="font-bold text-slate-900">Conversation</h4><div class="mt-3 space-y-3"><div v-for="message in selectedTicket.messages" :key="message.id" class="p-3 rounded-xl" :class="message.role === 'Admin' ? 'bg-blue-50' : 'bg-slate-50'"><p class="text-xs font-bold text-slate-600">{{ message.sender }} · {{ message.role }} · {{ formatDate(message.createdAt) }}</p><p class="text-sm text-slate-700 mt-1 whitespace-pre-line">{{ message.message }}</p></div></div><div v-if="selectedTicket.status !== 'Closed'" class="mt-4 flex gap-2"><input v-model="reply" placeholder="Write a reply..." class="flex-1 px-3 py-2.5 rounded-xl border border-slate-300" /><button @click="sendReply" class="px-4 py-2.5 rounded-xl bg-[#8B1E23] text-white font-bold">Send Reply</button></div></div><button v-if="selectedTicket.status === 'Resolved'" @click="confirmResolution" class="px-4 py-2.5 rounded-xl bg-green-600 text-white font-bold">Confirm Resolution</button></div></div></div>
+    <div v-if="detailsOpen && selectedTicket" class="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4" @click.self="detailsOpen = false">
+      <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div class="p-6 border-b border-slate-200 flex justify-between">
+          <div><p class="text-xs font-bold text-[#8B1E23]">{{ selectedTicket.ticketNumber }}</p><h3 class="text-xl font-bold text-slate-900 mt-1">{{ selectedTicket.subject }}</h3></div>
+          <button @click="detailsOpen = false" class="text-xl text-slate-400">×</button>
+        </div>
+        <div class="p-6 space-y-5">
+          <div class="flex flex-wrap gap-2">
+            <span class="px-3 py-1 rounded-full text-xs font-bold" :class="statusClass(selectedTicket.status)">{{ selectedTicket.status }}</span>
+            <span class="px-3 py-1 rounded-full text-xs font-bold" :class="priorityClass(selectedTicket.priority)">{{ selectedTicket.priority }}</span>
+            <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold">{{ selectedTicket.category }}</span>
+          </div>
+          <p class="text-sm text-slate-600 whitespace-pre-line">{{ selectedTicket.description }}</p>
+          <p class="text-xs text-slate-500">Created {{ formatDate(selectedTicket.createdAt) }} · Updated {{ formatDate(selectedTicket.updatedAt) }}<span v-if="selectedTicket.module"> · {{ selectedTicket.module }}</span></p>
+          <section v-if="['Resolved', 'Closed'].includes(selectedTicket.status)" class="border-t border-slate-200 pt-4">
+            <template v-if="selectedTicket.feedback">
+              <h4 class="font-bold text-slate-900">Your feedback</h4>
+              <p class="mt-2 text-amber-500" aria-label="Submitted rating">{{ '★'.repeat(selectedTicket.feedback.rating) }}{{ '☆'.repeat(5 - selectedTicket.feedback.rating) }}</p>
+              <p v-if="selectedTicket.feedback.comment" class="mt-1 text-sm text-slate-600">{{ selectedTicket.feedback.comment }}</p>
+              <p class="mt-1 text-xs text-slate-400">Submitted {{ formatDate(selectedTicket.feedback.createdAt) }}</p>
+            </template>
+            <template v-else>
+              <h4 class="font-bold text-slate-900">How was your support?</h4>
+              <p class="text-sm text-slate-500 mt-1">Rate the help you received. Your feedback is optional.</p>
+              <div class="flex gap-2 mt-3" role="group" aria-label="Rate support from 1 to 5 stars">
+                <button v-for="score in 5" :key="score" type="button" @click="feedbackRating = score" class="text-2xl" :class="score <= feedbackRating ? 'text-amber-500' : 'text-slate-300'" :aria-label="`${score} stars`" :aria-pressed="feedbackRating === score">★</button>
+              </div>
+              <textarea v-model="feedbackComment" maxlength="500" rows="2" placeholder="Optional comment" class="w-full mt-3 px-3 py-2 rounded-lg border border-slate-300 text-sm resize-y"></textarea>
+              <button @click="sendTicketFeedback" :disabled="!feedbackRating" class="mt-3 px-4 py-2 rounded-lg bg-[#8B1E23] text-white text-sm font-bold disabled:opacity-50">Submit Feedback</button>
+            </template>
+          </section>
+          <div class="border-t border-slate-200 pt-4">
+            <h4 class="font-bold text-slate-900">Conversation</h4>
+            <div class="mt-3 space-y-3">
+              <div v-for="message in selectedTicket.messages" :key="message.id" class="p-3 rounded-xl" :class="message.role === 'Admin' ? 'bg-blue-50' : 'bg-slate-50'">
+                <p class="text-xs font-bold text-slate-600">{{ message.sender }} · {{ message.role }} · {{ formatDate(message.createdAt) }}</p>
+                <p class="text-sm text-slate-700 mt-1 whitespace-pre-line">{{ message.message }}</p>
+              </div>
+            </div>
+            <div v-if="selectedTicket.status !== 'Closed'" class="mt-4 flex gap-2">
+              <input v-model="reply" placeholder="Write a reply..." class="flex-1 px-3 py-2.5 rounded-xl border border-slate-300" />
+              <button @click="sendReply" class="px-4 py-2.5 rounded-xl bg-[#8B1E23] text-white font-bold">Send Reply</button>
+            </div>
+          </div>
+          <button v-if="selectedTicket.status === 'Resolved'" @click="confirmResolution" class="px-4 py-2.5 rounded-xl bg-green-600 text-white font-bold">Confirm Resolution</button>
+        </div>
+      </div>
+    </div>
 
     <transition name="toast"><div v-if="toast" class="fixed bottom-6 right-6 z-[60] bg-slate-900 text-white px-5 py-3 rounded-xl shadow-xl text-sm font-semibold">{{ toast }}</div></transition>
   </div>

@@ -3,6 +3,7 @@ from rest_framework import serializers
 from users.models import User
 from .models import (
     Activity,
+    ActivityAssignment,
     ActivitySubmission,
     SubmissionEvidence,
     Task,
@@ -31,6 +32,14 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class ActivitySerializer(serializers.ModelSerializer):
+    assigned_personnel_ids = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=User.objects.filter(role__iexact="PERSONNEL"),
+        required=False,
+        write_only=True,
+        allow_empty=True,
+    )
+
     class Meta:
         model = Activity
         fields = [
@@ -43,12 +52,59 @@ class ActivitySerializer(serializers.ModelSerializer):
             "activity_time",
             "location",
             "assigned_personnel",
+            "assigned_personnel_ids",
             "status",
-            "is_archived",
             "created_by",
             "created_at",
             "updated_at",
         ]
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        personnel_ids = list(
+            instance.personnel_assignments.order_by("personnel_id").values_list("personnel_id", flat=True)
+        )
+        if not personnel_ids and instance.assigned_personnel_id:
+            personnel_ids = [instance.assigned_personnel_id]
+        elif instance.assigned_personnel_id in personnel_ids:
+            personnel_ids.remove(instance.assigned_personnel_id)
+            personnel_ids.insert(0, instance.assigned_personnel_id)
+        data["assigned_personnel_ids"] = personnel_ids
+        return data
+
+    def _save_personnel_assignments(self, activity, personnel):
+        unique_people = list({person.pk: person for person in personnel}.values())
+        primary_person = unique_people[0] if unique_people else None
+        if activity.assigned_personnel_id != getattr(primary_person, "pk", None):
+            activity.assigned_personnel = primary_person
+            activity.save(update_fields=["assigned_personnel", "updated_at"])
+
+        ActivityAssignment.objects.filter(activity=activity).delete()
+        ActivityAssignment.objects.bulk_create([
+            ActivityAssignment(activity=activity, personnel=person)
+            for person in unique_people
+        ])
+
+    def create(self, validated_data):
+        personnel = validated_data.pop("assigned_personnel_ids", None)
+        activity = super().create(validated_data)
+        if personnel is None:
+            personnel = [activity.assigned_personnel] if activity.assigned_personnel else []
+        self._save_personnel_assignments(activity, personnel)
+        return activity
+
+    def update(self, instance, validated_data):
+        personnel = validated_data.pop("assigned_personnel_ids", serializers.empty)
+        legacy_assignment_changed = "assigned_personnel" in validated_data
+        activity = super().update(instance, validated_data)
+        if personnel is not serializers.empty:
+            self._save_personnel_assignments(activity, personnel)
+        elif legacy_assignment_changed:
+            self._save_personnel_assignments(
+                activity,
+                [activity.assigned_personnel] if activity.assigned_personnel else [],
+            )
+        return activity
 
 
 class SubmissionEvidenceSerializer(serializers.ModelSerializer):

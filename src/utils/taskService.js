@@ -1,4 +1,5 @@
 const TASKS_URL = 'http://127.0.0.1:8000/api/tasks/'
+const TASK_ARCHIVES_URL = 'http://127.0.0.1:8000/api/task-archives/'
 
 const statusLabels = {
   ASSIGNED: 'Assigned',
@@ -20,7 +21,7 @@ export const normalizeTask = task => {
     : assignedPerson
   const dueDate = task.due_date || task.dueDate || ''
   const status = statusLabels[task.status] || task.status || 'Assigned'
-  const finalStatus = ['COMPLETED', 'VERIFIED', 'FOR_VERIFICATION'].includes(task.status)
+  const finalStatus = ['COMPLETED', 'VERIFIED', 'FOR_VERIFICATION', 'RETURNED'].includes(String(task.status || '').toUpperCase())
   const deadline = dueDate ? new Date(`${dueDate}T23:59:59`) : null
   const overdue = !finalStatus && deadline && !Number.isNaN(deadline.getTime()) && deadline < new Date()
 
@@ -112,3 +113,25 @@ export const updateTask = async (id, changes) => normalizeTask(await request(`${
 }))
 
 export const deleteTask = id => request(`${TASKS_URL}${id}/`, { method: 'DELETE' })
+
+export const getTaskArchiveIds = async userId => {
+  const ids = await request(`${TASK_ARCHIVES_URL}?user_id=${encodeURIComponent(userId)}`)
+  if (!Array.isArray(ids)) throw new Error('Invalid task archives response')
+  return ids.map(String)
+}
+
+export const setTaskArchive = (id, userId, archived) => request(
+  `${TASKS_URL}${id}/archive/`,
+  {
+    method: archived ? 'PUT' : 'DELETE',
+    body: JSON.stringify({ user_id: userId })
+  }
+)
+
+export const removeTaskAssignment = (id, userId) => request(
+  `${TASKS_URL}${id}/assignment/`,
+  {
+    method: 'DELETE',
+    body: JSON.stringify({ user_id: userId })
+  }
+)
